@@ -1,38 +1,46 @@
 # Bagotier V3
 
-A browser-based game inventory management UI that mimics the feel of a modern RPG — drag-and-drop item equipping, live stat calculations, sound effects, and tooltips — built entirely client-side with React 19, TypeScript, and Vite.
+A browser-based game inventory management UI built entirely client-side with **React 19**, **TypeScript** (strict), and **Vite** — drag-and-drop item equipping, live stat calculations, sound effects, and viewport-aware tooltips.
 
 **Live demo**: [jlyoungthe3rd.github.io/bagotier-v3](https://jlyoungthe3rd.github.io/bagotier-v3)
 
 ---
 
-## What This Project Demonstrates
+## Why This Exists
 
-This project is less about the final product and more about **how** it was built: structured specification, deliberate architecture decisions, iterative feature delivery, and LLM-assisted tooling to move fast without cutting corners.
+This project is an engineering portfolio piece. The domain (RPG inventory) is intentionally approachable so that the focus stays on *how* the frontend was built: normalized state, formal invariants, a typed component contract layer, and a three-layer test suite — all spec'd and reviewed before the first implementation file was touched.
+
+### Frontend Engineering Signals at a Glance
+
+| Area | What's Here |
+|------|-------------|
+| **React** | React 19 with hooks, custom selectors, and suspense-compatible async state |
+| **TypeScript** | Strict mode + `noUncheckedIndexedAccess`; branded types; discriminated unions as control flow |
+| **State management** | Zustand (session/UI) + React Query (data); explicit ownership boundaries and no entity duplication |
+| **Component design** | Pure state transitions decoupled from components; single-responsibility droppable/draggable split |
+| **Testing** | Contract → Unit → Integration pyramid; tests defined before implementation |
+| **Accessibility** | dnd-kit `KeyboardSensor`, screen-reader `Announcements`, WCAG 2.1 AA contrast |
+| **Performance** | 60 fps drag, ≤ 100 ms stat update, ≤ 250 KB gz bundle — declared as acceptance criteria upfront |
+| **Tooling** | Vite, ESLint (zero warnings), Prettier, GitHub Actions → GitHub Pages |
 
 ---
 
-## Structured Planning with Speckit
+## Stack
 
-Every feature in this project begins in `specs/` before a line of implementation code is written. The workflow is powered by **speckit** — a set of AI-assisted agents for VS Code Copilot that turn a natural-language feature description into a full set of design artifacts:
-
-```
-specs/
-├── 001-game-inventory-system/
-│   ├── spec.md          # user stories, acceptance scenarios, FRs, success criteria
-│   ├── research.md      # technical alternatives considered and decisions made
-│   ├── data-model.md    # entity definitions, ownership map, invariants, state transitions
-│   ├── plan.md          # architecture, project structure, constitution gate checks
-│   ├── quickstart.md    # run/test guide generated from the plan
-│   ├── contracts/       # Zod schema contracts for every data boundary
-│   └── tasks.md         # dependency-ordered, file-exact task list for implementation
-├── 002-item-hover-tooltip/
-└── 003-icon-only-inventory/
-```
-
-The workflow runs in phases: **specify → clarify → research → plan → tasks → implement**. Every output is grounded in a project **constitution** (`.specify/memory/constitution.md`) that enforces non-negotiable standards — testing, code quality, UX consistency, performance budgets — before implementation begins.
-
-Every feature ships with a traceable chain from user story → acceptance scenario → task → code → test.
+| Layer | Technology |
+|-------|-----------|
+| Framework | React 19 |
+| Build | Vite 8 |
+| Language | TypeScript 5 (strict + `noUncheckedIndexedAccess`) |
+| State — session | Zustand 5 |
+| State — data | TanStack React Query 5 |
+| Drag and drop | @dnd-kit/core |
+| Animation | Framer Motion |
+| Tooltip positioning | @floating-ui/react |
+| Styling | Tailwind CSS 3 |
+| Validation | Zod 4 |
+| Testing | Vitest + React Testing Library |
+| CI/CD | GitHub Actions → GitHub Pages |
 
 ---
 
@@ -59,27 +67,13 @@ Components resolve IDs → full items via a `useItem(id)` selector on the React 
 | **I4** Derived stats only | Stats computed on the fly — cannot double-count modifiers |
 | **I5** No entity copies | Zustand holds only IDs and primitives; enforced by a contract test |
 
-### Other notable choices
+### Notable implementation choices
 
 - **Pure state transitions** — `equip`, `swap`, `unequip` are `(state, args) → state` functions defined outside the store and unit-tested without React
 - **`DropOutcome` discriminated union** — one value per drag-end drives both the state transition and the sound effect; structurally impossible to fire them out of sync
 - **Branded `ItemId`** — `string & { readonly [brand]: true }` catches ID misuse at compile time
 - **Accessibility** — dnd-kit `KeyboardSensor` + screen-reader `Announcements`; WCAG 2.1 AA contrast via Tailwind tokens; loading/error/empty states are designed, not blank
 - **Performance budgets declared upfront** — 60 fps drag, ≤ 100 ms stat update, ≤ 3 s load, ≤ 250 KB gz bundle
-
----
-
-## Feature Iterations
-
-The project has shipped three independently-scoped features, each following the full speckit workflow:
-
-| # | Feature | What Was Delivered |
-|---|---------|-------------------|
-| **001** | Game Inventory System | Core drag-and-drop equipping, stat panel, sound effects, generated character, 24-cell bag |
-| **002** | Item Hover Tooltip | Viewport-aware tooltip using `@floating-ui/react`, single-tooltip guarantee, rapid movement handling |
-| **003** | Icon-Only Inventory | Stripped in-slot item labels; icon-only slots with accessible fallback states |
-
-Each iteration built on the prior feature without requiring architectural changes — a direct result of the upfront data model and normalized state design.
 
 ---
 
@@ -102,44 +96,40 @@ tests/
 
 ---
 
-## LLM-Assisted Development Velocity
+## Feature Iterations
 
-This project uses GitHub Copilot — specifically the **speckit** agent suite — to compress the planning and scaffolding phases that typically consume a disproportionate amount of feature time.
+Three independently-scoped features, each following the same spec-first workflow:
 
-**What the LLM did:**
-- Turned a one-paragraph feature description into a complete `spec.md` (user stories, acceptance scenarios, edge cases, functional requirements, success criteria)
-- Researched and documented technical trade-offs in `research.md` for each technology choice
-- Generated the full data model with entity definitions, invariants, and state transition table
-- Produced a constitution-checked `plan.md` with project structure and performance budgets
-- Emitted a `tasks.md` with dependency-ordered, file-exact tasks ready for sequential implementation
-- Implemented each task in order via `speckit.implement`, respecting all contracts defined earlier
+| # | Feature | What Was Delivered |
+|---|---------|-------------------|
+| **001** | Game Inventory System | Core drag-and-drop equipping, stat panel, sound effects, generated character, 24-cell bag |
+| **002** | Item Hover Tooltip | Viewport-aware tooltip using `@floating-ui/react`, single-tooltip guarantee, rapid movement handling |
+| **003** | Icon-Only Inventory | Stripped in-slot item labels; icon-only slots with accessible fallback states |
 
-**What this enabled:**
-By the time a single implementation file was touched, the architecture was already decided, contracts were written, and tests were defined. The implementation phase became a translation exercise from well-defined tasks into code — which is exactly the kind of work that benefits most from AI assistance.
-
-**What the LLM did not do:**
-The constitution, invariants, and architectural constraints were deliberate human decisions. The LLM executes plans; it does not replace the judgment required to define them.
-
-The net result: a project where every commit is traceable to a spec, every data boundary has a contract, every state transition has a unit test, and three features were delivered with consistent architecture — in a timeline that would be difficult to achieve without AI-augmented tooling.
+Each iteration built on the prior feature without requiring architectural changes — a direct result of the upfront data model and normalized state design.
 
 ---
 
-## Stack
+## Spec-First Workflow
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | React 19 |
-| Build | Vite 8 |
-| Language | TypeScript 5 (strict + `noUncheckedIndexedAccess`) |
-| State — session | Zustand 5 |
-| State — data | TanStack React Query 5 |
-| Drag and drop | @dnd-kit/core |
-| Animation | Framer Motion |
-| Tooltip positioning | @floating-ui/react |
-| Styling | Tailwind CSS 3 |
-| Validation | Zod 4 |
-| Testing | Vitest + React Testing Library |
-| CI/CD | GitHub Actions → GitHub Pages |
+Every feature begins in `specs/` before any implementation code is written. A set of AI-assisted planning agents (speckit) turn a one-paragraph feature description into a full set of design artifacts — spec, research, data model, architecture plan, and a dependency-ordered task list — all reviewed against a project constitution before coding starts.
+
+```
+specs/
+├── 001-game-inventory-system/
+│   ├── spec.md          # user stories, acceptance scenarios, FRs, success criteria
+│   ├── research.md      # technical alternatives considered and decisions made
+│   ├── data-model.md    # entity definitions, ownership map, invariants, state transitions
+│   ├── plan.md          # architecture, project structure, constitution gate checks
+│   ├── contracts/       # Zod schema contracts for every data boundary
+│   └── tasks.md         # dependency-ordered, file-exact task list for implementation
+├── 002-item-hover-tooltip/
+└── 003-icon-only-inventory/
+```
+
+The result: by the time a single implementation file is touched, the architecture is decided, contracts are written, and tests are scoped. Every commit is traceable from user story → acceptance scenario → task → code → test.
+
+**On AI assistance:** The LLM (GitHub Copilot + speckit agents) handled spec drafting, trade-off research, data model generation, and sequential task implementation. The invariants, ownership boundaries, performance budgets, and architectural constraints were deliberate human decisions made before the LLM wrote a line of code.
 
 ---
 
