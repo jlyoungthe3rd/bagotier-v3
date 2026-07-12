@@ -14,7 +14,7 @@ This project is less about the final product and more about **how** it was built
 
 ## Structured Planning with Speckit
 
-Every feature in this project begins in `specs/` before a line of implementation code is written. The workflow is powered by **[speckit](https://github.com/speckit)** — a set of AI-assisted agents for VS Code Copilot that turn a natural-language feature description into a full set of design artifacts:
+Every feature in this project begins in `specs/` before a line of implementation code is written. The workflow is powered by **speckit** — a set of AI-assisted agents for VS Code Copilot that turn a natural-language feature description into a full set of design artifacts:
 
 ```
 specs/
@@ -30,120 +30,42 @@ specs/
 └── 003-icon-only-inventory/
 ```
 
-The workflow runs in phases: **specify → clarify → research → plan → tasks → implement**. The AI agents handle the heavy lifting of drafting each artifact, but every output is grounded in a project **constitution** (`.specify/memory/constitution.md`) that enforces non-negotiable standards — testing, code quality, UX consistency, performance budgets — before implementation begins.
+The workflow runs in phases: **specify → clarify → research → plan → tasks → implement**. Every output is grounded in a project **constitution** (`.specify/memory/constitution.md`) that enforces non-negotiable standards — testing, code quality, UX consistency, performance budgets — before implementation begins.
 
-This means every feature ships with a traceable chain from user story to acceptance scenario to task to code to test.
+Every feature ships with a traceable chain from user story → acceptance scenario → task → code → test.
 
 ---
 
 ## System Design
 
-### Architecture at a Glance
+Single-page app, no backend. All data is client-local. The design challenge was applying real architectural discipline — normalized state, explicit data ownership, formal invariants — to a frontend-only project.
 
-This is a single-page application with **no backend**. All data is client-local. The interesting design challenge was applying real architectural discipline — normalized state, explicit data ownership, strict contracts — to a frontend-only project.
+### State ownership split
 
-```
-┌─────────────────────────────────────────────┐
-│                  React App                  │
-│                                             │
-│  ┌──────────────┐     ┌───────────────────┐ │
-│  │  React Query │     │      Zustand      │ │
-│  │  (data layer)│     │  (session state)  │ │
-│  │              │     │                   │ │
-│  │ Item catalog │◄────│ equipped: ItemId[]│ │
-│  │ Character    │     │ bag: ItemId[]     │ │
-│  │ Base stats   │     │ muted: boolean    │ │
-│  └──────────────┘     │ activeDrag: ...   │ │
-│         │             └───────────────────┘ │
-│         └──────────────────────┐            │
-│                   Derived      ▼            │
-│              effectiveStats = base + Σmod   │
-└─────────────────────────────────────────────┘
-```
+| Owner | Holds | Never holds |
+|-------|-------|-------------|
+| **React Query** | Item catalog, character, base stats | Session state |
+| **Zustand** | `ItemId[]` references, mute flag, drag state | `Item` entity objects |
 
-### Key Technical Choices
+Components resolve IDs → full items via a `useItem(id)` selector on the React Query cache. Effective stats are always derived (`base + Σ equipped modifiers`), never stored — so they can't drift under rapid interactions.
 
-#### Normalized State: React Query + Zustand, Never Both
+### Formal invariants (documented before implementation)
 
-The most deliberate design decision in the project. **React Query owns all entity data** (item catalog, character base stats). **Zustand owns only session state**, and that state contains exclusively `ItemId` strings — never `Item` objects.
+| | |
+|-|-|
+| **I1** Single location | Every `ItemId` lives in exactly one place: bag cell, slot, or nowhere |
+| **I2** Slot compatibility | `equipped[slot] = id` requires `catalog[id].slotType === slot` |
+| **I3** Bounded bag | `bag.length === BAG_CAPACITY` always; unequip into a full bag is rejected |
+| **I4** Derived stats only | Stats computed on the fly — cannot double-count modifiers |
+| **I5** No entity copies | Zustand holds only IDs and primitives; enforced by a contract test |
 
-Components resolve IDs to full item data through a `useItem(id)` selector hook that reads the React Query cache. Zustand never stores an entity copy.
+### Other notable choices
 
-```typescript
-// Zustand state — IDs only, never entity copies (invariant I5)
-export interface EquipmentState {
-  readonly equipped: Readonly<Record<SlotType, ItemId | null>>;
-  readonly bag: readonly (ItemId | null)[];
-  readonly muted: boolean;
-  readonly activeDrag: { itemId: ItemId; origin: DragOrigin } | null;
-}
-```
-
-**Why this matters**: It establishes a single source of truth. Effective stats can never drift from item data because stats are computed on the fly from the canonical catalog — they are never stored. Rapid equip/unequip sequences cannot produce double-counted modifiers (a real race condition in simpler designs) because each stat is derived fresh from the current set of equipped IDs.
-
-#### Pure State Transitions
-
-All Zustand mutations are expressed as pure `(state, args) → state` functions, defined outside the store and unit-tested directly without React:
-
-```typescript
-export function equipTransition(state, itemId, slot): EquipmentState { ... }
-export function swapTransition(state, itemId, slot): EquipmentState { ... }
-export function unequipTransition(state, slot, toBagIndex?): { state, result } { ... }
-```
-
-This made the business logic straightforward to test exhaustively and keeps the store thin.
-
-#### Formal Invariants
-
-The data model documents five explicit invariants that every transition must preserve:
-
-| Invariant | Description |
-|-----------|-------------|
-| **I1** — Single location | Every `ItemId` exists in exactly one place: a bag cell, a slot, or nowhere. Never duplicated. |
-| **I2** — Slot compatibility | `equipped[slot] = id` implies `catalog[id].slotType === slot`. No mismatched items. |
-| **I3** — Bounded bag | `bag.length === BAG_CAPACITY` always. Unequip into a full bag is rejected with user feedback. |
-| **I4** — Derived stats only | Effective stats are computed, never stored. Cannot drift under rapid interactions. |
-| **I5** — No entity copies in store | Zustand holds only IDs and primitives. Enforced by a contract test. |
-
-#### Drag and Drop: Exactly-Once Sound + State
-
-A single `DropOutcome` discriminated union is resolved per drag-end event. This single value drives both the state transition and the sound effect, making it structurally impossible to fire a sound without updating state (or vice versa):
-
-```typescript
-type DropOutcome =
-  | { type: 'equip'; itemId; slot }         // → equip sound
-  | { type: 'swap'; itemId; slot; replacedItemId } // → equip sound
-  | { type: 'unequip'; slot; toBagIndex? }  // → unequip sound
-  | { type: 'moveInBag'; itemId; toBagIndex } // → no sound
-  | { type: 'invalid' }                     // → invalid sound
-  | { type: 'cancelled' };                  // → invalid sound
-```
-
-#### Typed Domain with Branded IDs
-
-`ItemId` is a branded string type, making it impossible to pass an arbitrary string where an item identifier is expected:
-
-```typescript
-declare const itemIdBrand: unique symbol;
-export type ItemId = string & { readonly [itemIdBrand]: true };
-```
-
-All slot types and stat keys are `as const` tuple unions, meaning TypeScript enforces exhaustive handling at every switch.
-
-#### Accessible by Design
-
-- dnd-kit's `KeyboardSensor` + screen-reader `Announcements` provide full keyboard and assistive tech support for drag operations
-- All interactive elements have accessible names and meet WCAG 2.1 AA contrast ratios via Tailwind design tokens
-- Loading, error, and empty states are designed first-class (no blank screens)
-
-#### Performance Budgets (declared up front)
-
-| Budget | Target |
-|--------|--------|
-| Drag frame rate | 60 fps (transform-based, no layout thrash) |
-| Stat panel update after drop | ≤ 100 ms perceived |
-| Initial load | ≤ 3 s on mid-tier hardware |
-| JS bundle | ≤ 250 KB gzipped |
+- **Pure state transitions** — `equip`, `swap`, `unequip` are `(state, args) → state` functions defined outside the store and unit-tested without React
+- **`DropOutcome` discriminated union** — one value per drag-end drives both the state transition and the sound effect; structurally impossible to fire them out of sync
+- **Branded `ItemId`** — `string & { readonly [brand]: true }` catches ID misuse at compile time
+- **Accessibility** — dnd-kit `KeyboardSensor` + screen-reader `Announcements`; WCAG 2.1 AA contrast via Tailwind tokens; loading/error/empty states are designed, not blank
+- **Performance budgets declared upfront** — 60 fps drag, ≤ 100 ms stat update, ≤ 3 s load, ≤ 250 KB gz bundle
 
 ---
 
