@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-surface-sunken text-ink;
+  }
+
+  body {
+    @apply min-h-screen antialiased;
+    /* Subtle rune-purple radial emanating from top — sets the dungeon-arcane atmosphere */
+    background-image: radial-gradient(
+      ellipse at 50% -10%,
+      rgba(124, 95, 199, 0.08) 0%,
+      transparent 65%
+    );
+  }
+
+  ::-webkit-scrollbar {
+    width: 5px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface-sunken;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply rounded-full bg-slot-idle;
+  }
+}
+
+@layer components {
+  .item-tooltip {
+    @apply pointer-events-none select-none;
+  }
+}
