@@ -7,6 +7,7 @@ import { ItemTooltipProvider } from './features/inventory/tooltip';
 import { CharacterView } from './features/character/CharacterView';
 import { StatPanel } from './features/character/StatPanel';
 import { MuteToggle } from './features/audio/MuteToggle';
+import { GitHubLink } from './features/github/GitHubLink';
 import type { Item } from './types/domain';
 
 /** Skeleton block used by the designed loading state (Constitution III). */
@@ -112,6 +113,7 @@ function InventoryScreen() {
         ) : null}
 
         <MuteToggle />
+        <GitHubLink />
       </main>
     </ItemTooltipProvider>
   );
