@@ -1,11 +1,15 @@
-import { useDraggable } from '@dnd-kit/core';
-import { useCallback, useRef } from 'react';
+import { useRef, useEffect } from 'react';
 import type { DragOrigin, Item } from '../../types/domain';
 import { useItemTooltip } from './tooltip';
 import type { ButtonHTMLAttributes } from 'react';
+import { useInventoryStore } from '../../store/useInventoryStore';
+import { useSound } from '../audio/useSound';
+import { handleBagKeyDown, handleEquipmentKeyDown } from './keyboard';
 
-interface InventoryItemProps
-  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'item'> {
+interface InventoryItemProps extends Omit<
+  ButtonHTMLAttributes<HTMLButtonElement>,
+  'item'
+> {
   readonly item: Item;
   readonly origin: DragOrigin;
 }
@@ -17,73 +21,113 @@ function resolveIcon(icon: string): string {
 }
 
 /**
- * Draggable item tile. Rendered inside a bag cell or an equipment slot;
- * the drag `data` payload carries everything drop resolution needs.
+ * Focusable item tile. Rendered inside a bag cell or an equipment slot;
+ * clicking or pressing Enter/Space instantly equips or unequips the item.
  */
 export function InventoryItem({ item, origin, ...buttonProps }: InventoryItemProps) {
   const tooltip = useItemTooltip();
-  const elementRef = useRef<HTMLButtonElement | null>(null);
-  const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
-    id: item.id,
-    data: { itemId: item.id, slotType: item.slotType, origin },
-  });
-  const setRefs = useCallback(
-    (node: HTMLButtonElement | null) => {
-      elementRef.current = node;
-      setNodeRef(node);
-    },
-    [setNodeRef],
-  );
   const describedBy = tooltip.ariaDescribedByFor(item.id);
-  const mergedDescribedBy = [attributes['aria-describedby'], describedBy]
-    .filter((value): value is string => typeof value === 'string' && value.length > 0)
-    .join(' ');
+  const elementRef = useRef<HTMLButtonElement | null>(null);
+
+  const focusedSection = useInventoryStore((s) => s.focusedSection);
+  const focusedBagIndex = useInventoryStore((s) => s.focusedBagIndex);
+  const focusedSlot = useInventoryStore((s) => s.focusedSlot);
+  const play = useSound();
+
+  const isActive =
+    origin.kind === 'bag'
+      ? focusedSection === 'bag' && focusedBagIndex === origin.index
+      : focusedSection === 'equipment' && focusedSlot === origin.slot;
+
+  useEffect(() => {
+    if (isActive) {
+      if (elementRef.current && document.activeElement !== elementRef.current) {
+        elementRef.current.focus();
+      }
+    }
+  }, [isActive]);
+
+  const tabIndex =
+    origin.kind === 'bag'
+      ? (focusedSection === 'bag' || focusedSection === null) &&
+        focusedBagIndex === origin.index
+        ? 0
+        : -1
+      : focusedSection === 'equipment' && focusedSlot === origin.slot
+        ? 0
+        : -1;
+
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    buttonProps.onClick?.(e);
+    const store = useInventoryStore.getState();
+    if (origin.kind === 'bag') {
+      const currentOccupant = store.equipped[item.slotType];
+      if (currentOccupant === null) {
+        store.equip(item.id, item.slotType);
+        play('equip');
+      } else {
+        store.swap(item.id, item.slotType);
+        play('equip');
+      }
+    } else {
+      const result = store.unequip(origin.slot);
+      if (result === 'bag-full') {
+        play('invalid');
+      } else {
+        play('unequip');
+      }
+    }
+  };
 
   return (
     <button
-      ref={setRefs}
+      {...buttonProps}
+      ref={elementRef}
       type="button"
+      tabIndex={tabIndex}
       data-testid={`item-${item.id}`}
       aria-label={`${item.name} (${item.slotType})`}
-      className={`flex h-full w-full items-center justify-center bg-surface-raised/80 p-1 text-ink transition-colors outline-offset-2 hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid ${
-        isDragging ? 'opacity-25' : ''
-      }`}
+      className="flex h-full w-full items-center justify-center bg-surface-raised/80 p-1 text-ink transition-colors outline-offset-2 hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"
       onMouseEnter={() => {
         tooltip.open(item, 'hover', elementRef.current);
       }}
       onMouseLeave={() => {
         tooltip.closeFor(item.id, 'hover');
       }}
-      onFocus={() => {
+      onFocus={(e) => {
+        if (origin.kind === 'bag') {
+          useInventoryStore.getState().setFocusedSection('bag');
+          useInventoryStore.getState().setFocusedBagIndex(origin.index);
+        } else {
+          useInventoryStore.getState().setFocusedSection('equipment');
+          useInventoryStore.getState().setFocusedSlot(origin.slot);
+        }
         tooltip.open(item, 'focus', elementRef.current);
+        buttonProps.onFocus?.(e);
       }}
-      onBlur={() => {
+      onBlur={(e) => {
         tooltip.closeFor(item.id, 'focus');
+        buttonProps.onBlur?.(e);
       }}
       onKeyDownCapture={(event) => {
         if (event.key === 'Escape') {
           tooltip.dismiss();
         }
       }}
-      {...buttonProps}
-      {...attributes}
-      {...listeners}
-      aria-describedby={mergedDescribedBy.length > 0 ? mergedDescribedBy : undefined}
+      onKeyDown={(event) => {
+        if (origin.kind === 'bag') {
+          handleBagKeyDown(event, origin.index);
+        } else {
+          handleEquipmentKeyDown(event, origin.slot);
+        }
+        buttonProps.onKeyDown?.(event);
+      }}
+      onClick={handleClick}
+      aria-describedby={describedBy ?? undefined}
     >
       <span aria-hidden="true" className="text-2xl leading-none">
         {resolveIcon(item.icon)}
       </span>
     </button>
-  );
-}
-
-/** Presentation-only tile for the DragOverlay (not draggable itself). */
-export function ItemTilePreview({ item }: { readonly item: Item }) {
-  return (
-    <div className="flex h-cell w-cell items-center justify-center bg-surface-raised/90 p-1 shadow-[0_0_16px_rgba(86,173,116,0.5)] ring-1 ring-slot-valid">
-      <span aria-hidden="true" className="text-2xl leading-none">
-        {resolveIcon(item.icon)}
-      </span>
-    </div>
   );
 }

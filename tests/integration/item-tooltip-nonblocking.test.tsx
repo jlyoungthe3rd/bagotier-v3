@@ -16,8 +16,9 @@ describe('item tooltip non-blocking behavior', () => {
     const muteToggle = screen.getByRole('button', { name: /mute sound effects/i });
     await user.click(muteToggle);
 
-    expect(
-      screen.getByRole('button', { name: /unmute sound effects/i }),
-    ).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: /unmute sound effects/i })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
   });
 });

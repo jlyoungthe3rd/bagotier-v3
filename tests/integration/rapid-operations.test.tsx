@@ -30,9 +30,7 @@ function resolveEquipped(
 describe('rapid successive operations (Polish)', () => {
   beforeEach(() => {
     useInventoryStore.getState().reset();
-    registerItemSlotTypes(
-      Object.fromEntries(items.map((i) => [i.id, i.slotType])),
-    );
+    registerItemSlotTypes(Object.fromEntries(items.map((i) => [i.id, i.slotType])));
     useInventoryStore.getState().seedBag(items.map((i) => i.id));
   });
 
@@ -74,9 +72,7 @@ describe('rapid successive operations (Polish)', () => {
 
     const { bag, equipped } = s();
     const bagIds = bag.filter((id): id is ItemId => id !== null);
-    const equippedIds = Object.values(equipped).filter(
-      (id): id is ItemId => id !== null,
-    );
+    const equippedIds = Object.values(equipped).filter((id): id is ItemId => id !== null);
     const all = [...bagIds, ...equippedIds];
     // No item lost or duplicated.
     expect(all).toHaveLength(items.length);

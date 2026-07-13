@@ -1,12 +1,16 @@
 import { describe, expect, it } from 'vitest';
-import {
-  computeDeltas,
-  computeEffectiveStats,
-} from '../../src/features/character/stats';
+import { computeDeltas, computeEffectiveStats } from '../../src/features/character/stats';
 import type { Item, StatKey } from '../../src/types/domain';
 import { toItemId } from '../../src/types/domain';
 
-const base: Record<StatKey, number> = { hp: 50, mp: 30, def: 10, str: 8 };
+const base: Record<StatKey, number> = {
+  hp: 50,
+  mp: 30,
+  def: 10,
+  str: 8,
+  agi: 10,
+  int: 10,
+};
 
 function makeItem(modifiers: Item['modifiers']): Item {
   return {
@@ -34,7 +38,7 @@ describe('computeEffectiveStats (US2 / FR-006)', () => {
       makeItem({ def: 5, hp: 4 }),
       makeItem({ def: 3, str: 2 }),
     ]);
-    expect(effective).toEqual({ hp: 54, mp: 30, def: 18, str: 10 });
+    expect(effective).toEqual({ hp: 54, mp: 30, def: 18, str: 10, agi: 10, int: 10 });
   });
 
   it('applies negative modifiers and clamps results at 0', () => {
@@ -51,7 +55,14 @@ describe('computeEffectiveStats (US2 / FR-006)', () => {
 
 describe('computeDeltas (FR-014)', () => {
   it('reports effective minus base per stat', () => {
-    const effective = { hp: 54, mp: 25, def: 10, str: 8 };
-    expect(computeDeltas(base, effective)).toEqual({ hp: 4, mp: -5, def: 0, str: 0 });
+    const effective = { hp: 54, mp: 25, def: 10, str: 8, agi: 10, int: 10 };
+    expect(computeDeltas(base, effective)).toEqual({
+      hp: 4,
+      mp: -5,
+      def: 0,
+      str: 0,
+      agi: 0,
+      int: 0,
+    });
   });
 });

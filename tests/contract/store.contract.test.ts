@@ -35,7 +35,7 @@ function pickState() {
     equipped: s.equipped,
     bag: s.bag,
     muted: s.muted,
-    activeDrag: s.activeDrag,
+    feedback: s.feedback,
   };
 }
 
@@ -86,9 +86,6 @@ describe('inventory store contract', () => {
         s.unequip(slot);
       } else if (roll < 0.85) {
         s.moveInBag(itemId, Math.floor(rand() * BAG_CAPACITY));
-      } else if (roll < 0.95) {
-        s.startDrag(itemId, { kind: 'bag', index: 0 });
-        s.cancelDrag();
       } else {
         s.toggleMute();
       }

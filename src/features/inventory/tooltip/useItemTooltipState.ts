@@ -61,28 +61,25 @@ export function useItemTooltipState() {
     [closeNow],
   );
 
-  const closeFor = useCallback(
-    (itemId: ItemId, mode: TooltipTriggerMode) => {
-      setSnapshot((current) => {
-        if (!current.open || current.activeItemId !== itemId) {
-          return current;
-        }
+  const closeFor = useCallback((itemId: ItemId, mode: TooltipTriggerMode) => {
+    setSnapshot((current) => {
+      if (!current.open || current.activeItemId !== itemId) {
+        return current;
+      }
 
-        sourcesRef.current[mode] = false;
-        if (sourcesRef.current.hover || sourcesRef.current.focus) {
-          return current;
-        }
-        return {
-          open: false,
-          activeItemId: null,
-          triggerMode: null,
-          referenceElement: null,
-          content: null,
-        };
-      });
-    },
-    [],
-  );
+      sourcesRef.current[mode] = false;
+      if (sourcesRef.current.hover || sourcesRef.current.focus) {
+        return current;
+      }
+      return {
+        open: false,
+        activeItemId: null,
+        triggerMode: null,
+        referenceElement: null,
+        content: null,
+      };
+    });
+  }, []);
 
   const isDescribedBy = useCallback(
     (itemId: ItemId) => snapshot.open && snapshot.activeItemId === itemId,

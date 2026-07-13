@@ -22,6 +22,8 @@ const STAT_RANGES: Readonly<Record<StatKey, readonly [number, number]>> = {
   mp: [20, 40],
   def: [5, 15],
   str: [5, 15],
+  agi: [5, 15],
+  int: [5, 15],
 };
 
 function pick<T>(rand: () => number, options: readonly T[]): T {
@@ -54,6 +56,8 @@ export function generateCharacter(seed: number): Character {
       mp: rollStat(rand, STAT_RANGES.mp),
       def: rollStat(rand, STAT_RANGES.def),
       str: rollStat(rand, STAT_RANGES.str),
+      agi: rollStat(rand, STAT_RANGES.agi),
+      int: rollStat(rand, STAT_RANGES.int),
     },
   };
 }

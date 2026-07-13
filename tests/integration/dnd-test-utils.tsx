@@ -132,7 +132,7 @@ export async function pickUp(
   const hostId = host?.getAttribute('data-testid');
   pickedRect = hostId != null ? expectedRect(hostId) : null;
   item.focus();
-  await user.keyboard('{Enter}');
+  await user.keyboard(' ');
 }
 
 /**

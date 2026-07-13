@@ -62,5 +62,5 @@ export const InventoryStoreStateSchema = z.object({
     ),
   bag: z.array(z.string().nullable()).length(BAG_CAPACITY),
   muted: z.boolean(),
-  activeDrag: z.object({ itemId: z.string(), origin: DragOriginSchema }).nullable(),
+  feedback: z.string().nullable(),
 });

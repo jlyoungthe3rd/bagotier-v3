@@ -52,7 +52,13 @@ function CharacterFigure({ appearance }: { readonly appearance: CharacterAppeara
       <circle cx="41" cy="45" r="3" fill="#1e1b18" />
       <circle cx="59" cy="45" r="3" fill="#1e1b18" />
       {/* mouth */}
-      <path d={mouth} stroke="#1e1b18" strokeWidth="2" fill="none" strokeLinecap="round" />
+      <path
+        d={mouth}
+        stroke="#1e1b18"
+        strokeWidth="2"
+        fill="none"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
@@ -75,6 +81,7 @@ function RegionSlot({
 export function CharacterView() {
   const { data: character } = useCharacterQuery();
   const equipped = useInventoryStore((s) => s.equipped);
+  const showTabHint = useInventoryStore((s) => s.showTabHint);
 
   if (character === undefined) return null;
 
@@ -82,8 +89,20 @@ export function CharacterView() {
     <section
       aria-label={`Character ${character.name}`}
       data-testid="character-view"
-      className="flex flex-col items-center gap-3"
+      className="relative flex flex-col items-center gap-3"
     >
+      {showTabHint && (
+        <div
+          data-testid="tab-hint-tooltip"
+          className="absolute -top-1.5 z-30 animate-bounce rounded-md border border-gold bg-surface px-3 py-1.5 text-[10px] font-semibold text-gold shadow-lg"
+        >
+          Press{' '}
+          <kbd className="mx-0.5 rounded bg-surface-raised px-1 py-0.5 font-mono text-[9px] text-gold border border-gold/50">
+            TAB
+          </kbd>{' '}
+          to switch to the paper doll
+        </div>
+      )}
       <h2 className="font-display text-base font-bold text-gold">{character.name}</h2>
       <div data-region="head" className="flex justify-center">
         <RegionSlot slot="head" equipped={equipped} />
@@ -99,10 +118,7 @@ export function CharacterView() {
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
             aria-hidden="true"
           >
-            <svg
-              viewBox="0 0 200 220"
-              className="h-52 w-auto opacity-[0.18]"
-            >
+            <svg viewBox="0 0 200 220" className="h-52 w-auto opacity-[0.18]">
               {/* Outer spinning dashed ring */}
               <g
                 style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
@@ -128,12 +144,47 @@ export function CharacterView() {
                 strokeWidth="0.4"
               />
               {/* Gold rune marks at cardinal points */}
-              <line x1="100" y1="30" x2="100" y2="42" stroke="#c4943a" strokeWidth="1.2" />
-              <line x1="100" y1="178" x2="100" y2="190" stroke="#c4943a" strokeWidth="1.2" />
-              <line x1="20" y1="110" x2="32" y2="110" stroke="#c4943a" strokeWidth="1.2" />
-              <line x1="168" y1="110" x2="180" y2="110" stroke="#c4943a" strokeWidth="1.2" />
+              <line
+                x1="100"
+                y1="30"
+                x2="100"
+                y2="42"
+                stroke="#c4943a"
+                strokeWidth="1.2"
+              />
+              <line
+                x1="100"
+                y1="178"
+                x2="100"
+                y2="190"
+                stroke="#c4943a"
+                strokeWidth="1.2"
+              />
+              <line
+                x1="20"
+                y1="110"
+                x2="32"
+                y2="110"
+                stroke="#c4943a"
+                strokeWidth="1.2"
+              />
+              <line
+                x1="168"
+                y1="110"
+                x2="180"
+                y2="110"
+                stroke="#c4943a"
+                strokeWidth="1.2"
+              />
               {/* Center orb */}
-              <circle cx="100" cy="110" r="3" fill="none" stroke="#c4943a" strokeWidth="0.8" />
+              <circle
+                cx="100"
+                cy="110"
+                r="3"
+                fill="none"
+                stroke="#c4943a"
+                strokeWidth="0.8"
+              />
             </svg>
           </div>
           <CharacterFigure appearance={character.appearance} />

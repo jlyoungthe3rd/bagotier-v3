@@ -27,7 +27,7 @@ export const SLOT_TYPES = [
 export type SlotType = (typeof SLOT_TYPES)[number];
 
 /** Stat keys shown in the stat panel (v1 minimum set). */
-export const STAT_KEYS = ['hp', 'mp', 'def', 'str'] as const;
+export const STAT_KEYS = ['hp', 'mp', 'def', 'str', 'agi', 'int'] as const;
 
 export type StatKey = (typeof STAT_KEYS)[number];
 
@@ -58,7 +58,7 @@ export interface Character {
   readonly baseStats: Readonly<Record<StatKey, number>>;
 }
 
-/** Where a drag started (bag cell or equipment slot). */
+/** Where an item is located (bag cell or equipment slot). */
 export type DragOrigin =
   | { readonly kind: 'bag'; readonly index: number }
   | { readonly kind: 'slot'; readonly slot: SlotType };
@@ -68,22 +68,10 @@ export interface EquipmentState {
   readonly equipped: Readonly<Record<SlotType, ItemId | null>>;
   readonly bag: readonly (ItemId | null)[];
   readonly muted: boolean;
-  readonly activeDrag: { readonly itemId: ItemId; readonly origin: DragOrigin } | null;
+  readonly feedback: string | null;
+  readonly focusedSection: 'bag' | 'equipment' | null;
+  readonly focusedBagIndex: number;
+  readonly focusedSlot: SlotType;
+  readonly tabHintDismissed: boolean;
+  readonly showTabHint: boolean;
 }
-
-/**
- * The single value resolved per drag-end; triggers exactly one store
- * transition and at most one sound effect (SC-004).
- */
-export type DropOutcome =
-  | { readonly type: 'equip'; readonly itemId: ItemId; readonly slot: SlotType }
-  | {
-      readonly type: 'swap';
-      readonly itemId: ItemId;
-      readonly slot: SlotType;
-      readonly replacedItemId: ItemId;
-    }
-  | { readonly type: 'unequip'; readonly slot: SlotType; readonly toBagIndex?: number }
-  | { readonly type: 'moveInBag'; readonly itemId: ItemId; readonly toBagIndex: number }
-  | { readonly type: 'invalid' }
-  | { readonly type: 'cancelled' };

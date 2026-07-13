@@ -55,31 +55,4 @@ describe('store equip transition (US1)', () => {
     useInventoryStore.getState().equip(ghost, 'head');
     expect(useInventoryStore.getState().equipped.head).toBeNull();
   });
-
-  it('clears activeDrag after an equip', () => {
-    useInventoryStore.getState().startDrag(helm, { kind: 'bag', index: 0 });
-    useInventoryStore.getState().equip(helm, 'head');
-    expect(useInventoryStore.getState().activeDrag).toBeNull();
-  });
-});
-
-describe('store cancelDrag transition (US1 / FR-012)', () => {
-  beforeEach(() => {
-    registerItemSlotTypes({ [helm]: 'head' });
-    useInventoryStore.getState().reset();
-    useInventoryStore.getState().seedBag([helm]);
-  });
-
-  it('clears activeDrag without changing item ownership', () => {
-    useInventoryStore.getState().startDrag(helm, { kind: 'bag', index: 0 });
-    expect(useInventoryStore.getState().activeDrag).toEqual({
-      itemId: helm,
-      origin: { kind: 'bag', index: 0 },
-    });
-    useInventoryStore.getState().cancelDrag();
-    const s = useInventoryStore.getState();
-    expect(s.activeDrag).toBeNull();
-    expect(s.bag[0]).toBe(helm);
-    expect(Object.values(s.equipped).every((v) => v === null)).toBe(true);
-  });
 });

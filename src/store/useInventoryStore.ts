@@ -1,10 +1,5 @@
 import { create } from 'zustand';
-import type {
-  DragOrigin,
-  EquipmentState,
-  ItemId,
-  SlotType,
-} from '../types/domain';
+import type { EquipmentState, ItemId, SlotType } from '../types/domain';
 import { BAG_CAPACITY, SLOT_TYPES } from '../types/domain';
 
 /** Result of an `unequip` attempt (US3-AS3 full-bag rejection). */
@@ -38,7 +33,12 @@ function initialState(): EquipmentState {
     equipped: emptyEquipped(),
     bag: Array.from({ length: BAG_CAPACITY }, () => null),
     muted: false,
-    activeDrag: null,
+    feedback: null,
+    focusedSection: null,
+    focusedBagIndex: 0,
+    focusedSlot: 'head',
+    tabHintDismissed: false,
+    showTabHint: false,
   };
 }
 
@@ -122,13 +122,18 @@ export function moveInBagTransition(
 export interface InventoryStore extends EquipmentState {
   /** Places catalog IDs into the first bag cells (initial load). */
   seedBag: (itemIds: readonly ItemId[]) => void;
-  startDrag: (itemId: ItemId, origin: DragOrigin) => void;
   equip: (itemId: ItemId, slot: SlotType) => void;
   swap: (itemId: ItemId, slot: SlotType) => void;
   unequip: (slot: SlotType, toBagIndex?: number) => UnequipResult;
   moveInBag: (itemId: ItemId, toIndex: number) => void;
-  cancelDrag: () => void;
   toggleMute: () => void;
+  setFeedback: (feedback: string | null) => void;
+  dismissFeedback: () => void;
+  setFocusedSection: (section: 'bag' | 'equipment' | null) => void;
+  setFocusedBagIndex: (index: number) => void;
+  setFocusedSlot: (slot: SlotType) => void;
+  dismissTabHint: () => void;
+  triggerArrowKeyNav: () => void;
   /** Restores the pristine initial state (tests + reload). */
   reset: () => void;
 }
@@ -141,21 +146,45 @@ export const useInventoryStore = create<InventoryStore>()((set, get) => ({
       itemIds.slice(0, BAG_CAPACITY).forEach((id, i) => {
         bag[i] = id;
       });
-      return { ...initialState(), bag, muted: get().muted };
+      return {
+        ...initialState(),
+        bag,
+        muted: get().muted,
+        tabHintDismissed: get().tabHintDismissed,
+      };
     }),
-  startDrag: (itemId, origin) => set({ activeDrag: { itemId, origin } }),
-  equip: (itemId, slot) =>
-    set((s) => ({ ...equipTransition(s, itemId, slot), activeDrag: null })),
-  swap: (itemId, slot) =>
-    set((s) => ({ ...swapTransition(s, itemId, slot), activeDrag: null })),
+  equip: (itemId, slot) => set((s) => ({ ...equipTransition(s, itemId, slot) })),
+  swap: (itemId, slot) => set((s) => ({ ...swapTransition(s, itemId, slot) })),
   unequip: (slot, toBagIndex) => {
     const { state, result } = unequipTransition(get(), slot, toBagIndex);
-    set({ ...state, activeDrag: null });
+    if (result === 'bag-full') {
+      set({ ...state, feedback: 'Your bag is full — free a cell before unequipping.' });
+    } else {
+      set({ ...state, feedback: null });
+    }
     return result;
   },
   moveInBag: (itemId, toIndex) =>
-    set((s) => ({ ...moveInBagTransition(s, itemId, toIndex), activeDrag: null })),
-  cancelDrag: () => set({ activeDrag: null }),
+    set((s) => ({ ...moveInBagTransition(s, itemId, toIndex) })),
   toggleMute: () => set((s) => ({ muted: !s.muted })),
+  setFeedback: (msg) => set({ feedback: msg }),
+  dismissFeedback: () => set({ feedback: null }),
+  setFocusedSection: (section) =>
+    set(() => {
+      if (section === 'equipment') {
+        return { focusedSection: section, showTabHint: false, tabHintDismissed: true };
+      }
+      return { focusedSection: section };
+    }),
+  setFocusedBagIndex: (index) => set({ focusedBagIndex: index }),
+  setFocusedSlot: (slot) => set({ focusedSlot: slot }),
+  dismissTabHint: () => set({ showTabHint: false, tabHintDismissed: true }),
+  triggerArrowKeyNav: () =>
+    set((s) => {
+      if (!s.tabHintDismissed) {
+        return { showTabHint: true };
+      }
+      return {};
+    }),
   reset: () => set(initialState()),
 }));

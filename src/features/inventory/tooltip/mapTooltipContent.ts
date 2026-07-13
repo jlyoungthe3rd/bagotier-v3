@@ -15,9 +15,11 @@ const STAT_LABELS: Readonly<Record<StatKey, string>> = {
   mp: 'MP',
   def: 'DEF',
   str: 'STR',
+  agi: 'AGI',
+  int: 'INT',
 };
 
-const STAT_ORDER: readonly StatKey[] = ['hp', 'mp', 'def', 'str'];
+const STAT_ORDER: readonly StatKey[] = ['hp', 'mp', 'def', 'str', 'agi', 'int'];
 
 export interface TooltipContent {
   readonly title: string;

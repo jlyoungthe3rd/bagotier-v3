@@ -1,10 +1,11 @@
-import { useDroppable } from '@dnd-kit/core';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { ItemId, SlotType } from '../../types/domain';
 import { useInventoryStore } from '../../store/useInventoryStore';
 import { useItem } from '../inventory/useInventoryQuery';
 import { InventoryItem } from '../inventory/InventoryItem';
-import { useInvalidFlash } from '../inventory/dnd';
+import { useEffect, useRef } from 'react';
+import { useItemTooltip } from '../inventory/tooltip';
+import { handleEquipmentKeyDown } from '../inventory/keyboard';
 
 const SLOT_LABELS: Readonly<Record<SlotType, string>> = {
   head: 'Head',
@@ -26,55 +27,41 @@ const SLOT_ICONS: Readonly<Record<SlotType, string>> = {
   accessory: '💍',
 };
 
-type Highlight = 'idle' | 'valid' | 'invalid';
-
-const HIGHLIGHT_CLASSES: Readonly<Record<Highlight, string>> = {
-  idle: 'border-slot-idle/60',
-  valid: 'border-slot-valid shadow-[0_0_14px_rgba(86,173,116,0.45)]',
-  invalid: 'border-slot-invalid shadow-[0_0_14px_rgba(217,79,79,0.45)]',
-};
-
 interface EquipmentSlotProps {
   readonly slot: SlotType;
   readonly itemId: ItemId | null;
 }
 
 /**
- * A droppable equipment slot with idle/valid/invalid highlight states
- * (FR-005) and a shake animation on rejected drops (US1-AS2).
+ * An equipment slot displaying the equipped item icon or an empty silhouette.
  */
 export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
-  const { setNodeRef, isOver } = useDroppable({
-    id: `slot-${slot}`,
-    data: { kind: 'slot', slot },
-  });
-  const activeDrag = useInventoryStore((s) => s.activeDrag);
-  const draggedItem = useItem(activeDrag?.itemId ?? null);
   const equippedItem = useItem(itemId);
-  const invalidFlash = useInvalidFlash();
   const reducedMotion = useReducedMotion();
 
-  let highlight: Highlight = 'idle';
-  if (draggedItem !== undefined) {
-    if (draggedItem.slotType === slot) highlight = 'valid';
-    else if (isOver) highlight = 'invalid';
-  }
+  const focusedSection = useInventoryStore((s) => s.focusedSection);
+  const focusedSlot = useInventoryStore((s) => s.focusedSlot);
+  const tooltip = useItemTooltip();
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
 
-  const flashNonce = invalidFlash?.slot === slot ? invalidFlash.nonce : 0;
+  const isActive = focusedSection === 'equipment' && focusedSlot === slot;
+
+  useEffect(() => {
+    if (isActive && equippedItem === undefined) {
+      if (buttonRef.current && document.activeElement !== buttonRef.current) {
+        buttonRef.current.focus();
+      }
+    }
+  }, [isActive, equippedItem]);
+
+  const tabIndex = focusedSection === 'equipment' && focusedSlot === slot ? 0 : -1;
 
   return (
-    <motion.div
-      key={`flash-${String(flashNonce)}`}
-      animate={flashNonce > 0 ? { x: [0, -6, 6, -4, 4, 0] } : { x: 0 }}
-      transition={{ duration: 0.3 }}
-      className="flex flex-col items-center gap-1"
-    >
+    <div className="flex flex-col items-center gap-1">
       <div
-        ref={setNodeRef}
         data-testid={`slot-${slot}`}
-        data-highlight={highlight}
         aria-label={`${SLOT_LABELS[slot]} slot`}
-        className={`relative h-cell w-cell border bg-surface p-0.5 transition-all duration-200 ${HIGHLIGHT_CLASSES[highlight]}`}
+        className="relative h-cell w-cell border bg-surface p-0.5 transition-all duration-200 border-slot-idle/60"
       >
         {/* Corner bracket accents — the JRPG-style slot framing */}
         <div className="pointer-events-none absolute left-0.5 top-0.5 h-2.5 w-2.5 border-l border-t border-gold/40" />
@@ -103,19 +90,36 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               />
             </motion.div>
           ) : (
-            <span
-              aria-hidden="true"
-              data-testid={`slot-empty-${slot}`}
-              className="flex h-full w-full items-center justify-center text-xl opacity-15 grayscale"
+            <button
+              ref={buttonRef}
+              type="button"
+              tabIndex={tabIndex}
+              data-testid={`slot-empty-button-${slot}`}
+              aria-label={`Empty ${SLOT_LABELS[slot]} slot`}
+              className="flex h-full w-full items-center justify-center bg-transparent transition-colors outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"
+              onFocus={() => {
+                useInventoryStore.getState().setFocusedSection('equipment');
+                useInventoryStore.getState().setFocusedSlot(slot);
+                tooltip.dismiss();
+              }}
+              onKeyDown={(event) => {
+                handleEquipmentKeyDown(event, slot);
+              }}
             >
-              {SLOT_ICONS[slot]}
-            </span>
+              <span
+                aria-hidden="true"
+                data-testid={`slot-empty-${slot}`}
+                className="flex h-full w-full items-center justify-center text-xl opacity-15 grayscale"
+              >
+                {SLOT_ICONS[slot]}
+              </span>
+            </button>
           )}
         </AnimatePresence>
       </div>
       <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-ink-muted/70">
         {SLOT_LABELS[slot]}
       </span>
-    </motion.div>
+    </div>
   );
 }

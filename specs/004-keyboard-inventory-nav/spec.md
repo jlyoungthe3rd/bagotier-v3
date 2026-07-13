@@ -4,7 +4,7 @@
 
 **Created**: 2026-07-12
 
-**Status**: Draft
+**Status**: Completed
 
 **Input**: User description: "Add a feature that allows a keyboard user to navigate the inventory grid using the arrow keys. They can use TAB to switch between the inventory grid and the paper doll. If a user hits spacebar or enter the selected item will equip to the correct slot (or unequip if they are navigating the paper doll container). The tooltip should display same as when a mouseOver happens. If a user attempts to use the keyboard to navigate the inventory grid, show a small tooltip over the paper doll that lets the user know they can use TAB to select the paper doll."
 

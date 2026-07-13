@@ -1,10 +1,6 @@
-import { DndContext } from '@dnd-kit/core';
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
-import {
-  InventoryItem,
-  ItemTilePreview,
-} from '../../src/features/inventory/InventoryItem';
+import { InventoryItem } from '../../src/features/inventory/InventoryItem';
 import { ItemTooltipProvider } from '../../src/features/inventory/tooltip';
 import type { Item } from '../../src/types/domain';
 import { toItemId } from '../../src/types/domain';
@@ -25,11 +21,9 @@ describe('InventoryItem', () => {
     const item = makeItem({ name: 'Iron Helm', icon: '🪖' });
 
     render(
-      <DndContext>
-        <ItemTooltipProvider>
-          <InventoryItem item={item} origin={{ kind: 'bag', index: 0 }} />
-        </ItemTooltipProvider>
-      </DndContext>,
+      <ItemTooltipProvider>
+        <InventoryItem item={item} origin={{ kind: 'bag', index: 0 }} />
+      </ItemTooltipProvider>,
     );
 
     const tile = screen.getByRole('button', { name: 'Iron Helm (head)' });
@@ -42,23 +36,12 @@ describe('InventoryItem', () => {
     const item = makeItem({ icon: '   ' });
 
     render(
-      <DndContext>
-        <ItemTooltipProvider>
-          <InventoryItem item={item} origin={{ kind: 'bag', index: 0 }} />
-        </ItemTooltipProvider>
-      </DndContext>,
+      <ItemTooltipProvider>
+        <InventoryItem item={item} origin={{ kind: 'bag', index: 0 }} />
+      </ItemTooltipProvider>,
     );
 
     expect(screen.getByText('◻️')).toBeInTheDocument();
     expect(screen.queryByText('Test Item')).toBeNull();
-  });
-});
-
-describe('ItemTilePreview', () => {
-  it('renders icon-only preview and no visible item-name text', () => {
-    const item = makeItem({ name: 'Wizard Hat', icon: '🎩' });
-    render(<ItemTilePreview item={item} />);
-    expect(screen.getByText('🎩')).toBeInTheDocument();
-    expect(screen.queryByText('Wizard Hat')).toBeNull();
   });
 });

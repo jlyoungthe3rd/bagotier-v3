@@ -1,4 +1,4 @@
-import { motion, useReducedMotion } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import type { StatKey } from '../../types/domain';
 import { STAT_KEYS } from '../../types/domain';
@@ -13,25 +13,18 @@ const STAT_LABELS: Readonly<Record<StatKey, string>> = {
   mp: 'MP',
   def: 'DEF',
   str: 'STR',
-};
-
-/** Reference ceiling for the stat bar — generous enough to include item bonuses. */
-const STAT_MAX: Readonly<Record<StatKey, number>> = {
-  hp: 80,
-  mp: 60,
-  def: 30,
-  str: 30,
+  agi: 'AGI',
+  int: 'INT',
 };
 
 /**
- * Effective-stat panel: derives base + equipped modifiers on every render
- * from store IDs resolved against the React Query cache — values are never
- * stored (invariant I4). Changed stats pulse and show their delta (FR-014).
+ * Attributes Panel: Displays base + equipped modifiers.
+ * Rendered in a single row under the paper doll, using a premium frosted-glass container.
+ * Only the final computed value is displayed, color-coded for buffs/debuffs.
  */
 export function StatPanel() {
   const { data: charData } = useCharacterQuery();
   const equipped = useInventoryStore((s) => s.equipped);
-  const reducedMotion = useReducedMotion();
 
   const { data: equippedItems } = useQuery({
     queryKey: queryKeys.items,
@@ -52,65 +45,46 @@ export function StatPanel() {
     <section
       aria-label="Character stats"
       data-testid="stat-panel"
-      className="w-full shrink-0 rounded border border-slot-idle/40 bg-surface-raised/60 p-3 sm:p-4"
+      className="w-full rounded-lg border border-white/10 bg-surface-raised/30 p-3.5 backdrop-blur-md shadow-lg sm:p-4"
     >
-      <h2 className="mb-4 font-display text-[10px] font-bold uppercase tracking-[0.22em] text-gold/80">
+      <h2 className="mb-3 font-display text-[9px] font-bold uppercase tracking-[0.2em] text-gold/80">
         Attributes
       </h2>
-      <dl className="flex flex-col gap-3.5">
+      <div className="grid grid-cols-3 gap-y-3.5 gap-x-2 sm:grid-cols-6 sm:gap-x-4">
         {STAT_KEYS.map((key) => {
           const delta = deltas[key];
           const kind = delta > 0 ? 'buff' : delta < 0 ? 'debuff' : 'none';
-          const barPct = Math.min(100, (effective[key] / STAT_MAX[key]) * 100);
-          const barColor =
-            kind === 'buff' ? 'bg-buff' : kind === 'debuff' ? 'bg-debuff' : 'bg-ember';
+
+          let valueColor = 'text-ink';
+          if (kind === 'buff') {
+            valueColor = 'text-buff font-bold';
+          } else if (kind === 'debuff') {
+            valueColor = 'text-debuff font-bold';
+          }
 
           return (
             <div
               key={key}
               data-testid={`stat-${key}`}
               data-delta={kind}
-              className="space-y-1"
+              className="flex flex-col items-center justify-center rounded bg-surface/20 p-2 border border-white/5 sm:p-2.5"
             >
-              <div className="flex items-baseline justify-between gap-2">
-                <dt className="text-[10px] font-semibold uppercase tracking-widest text-ink-muted">
-                  {STAT_LABELS[key]}
-                </dt>
-                <dd className="flex items-baseline gap-1 font-mono">
-                  <motion.span
-                    key={`${key}-${String(effective[key])}`}
-                    initial={reducedMotion === true ? false : { scale: 1.4, color: '#e8ddd0' }}
-                    animate={{ scale: 1 }}
-                    transition={{ duration: 0.22 }}
-                    className="inline-block text-base font-bold leading-none"
-                  >
-                    {effective[key]}
-                  </motion.span>
-                  {delta !== 0 ? (
-                    <span
-                      data-testid={`stat-${key}-delta`}
-                      className={`text-[10px] font-bold ${
-                        delta > 0 ? 'text-buff' : 'text-debuff'
-                      }`}
-                    >
-                      {delta > 0 ? `+${String(delta)}` : String(delta)}
-                    </span>
-                  ) : null}
-                </dd>
-              </div>
-              {/* Stat bar */}
-              <div className="h-0.5 overflow-hidden rounded-full bg-slot-idle/60">
-                <motion.div
-                  className={`h-full rounded-full ${barColor}`}
-                  initial={false}
-                  animate={{ width: `${String(barPct)}%` }}
-                  transition={{ duration: 0.4, ease: 'easeOut' }}
-                />
-              </div>
+              <span className="text-[9px] font-semibold uppercase tracking-wider text-ink-muted/80">
+                {STAT_LABELS[key]}
+              </span>
+              <motion.span
+                key={`${key}-${String(effective[key])}`}
+                initial={{ scale: 1.25 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 0.2 }}
+                className={`mt-0.5 text-sm font-semibold tracking-tight ${valueColor}`}
+              >
+                {effective[key]}
+              </motion.span>
             </div>
           );
         })}
-      </dl>
+      </div>
     </section>
   );
 }

@@ -18,7 +18,7 @@ export const items: readonly Item[] = [
     name: 'Wizard Hat',
     icon: '🎩',
     slotType: 'head',
-    modifiers: { mp: 8, def: -1 },
+    modifiers: { mp: 8, def: -1, int: 4 },
   },
   {
     id: toItemId('steel-cuirass'),
@@ -32,7 +32,7 @@ export const items: readonly Item[] = [
     name: 'Silk Robe',
     icon: '🥋',
     slotType: 'body',
-    modifiers: { mp: 6 },
+    modifiers: { mp: 6, int: 5 },
   },
   {
     id: toItemId('plated-greaves'),
@@ -46,7 +46,7 @@ export const items: readonly Item[] = [
     name: 'Swift Trousers',
     icon: '👖',
     slotType: 'legs',
-    modifiers: { hp: 2, str: 1 },
+    modifiers: { hp: 2, str: 1, agi: 4 },
   },
   {
     id: toItemId('leather-gloves'),
@@ -67,7 +67,7 @@ export const items: readonly Item[] = [
     name: 'Travel Boots',
     icon: '🥾',
     slotType: 'feet',
-    modifiers: { hp: 3 },
+    modifiers: { hp: 3, agi: 3 },
   },
   {
     id: toItemId('iron-sabatons'),
@@ -88,14 +88,14 @@ export const items: readonly Item[] = [
     name: 'Oak Staff',
     icon: '🪄',
     slotType: 'weapon',
-    modifiers: { mp: 10, str: -2 },
+    modifiers: { mp: 10, str: -2, int: 6 },
   },
   {
     id: toItemId('lucky-charm'),
     name: 'Lucky Charm',
     icon: '🍀',
     slotType: 'accessory',
-    modifiers: {},
+    modifiers: { agi: 2, int: 2 },
   },
   {
     id: toItemId('ruby-ring'),

@@ -22,7 +22,11 @@ import {
 
 interface ItemTooltipContextValue {
   readonly tooltipId: string;
-  readonly open: (item: Item, mode: TooltipTriggerMode, element: HTMLElement | null) => void;
+  readonly open: (
+    item: Item,
+    mode: TooltipTriggerMode,
+    element: HTMLElement | null,
+  ) => void;
   readonly closeFor: (itemId: ItemId, mode: TooltipTriggerMode) => void;
   readonly dismiss: () => void;
   readonly ariaDescribedByFor: (itemId: ItemId) => string | undefined;
@@ -30,7 +34,13 @@ interface ItemTooltipContextValue {
 
 const ItemTooltipContext = createContext<ItemTooltipContextValue | null>(null);
 
-function TooltipNode({ controller, tooltipId }: { controller: ItemTooltipController; tooltipId: string }) {
+function TooltipNode({
+  controller,
+  tooltipId,
+}: {
+  controller: ItemTooltipController;
+  tooltipId: string;
+}) {
   const { snapshot } = controller;
   const { refs, floatingStyles, update, placement } = useFloating({
     open: snapshot.open,

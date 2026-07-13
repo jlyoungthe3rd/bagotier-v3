@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { ItemCatalogSchema, SlotTypeSchema, StatKeySchema } from '../../src/types/schemas';
+import {
+  ItemCatalogSchema,
+  SlotTypeSchema,
+  StatKeySchema,
+} from '../../src/types/schemas';
 import { items } from '../../src/mocks/items';
 
 describe('item catalog contract', () => {
@@ -25,8 +29,6 @@ describe('item catalog contract', () => {
   });
 
   it('has at least one item with a negative modifier (clamping edge case)', () => {
-    expect(
-      items.some((i) => Object.values(i.modifiers).some((v) => v < 0)),
-    ).toBe(true);
+    expect(items.some((i) => Object.values(i.modifiers).some((v) => v < 0))).toBe(true);
   });
 });

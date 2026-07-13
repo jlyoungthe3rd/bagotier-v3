@@ -1,15 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { act } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { arrow, pickUp, renderApp } from './dnd-test-utils';
+import { act, screen, fireEvent } from '@testing-library/react';
+import { renderApp } from './dnd-test-utils';
 import { audioEngine } from '../../src/features/audio/useSound';
 import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { toItemId } from '../../src/types/domain';
 
-/**
- * US4 — each interaction plays its distinct sound exactly once (SC-004),
- * spied at the audio-engine boundary; mute silences everything.
- */
 describe('exactly-once sound playback (US4)', () => {
   const playback = vi.spyOn(audioEngine, 'playback').mockImplementation(() => {
     /* silent in tests */
@@ -17,97 +12,74 @@ describe('exactly-once sound playback (US4)', () => {
 
   beforeEach(() => {
     playback.mockClear();
+    useInventoryStore.getState().reset();
   });
 
-  it('plays pickup once on drag start and equip once on a valid drop', async () => {
-    const user = userEvent.setup();
+  it('plays equip sound once on direct click-to-equip', async () => {
     await renderApp();
 
-    await pickUp(user, 'item-iron-helm');
+    const item = screen.getByTestId('item-iron-helm');
+    fireEvent.click(item);
+
     expect(playback).toHaveBeenCalledTimes(1);
-    expect(playback).toHaveBeenCalledWith('pickup');
-
-    await arrow(user, 'ArrowUp', 8);
-    await user.keyboard('{Enter}');
-
-    expect(playback).toHaveBeenCalledTimes(2);
-    expect(playback).toHaveBeenLastCalledWith('equip');
+    expect(playback).toHaveBeenCalledWith('equip');
   });
 
-  it('plays the equip sound once for a swap', async () => {
-    const user = userEvent.setup();
+  it('plays the equip sound once for a click-to-swap', async () => {
     await renderApp();
     act(() => {
       useInventoryStore.getState().equip(toItemId('iron-helm'), 'head');
     });
 
-    await pickUp(user, 'item-wizard-hat'); // cell 1 → occupied head slot
-    await arrow(user, 'ArrowLeft', 4);
-    await arrow(user, 'ArrowUp', 8);
-    await user.keyboard('{Enter}');
+    const wizardHat = screen.getByTestId('item-wizard-hat');
+    fireEvent.click(wizardHat);
 
-    expect(playback.mock.calls.filter(([e]) => e === 'equip')).toHaveLength(1);
+    expect(playback).toHaveBeenCalledTimes(1);
+    expect(playback).toHaveBeenCalledWith('equip');
   });
 
-  it('plays the unequip sound once when dragging slot → grid', async () => {
-    const user = userEvent.setup();
+  it('plays the unequip sound once when unequipping an item', async () => {
     await renderApp();
     act(() => {
       useInventoryStore.getState().equip(toItemId('iron-helm'), 'head');
     });
 
-    await pickUp(user, 'item-iron-helm');
-    await arrow(user, 'ArrowDown', 8);
-    await user.keyboard('{Enter}');
+    const item = screen.getByTestId('item-iron-helm');
+    fireEvent.click(item);
 
-    expect(playback.mock.calls.filter(([e]) => e === 'unequip')).toHaveLength(1);
+    expect(playback).toHaveBeenCalledTimes(1);
+    expect(playback).toHaveBeenCalledWith('unequip');
   });
 
-  it('plays the invalid sound once for a rejected drop', async () => {
-    const user = userEvent.setup();
+  it('plays the invalid sound once when attempting to unequip into a full bag', async () => {
     await renderApp();
+    act(() => {
+      const ids = Array.from({ length: 24 }, (_, i) =>
+        toItemId(i === 0 ? 'iron-helm' : `item-${String(i)}`),
+      );
+      useInventoryStore.getState().seedBag(ids);
+      useInventoryStore.getState().equip(toItemId('iron-helm'), 'head');
 
-    await pickUp(user, 'item-iron-helm');
-    await arrow(user, 'ArrowRight', 8); // legs slot — wrong type
-    await arrow(user, 'ArrowUp', 8);
-    await user.keyboard('{Enter}');
+      const bagCopy = [...useInventoryStore.getState().bag];
+      bagCopy[0] = toItemId('extra-item');
+      useInventoryStore.setState({ bag: bagCopy });
+    });
 
-    expect(playback.mock.calls.filter(([e]) => e === 'invalid')).toHaveLength(1);
-  });
+    const item = screen.getByTestId('item-iron-helm');
+    fireEvent.click(item);
 
-  it('plays the invalid sound once when a drag is cancelled', async () => {
-    const user = userEvent.setup();
-    await renderApp();
-
-    await pickUp(user, 'item-iron-helm');
-    await user.keyboard('{Escape}');
-
-    expect(playback.mock.calls.filter(([e]) => e === 'invalid')).toHaveLength(1);
-  });
-
-  it('plays no sound for a bag reorder', async () => {
-    const user = userEvent.setup();
-    await renderApp();
-
-    await pickUp(user, 'item-iron-helm');
-    playback.mockClear();
-    await arrow(user, 'ArrowRight', 8);
-    await arrow(user, 'ArrowDown', 8); // empty cell 14
-    await user.keyboard('{Enter}');
-
-    expect(playback).not.toHaveBeenCalled();
+    expect(playback).toHaveBeenCalledTimes(1);
+    expect(playback).toHaveBeenCalledWith('invalid');
   });
 
   it('plays zero sounds when muted (FR-010)', async () => {
-    const user = userEvent.setup();
     await renderApp();
     act(() => {
       useInventoryStore.getState().toggleMute();
     });
 
-    await pickUp(user, 'item-iron-helm');
-    await arrow(user, 'ArrowUp', 8);
-    await user.keyboard('{Enter}');
+    const item = screen.getByTestId('item-iron-helm');
+    fireEvent.click(item);
 
     expect(playback).not.toHaveBeenCalled();
     expect(useInventoryStore.getState().equipped.head).toBe('iron-helm');

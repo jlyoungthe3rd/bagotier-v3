@@ -2,7 +2,10 @@ import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
 import { renderApp } from '../integration/dnd-test-utils';
-import { waitForTooltip, waitForTooltipToClose } from '../integration/item-tooltip-test-utils';
+import {
+  waitForTooltip,
+  waitForTooltipToClose,
+} from '../integration/item-tooltip-test-utils';
 
 describe('item tooltip UI contract', () => {
   it('renders role=tooltip and associates trigger through aria-describedby', async () => {
