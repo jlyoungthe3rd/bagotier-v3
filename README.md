@@ -8,39 +8,39 @@ A browser-based game inventory management UI built entirely client-side with **R
 
 ## Why This Exists
 
-This project is an engineering portfolio piece. The domain (RPG inventory) is intentionally approachable so that the focus stays on *how* the frontend was built: normalized state, formal invariants, a typed component contract layer, and a three-layer test suite — all spec'd and reviewed before the first implementation file was touched.
+This project is an engineering portfolio piece. The domain (RPG inventory) is intentionally approachable so that the focus stays on _how_ the frontend was built: normalized state, formal invariants, a typed component contract layer, and a three-layer test suite — all spec'd and reviewed before the first implementation file was touched.
 
 ### Frontend Engineering Signals at a Glance
 
-| Area | What's Here |
-|------|-------------|
-| **React** | React 19 with hooks, custom selectors, and suspense-compatible async state |
-| **TypeScript** | Strict mode + `noUncheckedIndexedAccess`; branded types; discriminated unions as control flow |
+| Area                 | What's Here                                                                                        |
+| -------------------- | -------------------------------------------------------------------------------------------------- |
+| **React**            | React 19 with hooks, custom selectors, and suspense-compatible async state                         |
+| **TypeScript**       | Strict mode + `noUncheckedIndexedAccess`; branded types; discriminated unions as control flow      |
 | **State management** | Zustand (session/UI) + React Query (data); explicit ownership boundaries and no entity duplication |
-| **Component design** | Pure state transitions decoupled from components; single-responsibility droppable/draggable split |
-| **Testing** | Contract → Unit → Integration pyramid; tests defined before implementation |
-| **Accessibility** | dnd-kit `KeyboardSensor`, screen-reader `Announcements`, WCAG 2.1 AA contrast |
-| **Performance** | 60 fps drag, ≤ 100 ms stat update, ≤ 250 KB gz bundle — declared as acceptance criteria upfront |
-| **Tooling** | Vite, ESLint (zero warnings), Prettier, GitHub Actions → GitHub Pages |
+| **Component design** | Pure state transitions decoupled from components; single-responsibility droppable/draggable split  |
+| **Testing**          | Contract → Unit → Integration pyramid; tests defined before implementation                         |
+| **Accessibility**    | dnd-kit `KeyboardSensor`, screen-reader `Announcements`, WCAG 2.1 AA contrast                      |
+| **Performance**      | 60 fps drag, ≤ 100 ms stat update, ≤ 250 KB gz bundle — declared as acceptance criteria upfront    |
+| **Tooling**          | Vite, ESLint (zero warnings), Prettier, GitHub Actions → GitHub Pages                              |
 
 ---
 
 ## Stack
 
-| Layer | Technology |
-|-------|-----------|
-| Framework | React 19 |
-| Build | Vite 8 |
-| Language | TypeScript 5 (strict + `noUncheckedIndexedAccess`) |
-| State — session | Zustand 5 |
-| State — data | TanStack React Query 5 |
-| Drag and drop | @dnd-kit/core |
-| Animation | Framer Motion |
-| Tooltip positioning | @floating-ui/react |
-| Styling | Tailwind CSS 3 |
-| Validation | Zod 4 |
-| Testing | Vitest + React Testing Library |
-| CI/CD | GitHub Actions → GitHub Pages |
+| Layer               | Technology                                         |
+| ------------------- | -------------------------------------------------- |
+| Framework           | React 19                                           |
+| Build               | Vite 8                                             |
+| Language            | TypeScript 5 (strict + `noUncheckedIndexedAccess`) |
+| State — session     | Zustand 5                                          |
+| State — data        | TanStack React Query 5                             |
+| Drag and drop       | @dnd-kit/core                                      |
+| Animation           | Framer Motion                                      |
+| Tooltip positioning | @floating-ui/react                                 |
+| Styling             | Tailwind CSS 3                                     |
+| Validation          | Zod 4                                              |
+| Testing             | Vitest + React Testing Library                     |
+| CI/CD               | GitHub Actions → GitHub Pages                      |
 
 ---
 
@@ -50,22 +50,22 @@ Single-page app, no backend. All data is client-local. The design challenge was 
 
 ### State ownership split
 
-| Owner | Holds | Never holds |
-|-------|-------|-------------|
-| **React Query** | Item catalog, character, base stats | Session state |
-| **Zustand** | `ItemId[]` references, mute flag, drag state | `Item` entity objects |
+| Owner           | Holds                                        | Never holds           |
+| --------------- | -------------------------------------------- | --------------------- |
+| **React Query** | Item catalog, character, base stats          | Session state         |
+| **Zustand**     | `ItemId[]` references, mute flag, drag state | `Item` entity objects |
 
 Components resolve IDs → full items via a `useItem(id)` selector on the React Query cache. Effective stats are always derived (`base + Σ equipped modifiers`), never stored — so they can't drift under rapid interactions.
 
 ### Formal invariants (documented before implementation)
 
-| | |
-|-|-|
-| **I1** Single location | Every `ItemId` lives in exactly one place: bag cell, slot, or nowhere |
-| **I2** Slot compatibility | `equipped[slot] = id` requires `catalog[id].slotType === slot` |
-| **I3** Bounded bag | `bag.length === BAG_CAPACITY` always; unequip into a full bag is rejected |
-| **I4** Derived stats only | Stats computed on the fly — cannot double-count modifiers |
-| **I5** No entity copies | Zustand holds only IDs and primitives; enforced by a contract test |
+|                           |                                                                           |
+| ------------------------- | ------------------------------------------------------------------------- |
+| **I1** Single location    | Every `ItemId` lives in exactly one place: bag cell, slot, or nowhere     |
+| **I2** Slot compatibility | `equipped[slot] = id` requires `catalog[id].slotType === slot`            |
+| **I3** Bounded bag        | `bag.length === BAG_CAPACITY` always; unequip into a full bag is rejected |
+| **I4** Derived stats only | Stats computed on the fly — cannot double-count modifiers                 |
+| **I5** No entity copies   | Zustand holds only IDs and primitives; enforced by a contract test        |
 
 ### Notable implementation choices
 
@@ -100,11 +100,11 @@ tests/
 
 Three independently-scoped features, each following the same spec-first workflow:
 
-| # | Feature | What Was Delivered |
-|---|---------|-------------------|
-| **001** | Game Inventory System | Core drag-and-drop equipping, stat panel, sound effects, generated character, 24-cell bag |
-| **002** | Item Hover Tooltip | Viewport-aware tooltip using `@floating-ui/react`, single-tooltip guarantee, rapid movement handling |
-| **003** | Icon-Only Inventory | Stripped in-slot item labels; icon-only slots with accessible fallback states |
+| #       | Feature               | What Was Delivered                                                                                   |
+| ------- | --------------------- | ---------------------------------------------------------------------------------------------------- |
+| **001** | Game Inventory System | Core drag-and-drop equipping, stat panel, sound effects, generated character, 24-cell bag            |
+| **002** | Item Hover Tooltip    | Viewport-aware tooltip using `@floating-ui/react`, single-tooltip guarantee, rapid movement handling |
+| **003** | Icon-Only Inventory   | Stripped in-slot item labels; icon-only slots with accessible fallback states                        |
 
 Each iteration built on the prior feature without requiring architectural changes — a direct result of the upfront data model and normalized state design.
 
