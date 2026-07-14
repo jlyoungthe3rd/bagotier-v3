@@ -110,26 +110,15 @@ Each iteration built on the prior feature without requiring architectural change
 
 ---
 
-## Spec-First Workflow
+## Specifications & Testing
 
-Every feature begins in `specs/` before any implementation code is written. A set of AI-assisted planning agents (speckit) turn a one-paragraph feature description into a full set of design artifacts — spec, research, data model, architecture plan, and a dependency-ordered task list — all reviewed against a project constitution before coding starts.
+Before any implementation code was written, the features were spec'd out with clear user stories and functional requirements. For historical reference, the consolidated specifications for all features are maintained in [specifications.md](file:///Users/jlyoungthe3rd/Workspace/bagotierV3/docs/specifications.md).
 
-```
-specs/
-├── 001-game-inventory-system/
-│   ├── spec.md          # user stories, acceptance scenarios, FRs, success criteria
-│   ├── research.md      # technical alternatives considered and decisions made
-│   ├── data-model.md    # entity definitions, ownership map, invariants, state transitions
-│   ├── plan.md          # architecture, project structure, constitution gate checks
-│   ├── contracts/       # Zod schema contracts for every data boundary
-│   └── tasks.md         # dependency-ordered, file-exact task list for implementation
-├── 002-item-hover-tooltip/
-└── 003-icon-only-inventory/
-```
+This focused documentation approach keeps the repository clean and ensures that:
 
-The result: by the time a single implementation file is touched, the architecture is decided, contracts are written, and tests are scoped. Every commit is traceable from user story → acceptance scenario → task → code → test.
-
-**On AI assistance:** The LLM (GitHub Copilot + speckit agents) handled spec drafting, trade-off research, data model generation, and sequential task implementation. The invariants, ownership boundaries, performance budgets, and architectural constraints were deliberate human decisions made before the LLM wrote a line of code.
+1. The **specifications** drive the acceptance criteria and test cases.
+2. The **types** and **Zod schemas** act as code-enforced contracts.
+3. The **test suite** acts as the automated specification validator.
 
 ---
 
