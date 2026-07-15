@@ -5,6 +5,7 @@ This rule defines the standard operational workflow for all feature development 
 ## Workflow Phases & Rules
 
 ### Phase 1: Core Feature Implementation
+
 - **Scope Focus**: Implement core logic, application architecture, state management, and foundational HTML markup directly within the current workspace context.
 - **Constraints**:
   - Do NOT write unit tests during initial coding.
@@ -14,16 +15,19 @@ This rule defines the standard operational workflow for all feature development 
 ---
 
 ### Phase 2: Local App Review & Iteration Loop
+
 - **Local Preview**: Launch local dev server (`npm run dev`) and open local preview browser URL.
 - **Interactive Iteration Loop**: Keep the dev server active and perform any requested adjustments to logic/markup iteratively until satisfied.
 - **Explicit Approval Gate**: Prompt the user via the `ask_question` interactive tool to explicitly approve advancing to Phase 3:
-  - *Proceed to Phase 3* (Staging, Draft PR, Sub-agents).
-  - *Make further core changes*.
+  - _Proceed to Phase 3_ (Staging, Draft PR, Sub-agents).
+  - _Make further core changes_.
 
 ---
 
 ### Phase 3: Handoff Action (Commit & Draft PR)
-*Executes ONLY after explicit user confirmation in Phase 2.*
+
+_Executes ONLY after explicit user confirmation in Phase 2._
+
 - **Git Operations**:
   - Stage changes: `git add .`
   - Commit to new feature branch: `git checkout -b feature/<feature-name>` & `git commit -m "feat: core implementation"`
@@ -33,6 +37,7 @@ This rule defines the standard operational workflow for all feature development 
 ---
 
 ### Phase 4: Parallel Sub-Agent Execution in Isolated Git Worktrees
+
 - Create 3 isolated Git worktrees off the feature branch:
   - `.worktrees/test`
   - `.worktrees/a11y`
@@ -45,6 +50,7 @@ This rule defines the standard operational workflow for all feature development 
 ---
 
 ### Phase 5: Push Updates, Final Verification & Cleanup
+
 - Commit and push each sub-agent worktree branch to remote and merge back into `feature/<feature-name>`.
 - Refresh/verify local preview with user.
 - Remove and prune Git worktrees (`git worktree remove .worktrees/...` and `git worktree prune`).

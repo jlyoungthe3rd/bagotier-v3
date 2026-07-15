@@ -8,6 +8,7 @@ import { CharacterView } from './features/character/CharacterView';
 import { StatPanel } from './features/character/StatPanel';
 import { MuteToggle } from './features/audio/MuteToggle';
 import { GitHubLink } from './features/github/GitHubLink';
+import { WipBanner } from './features/banner/WipBanner';
 import type { Item } from './types/domain';
 
 /** Skeleton block used by the designed loading state (Constitution III). */
@@ -74,10 +75,11 @@ function InventoryScreen() {
     <ItemTooltipProvider>
       {/* On sm+ the layout locks to viewport height with no page scroll. */}
       <main className="mx-auto flex max-w-4xl flex-col gap-4 px-4 py-4 sm:h-dvh sm:gap-5 sm:overflow-hidden sm:px-6 sm:py-5">
-        <header className="flex shrink-0 items-center border-b border-slot-idle/40 pb-4">
+        <header className="flex shrink-0 items-center justify-between border-b border-slot-idle/40 pb-4">
           <h1 className="font-display text-xl font-bold text-ink sm:text-2xl">
             Bagotier
           </h1>
+          <WipBanner />
         </header>
 
         {/* Body: inventory bag left, paper doll + stat block right */}
