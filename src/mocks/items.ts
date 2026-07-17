@@ -18,7 +18,7 @@ export const items: readonly Item[] = [
     name: 'Wizard Hat',
     icon: '🎩',
     slotType: 'head',
-    modifiers: { mp: 8, def: -1, int: 4 },
+    modifiers: { mp: 8, int: 4 },
   },
   {
     id: toItemId('steel-cuirass'),
@@ -60,7 +60,7 @@ export const items: readonly Item[] = [
     name: 'Cursed Gauntlets',
     icon: '🦾',
     slotType: 'hands',
-    modifiers: { str: 7, hp: -3 },
+    modifiers: { str: 7 },
   },
   {
     id: toItemId('travel-boots'),
@@ -74,7 +74,7 @@ export const items: readonly Item[] = [
     name: 'Iron Sabatons',
     icon: '👢',
     slotType: 'feet',
-    modifiers: { def: 3, mp: -2 },
+    modifiers: { def: 3 },
   },
   {
     id: toItemId('bronze-sword'),
@@ -88,7 +88,7 @@ export const items: readonly Item[] = [
     name: 'Oak Staff',
     icon: '🪄',
     slotType: 'weapon',
-    modifiers: { mp: 10, str: -2, int: 6 },
+    modifiers: { mp: 10, int: 6 },
   },
   {
     id: toItemId('lucky-charm'),

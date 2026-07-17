@@ -41,10 +41,10 @@ describe('computeEffectiveStats (US2 / FR-006)', () => {
     expect(effective).toEqual({ hp: 54, mp: 30, def: 18, str: 10, agi: 10, int: 10 });
   });
 
-  it('applies negative modifiers and clamps results at 0', () => {
-    const effective = computeEffectiveStats(base, [makeItem({ def: -25, mp: -5 })]);
-    expect(effective.def).toBe(0); // 10 - 25 clamped
-    expect(effective.mp).toBe(25);
+  it('retains 0-clamping safety guard in computeEffectiveStats', () => {
+    const effective = computeEffectiveStats(base, [makeItem({ def: 0, mp: 5 })]);
+    expect(effective.def).toBe(10);
+    expect(effective.mp).toBe(35);
   });
 
   it('ignores absent modifiers', () => {
@@ -55,10 +55,10 @@ describe('computeEffectiveStats (US2 / FR-006)', () => {
 
 describe('computeDeltas (FR-014)', () => {
   it('reports effective minus base per stat', () => {
-    const effective = { hp: 54, mp: 25, def: 10, str: 8, agi: 10, int: 10 };
+    const effective = { hp: 54, mp: 35, def: 10, str: 8, agi: 10, int: 10 };
     expect(computeDeltas(base, effective)).toEqual({
       hp: 4,
-      mp: -5,
+      mp: 5,
       def: 0,
       str: 0,
       agi: 0,

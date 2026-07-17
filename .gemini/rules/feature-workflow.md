@@ -1,11 +1,13 @@
 # Standard Feature Development Workflow Rule
 
-This rule defines the standard operational workflow for all feature development requests in this workspace.
+> [!IMPORTANT]
+> **AUTOMATED WORKFLOW DIRECTIVE**: This 5-phase workflow MUST be automatically executed for EVERY feature request, bug fix, or code modification in this workspace. You do NOT need to ask the user to activate it—it is mandatory for all changes. Never skip Phase 1 (Grilling), Phase 2 (Local App Review & Iteration), Phase 3 (Branch & Draft PR), Phase 4 (Parallel Sub-Agents in Worktrees), or Phase 5 (Cleanup).
 
 ## Workflow Phases & Rules
 
 ### Phase 1: Core Feature Implementation
 
+- **Alignment & Planning (Mandatory Grilling)**: ALWAYS automatically grill the user (via interactive questions or `/grill-me` interview) before beginning feature implementation to resolve design decisions, clarify underspecified requirements, explore edge cases, and ensure full alignment on the plan.
 - **Scope Focus**: Implement core logic, application architecture, state management, and foundational HTML markup directly within the current workspace context.
 - **Constraints**:
   - Do NOT write unit tests during initial coding.
@@ -49,8 +51,13 @@ _Executes ONLY after explicit user confirmation in Phase 2._
 
 ---
 
-### Phase 5: Push Updates, Final Verification & Cleanup
+### Phase 5: Merge, Local Review Gate & Cleanup
 
-- Commit and push each sub-agent worktree branch to remote and merge back into `feature/<feature-name>`.
-- Refresh/verify local preview with user.
-- Remove and prune Git worktrees (`git worktree remove .worktrees/...` and `git worktree prune`).
+- **Merge Updates**: Commit and push each sub-agent worktree branch to remote and merge back into `feature/<feature-name>`.
+- **Review Reports & Local Dev Server**:
+  - Provide links to sub-agent reports (e.g. accessibility `report.md`, test summaries, styling changes).
+  - Launch local dev server (`npm run dev`) for final app preview.
+- **Final Review Approval Gate**: Prompt the user via the `ask_question` interactive tool to review sub-agent reports and test the app before worktree cleanup:
+  - _Approve & Prune Worktrees_ (Prune `.worktrees/*` and complete feature).
+  - _Request Further Adjustments_ (Keep worktrees intact for additional updates).
+- **Worktree Pruning & Push**: Push final merged feature branch to remote, then remove and prune Git worktrees (`git worktree remove .worktrees/...` and `git worktree prune`).

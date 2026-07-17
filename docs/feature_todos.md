@@ -6,10 +6,10 @@ This document tracks planned patches, UI enhancements, and feature ideas for **B
 
 ## 🛠️ Item Modifiers & Stats Patches
 
-- [ ] **Remove Negative Modifiers from Items**
+- [x] **Remove Negative Modifiers from Items**
   - Adjust item definitions and stat logic so items only confer positive/neutral modifiers.
 
-- [ ] **Stat Change Highlight & Revert Animation**
+- [x] **Stat Change Highlight & Revert Animation**
   - Remove persistent state color changes when a stat is affected by a modifier.
   - Instead, perform a brief color change and "grow" animation upon change, then revert the stat display back to default white.
 
