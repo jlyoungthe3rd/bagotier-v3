@@ -17,5 +17,6 @@ Whenever making changes to this codebase (features, UI enhancements, refactoring
    - Spawn sub-agents concurrently to write unit tests, perform WCAG audit, and optimize Tailwind CSS.
 5. **Phase 5: Merge, Local Review Gate & Cleanup**
    - Push sub-agent branches, merge into feature branch, launch `npm run dev`, and present sub-agent reports.
-   - Prompt user via `ask_question` gate to review reports and test app before pruning worktrees.
+   - Prompt user via `ask_question` gate to review reports and test app before proceeding.
+   - Run `npm run build`; if errors occur, HALT for triage before cleanup.
    - Push final merged branch, remove and prune Git worktrees.
