@@ -57,7 +57,11 @@ _Executes ONLY after explicit user confirmation in Phase 2._
 - **Review Reports & Local Dev Server**:
   - Provide links to sub-agent reports (e.g. accessibility `report.md`, test summaries, styling changes).
   - Launch local dev server (`npm run dev`) for final app preview.
-- **Final Review Approval Gate**: Prompt the user via the `ask_question` interactive tool to review sub-agent reports and test the app before worktree cleanup:
-  - _Approve & Prune Worktrees_ (Prune `.worktrees/*` and complete feature).
+- **Final Review Approval Gate**: Prompt the user via the `ask_question` interactive tool to review sub-agent reports and test the app before proceeding:
+  - _Approve & Run Build Check_.
   - _Request Further Adjustments_ (Keep worktrees intact for additional updates).
+- **Production Build Verification**:
+  - Run production build command (`npm run build`).
+  - If build succeeds without errors, proceed to worktree cleanup.
+  - If build fails or produces errors, HALT execution immediately and report errors for triage before pruning worktrees.
 - **Worktree Pruning & Push**: Push final merged feature branch to remote, then remove and prune Git worktrees (`git worktree remove .worktrees/...` and `git worktree prune`).
