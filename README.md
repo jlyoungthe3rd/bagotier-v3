@@ -1,6 +1,6 @@
 # Bagotier V3
 
-A browser-based game inventory management UI built entirely client-side with **React 19**, **TypeScript** (strict), and **Vite** — drag-and-drop item equipping, live stat calculations, sound effects, and viewport-aware tooltips.
+A browser-based game inventory management UI built entirely client-side with **React 19**, **TypeScript** (strict), and **Vite** — ~~drag-and-drop item equipping~~, live stat calculations, sound effects, and viewport-aware tooltips.
 
 **Live demo**: [jlyoungthe3rd.github.io/bagotier-v3](https://jlyoungthe3rd.github.io/bagotier-v3)
 
