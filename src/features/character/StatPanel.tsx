@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import type { StatKey } from '../../types/domain';
@@ -36,10 +37,18 @@ export function StatPanel() {
         .filter((i) => i !== undefined),
   });
 
+  const prevEffectiveRef = useRef<Record<StatKey, number> | null>(null);
+
   if (charData === undefined) return null;
 
   const effective = computeEffectiveStats(charData.baseStats, equippedItems ?? []);
   const deltas = computeDeltas(charData.baseStats, effective);
+
+  const prevEffective = prevEffectiveRef.current;
+
+  useEffect(() => {
+    prevEffectiveRef.current = effective;
+  }, [effective]);
 
   return (
     <section
@@ -55,11 +64,14 @@ export function StatPanel() {
           const delta = deltas[key];
           const kind = delta > 0 ? 'buff' : delta < 0 ? 'debuff' : 'none';
 
-          let valueColor = 'text-ink';
-          if (kind === 'buff') {
-            valueColor = 'text-buff font-bold';
-          } else if (kind === 'debuff') {
-            valueColor = 'text-debuff font-bold';
+          const currentVal = effective[key];
+          const prevVal = prevEffective ? prevEffective[key] : currentVal;
+
+          let initialColor = '#ffffff';
+          if (currentVal > prevVal) {
+            initialColor = '#6ec87c'; // buff green flash
+          } else if (currentVal < prevVal) {
+            initialColor = '#e06060'; // debuff red flash
           }
 
           return (
@@ -74,10 +86,10 @@ export function StatPanel() {
               </span>
               <motion.span
                 key={`${key}-${String(effective[key])}`}
-                initial={{ scale: 1.25 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 0.2 }}
-                className={`mt-0.5 text-sm font-semibold tracking-tight ${valueColor}`}
+                initial={{ scale: 1.75, color: initialColor }}
+                animate={{ scale: [1.25, 1.0], color: [initialColor, initialColor, '#ffffff'] }}
+                transition={{ duration: 0.8, times: [0, 0.4, 1.0], ease: 'easeOut' }}
+                className="mt-0.5 text-sm font-semibold tracking-tight text-white"
               >
                 {effective[key]}
               </motion.span>

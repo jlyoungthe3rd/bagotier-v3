@@ -1,11 +1,13 @@
 # Standard Feature Development Workflow Rule
 
-This rule defines the standard operational workflow for all feature development requests in this workspace.
+> [!IMPORTANT]
+> **AUTOMATED WORKFLOW DIRECTIVE**: This 5-phase workflow MUST be automatically executed for EVERY feature request, bug fix, or code modification in this workspace. You do NOT need to ask the user to activate it—it is mandatory for all changes. Never skip Phase 1 (Grilling), Phase 2 (Local App Review & Iteration), Phase 3 (Branch & Draft PR), Phase 4 (Parallel Sub-Agents in Worktrees), or Phase 5 (Cleanup).
 
 ## Workflow Phases & Rules
 
 ### Phase 1: Core Feature Implementation
 
+- **Alignment & Planning (Mandatory Grilling)**: ALWAYS automatically grill the user (via interactive questions or `/grill-me` interview) before beginning feature implementation to resolve design decisions, clarify underspecified requirements, explore edge cases, and ensure full alignment on the plan.
 - **Scope Focus**: Implement core logic, application architecture, state management, and foundational HTML markup directly within the current workspace context.
 - **Constraints**:
   - Do NOT write unit tests during initial coding.
