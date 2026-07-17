@@ -59,15 +59,19 @@ describe('stat panel (US2)', () => {
     );
   });
 
-  it('marks negative totals as debuffs', async () => {
+  it('updates stats and deltas correctly for equipped items', async () => {
     await renderApp();
-    // cursed-gauntlets: { str: +7, hp: -3 }
+    // cursed-gauntlets: { str: +7 }
     act(() => {
       useInventoryStore.getState().equip('cursed-gauntlets' as never, 'hands');
     });
 
+    const str = screen.getByTestId('stat-str');
+    expect(str).toHaveTextContent(String(character.baseStats.str + 7));
+    expect(str).toHaveAttribute('data-delta', 'buff');
+
     const hp = screen.getByTestId('stat-hp');
-    expect(hp).toHaveTextContent(String(character.baseStats.hp - 3));
-    expect(hp).toHaveAttribute('data-delta', 'debuff');
+    expect(hp).toHaveTextContent(String(character.baseStats.hp));
+    expect(hp).toHaveAttribute('data-delta', 'none');
   });
 });

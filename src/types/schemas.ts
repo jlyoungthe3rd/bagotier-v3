@@ -15,8 +15,8 @@ export const ItemSchema = z.object({
   name: z.string().min(1),
   icon: z.string().min(1),
   slotType: SlotTypeSchema,
-  // Zod v4: partialRecord — modifiers may be positive, negative, or absent per stat.
-  modifiers: z.partialRecord(StatKeySchema, z.number().int()).default({}),
+  // Zod v4: partialRecord — modifiers must be non-negative integers per stat.
+  modifiers: z.partialRecord(StatKeySchema, z.number().int().nonnegative()).default({}),
 });
 
 export const ItemCatalogSchema = z

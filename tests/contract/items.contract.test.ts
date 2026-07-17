@@ -28,7 +28,11 @@ describe('item catalog contract', () => {
     }
   });
 
-  it('has at least one item with a negative modifier (clamping edge case)', () => {
-    expect(items.some((i) => Object.values(i.modifiers).some((v) => v < 0))).toBe(true);
+  it('ensures no items in the catalog have negative modifiers', () => {
+    for (const item of items) {
+      for (const value of Object.values(item.modifiers)) {
+        expect(value).toBeGreaterThanOrEqual(0);
+      }
+    }
   });
 });

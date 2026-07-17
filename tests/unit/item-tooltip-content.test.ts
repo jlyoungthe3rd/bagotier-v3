@@ -8,7 +8,7 @@ function makeItem(overrides: Partial<Item> = {}): Item {
     name: 'Rune Gloves',
     icon: '🧤',
     slotType: 'hands',
-    modifiers: { str: 2, hp: -1 },
+    modifiers: { str: 2, hp: 1 },
     ...overrides,
   };
 }
@@ -20,7 +20,7 @@ describe('mapTooltipContent', () => {
     expect(content.title).toBe('Rune Gloves');
     expect(content.subtitle).toBe('Hands');
     expect(content.metadataLines).toContain('STR +2');
-    expect(content.metadataLines).toContain('HP -1');
+    expect(content.metadataLines).toContain('HP +1');
   });
 
   it('marks empty content as non-renderable when item name is blank', () => {

@@ -12,7 +12,7 @@ describe('WipBanner', () => {
     expect(screen.getByText('WIP')).toBeInTheDocument();
     expect(
       screen.getByText(
-        /Work in Progress — Features & balancing under active development/i,
+        /Work in Progress — Features under active development/i,
       ),
     ).toBeInTheDocument();
   });

@@ -6,7 +6,7 @@ This document tracks planned patches, UI enhancements, and feature ideas for **B
 
 ## 🛠️ Item Modifiers & Stats Patches
 
-- [ ] **Remove Negative Modifiers from Items**
+- [x] **Remove Negative Modifiers from Items**
   - Adjust item definitions and stat logic so items only confer positive/neutral modifiers.
 
 - [ ] **Stat Change Highlight & Revert Animation**
