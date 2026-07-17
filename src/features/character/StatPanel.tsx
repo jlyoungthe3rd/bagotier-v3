@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { motion } from 'framer-motion';
+import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
 import type { StatKey } from '../../types/domain';
 import { STAT_KEYS } from '../../types/domain';
@@ -26,6 +26,7 @@ const STAT_LABELS: Readonly<Record<StatKey, string>> = {
 export function StatPanel() {
   const { data: charData } = useCharacterQuery();
   const equipped = useInventoryStore((s) => s.equipped);
+  const shouldReduceMotion = useReducedMotion();
 
   const { data: equippedItems } = useQuery({
     queryKey: queryKeys.items,
@@ -56,10 +57,14 @@ export function StatPanel() {
       data-testid="stat-panel"
       className="w-full rounded-lg border border-white/10 bg-surface-raised/30 p-3.5 backdrop-blur-md shadow-lg sm:p-4"
     >
-      <h2 className="mb-3 font-display text-[9px] font-bold uppercase tracking-[0.2em] text-gold/80">
+      <h2 className="mb-3 font-display text-xs font-bold uppercase tracking-[0.2em] text-gold">
         Attributes
       </h2>
-      <div className="grid grid-cols-3 gap-y-3.5 gap-x-2 sm:grid-cols-6 sm:gap-x-4">
+      <dl
+        aria-live="polite"
+        aria-atomic="true"
+        className="grid grid-cols-3 gap-y-3.5 gap-x-2 sm:grid-cols-6 sm:gap-x-4"
+      >
         {STAT_KEYS.map((key) => {
           const delta = deltas[key];
           const kind = delta > 0 ? 'buff' : delta < 0 ? 'debuff' : 'none';
@@ -74,29 +79,42 @@ export function StatPanel() {
             initialColor = '#e06060'; // debuff red flash
           }
 
+          const statusText = delta > 0 ? ` (+${delta} bonus)` : delta < 0 ? ` (${delta} penalty)` : '';
+
           return (
             <div
               key={key}
               data-testid={`stat-${key}`}
               data-delta={kind}
+              aria-label={`${STAT_LABELS[key]}: ${effective[key]}${statusText}`}
               className="flex flex-col items-center justify-center rounded bg-surface/20 p-2 border border-white/5 sm:p-2.5"
             >
-              <span className="text-[9px] font-semibold uppercase tracking-wider text-ink-muted/80">
+              <dt className="text-[10px] font-semibold uppercase tracking-wider text-ink/80 sm:text-xs">
                 {STAT_LABELS[key]}
-              </span>
-              <motion.span
-                key={`${key}-${String(effective[key])}`}
-                initial={{ scale: 1.75, color: initialColor }}
-                animate={{ scale: [1.25, 1.0], color: [initialColor, initialColor, '#ffffff'] }}
-                transition={{ duration: 0.8, times: [0, 0.4, 1.0], ease: 'easeOut' }}
-                className="mt-0.5 text-sm font-semibold tracking-tight text-white"
-              >
-                {effective[key]}
-              </motion.span>
+              </dt>
+              <dd className="mt-0.5 m-0 text-sm font-semibold tracking-tight text-white flex items-center justify-center">
+                <motion.span
+                  key={`${key}-${String(effective[key])}`}
+                  initial={shouldReduceMotion ? false : { scale: 1.75, color: initialColor }}
+                  animate={
+                    shouldReduceMotion
+                      ? { scale: 1.0, color: '#ffffff' }
+                      : { scale: [1.25, 1.0], color: [initialColor, initialColor, '#ffffff'] }
+                  }
+                  transition={
+                    shouldReduceMotion
+                      ? { duration: 0 }
+                      : { duration: 0.8, times: [0, 0.4, 1.0], ease: 'easeOut' }
+                  }
+                >
+                  {effective[key]}
+                </motion.span>
+                {delta !== 0 && <span className="sr-only">{statusText}</span>}
+              </dd>
             </div>
           );
         })}
-      </div>
+      </dl>
     </section>
   );
 }
