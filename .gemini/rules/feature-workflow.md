@@ -51,8 +51,13 @@ _Executes ONLY after explicit user confirmation in Phase 2._
 
 ---
 
-### Phase 5: Push Updates, Final Verification & Cleanup
+### Phase 5: Merge, Local Review Gate & Cleanup
 
-- Commit and push each sub-agent worktree branch to remote and merge back into `feature/<feature-name>`.
-- Refresh/verify local preview with user.
-- Remove and prune Git worktrees (`git worktree remove .worktrees/...` and `git worktree prune`).
+- **Merge Updates**: Commit and push each sub-agent worktree branch to remote and merge back into `feature/<feature-name>`.
+- **Review Reports & Local Dev Server**:
+  - Provide links to sub-agent reports (e.g. accessibility `report.md`, test summaries, styling changes).
+  - Launch local dev server (`npm run dev`) for final app preview.
+- **Final Review Approval Gate**: Prompt the user via the `ask_question` interactive tool to review sub-agent reports and test the app before worktree cleanup:
+  - _Approve & Prune Worktrees_ (Prune `.worktrees/*` and complete feature).
+  - _Request Further Adjustments_ (Keep worktrees intact for additional updates).
+- **Worktree Pruning & Push**: Push final merged feature branch to remote, then remove and prune Git worktrees (`git worktree remove .worktrees/...` and `git worktree prune`).

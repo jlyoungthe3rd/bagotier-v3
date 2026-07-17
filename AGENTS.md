@@ -15,5 +15,7 @@ Whenever making changes to this codebase (features, UI enhancements, refactoring
 4. **Phase 4: Parallel Sub-Agent Execution in Isolated Git Worktrees**
    - Create worktrees (`.worktrees/test`, `.worktrees/a11y`, `.worktrees/styling`).
    - Spawn sub-agents concurrently to write unit tests, perform WCAG audit, and optimize Tailwind CSS.
-5. **Phase 5: Push Updates, Final Verification & Cleanup**
-   - Push sub-agent branches, merge, verify with user, and prune worktrees.
+5. **Phase 5: Merge, Local Review Gate & Cleanup**
+   - Push sub-agent branches, merge into feature branch, launch `npm run dev`, and present sub-agent reports.
+   - Prompt user via `ask_question` gate to review reports and test app before pruning worktrees.
+   - Push final merged branch, remove and prune Git worktrees.
