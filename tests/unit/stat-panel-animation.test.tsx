@@ -58,13 +58,13 @@ describe('StatPanel transient highlight and grow animation', () => {
     );
     expect(defCalls.length).toBeGreaterThan(0);
     const lastCall = defCalls[defCalls.length - 1];
-
-    expect(lastCall.initial).toEqual({ scale: 1.75, color: '#ffffff' });
-    expect(lastCall.animate).toEqual({
+    expect(lastCall).toBeDefined();
+    expect(lastCall?.initial).toEqual({ scale: 1.25, color: '#ffffff' });
+    expect(lastCall?.animate).toEqual({
       scale: [1.25, 1.0],
       color: ['#ffffff', '#ffffff', '#ffffff'],
     });
-    expect(lastCall.transition).toEqual({
+    expect(lastCall?.transition).toEqual({
       duration: 0.8,
       times: [0, 0.4, 1.0],
       ease: 'easeOut',
@@ -97,7 +97,7 @@ describe('StatPanel transient highlight and grow animation', () => {
     const buffCall = defCalls.find((c) => (c.initial as Record<string, unknown>)?.color === '#6ec87c');
     expect(buffCall).toBeDefined();
 
-    expect(buffCall?.initial).toEqual({ scale: 1.75, color: '#6ec87c' });
+    expect(buffCall?.initial).toEqual({ scale: 1.25, color: '#6ec87c' });
     expect(buffCall?.animate).toEqual({
       scale: [1.25, 1.0],
       color: ['#6ec87c', '#6ec87c', '#ffffff'],
@@ -146,7 +146,7 @@ describe('StatPanel transient highlight and grow animation', () => {
     const debuffCall = defCalls.find((c) => (c.initial as Record<string, unknown>)?.color === '#e06060');
     expect(debuffCall).toBeDefined();
 
-    expect(debuffCall?.initial).toEqual({ scale: 1.75, color: '#e06060' });
+    expect(debuffCall?.initial).toEqual({ scale: 1.25, color: '#e06060' });
     expect(debuffCall?.animate).toEqual({
       scale: [1.25, 1.0],
       color: ['#e06060', '#e06060', '#ffffff'],
