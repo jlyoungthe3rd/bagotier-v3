@@ -39,16 +39,20 @@ export function StatPanel() {
 
   const prevEffectiveRef = useRef<Record<StatKey, number> | null>(null);
 
-  if (charData === undefined) return null;
-
-  const effective = computeEffectiveStats(charData.baseStats, equippedItems ?? []);
-  const deltas = computeDeltas(charData.baseStats, effective);
+  const effective = charData
+    ? computeEffectiveStats(charData.baseStats, equippedItems ?? [])
+    : null;
+  const deltas = charData && effective ? computeDeltas(charData.baseStats, effective) : null;
 
   const prevEffective = prevEffectiveRef.current;
 
   useEffect(() => {
-    prevEffectiveRef.current = effective;
+    if (effective) {
+      prevEffectiveRef.current = effective;
+    }
   }, [effective]);
+
+  if (charData === undefined || effective === null || deltas === null) return null;
 
   return (
     <section
