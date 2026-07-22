@@ -38,7 +38,7 @@ function BagCell({
   return (
     <div
       data-testid={`cell-${String(index)}`}
-      className="aspect-square border bg-surface p-0.5 transition-colors border-slot-idle/50"
+      className="aspect-square border border-slot-idle/50 bg-surface p-0.5 transition-colors"
     >
       {item !== undefined ? (
         <InventoryItem

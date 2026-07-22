@@ -3,15 +3,20 @@ import { render, screen, act, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement } from 'react';
 import { StatPanel } from '../../src/features/character/StatPanel';
-import { registerItemSlotTypes, useInventoryStore } from '../../src/store/useInventoryStore';
+import {
+  registerItemSlotTypes,
+  useInventoryStore,
+} from '../../src/store/useInventoryStore';
 import { character } from '../../src/mocks/character';
 import { items } from '../../src/mocks/items';
 import { queryKeys } from '../../src/lib/queryKeys';
 
-const motionSpanCalls: Array<Record<string, unknown>> = [];
+import type * as FramerMotion from 'framer-motion';
 
-vi.mock('framer-motion', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('framer-motion')>();
+const motionSpanCalls: Record<string, unknown>[] = [];
+
+vi.mock('framer-motion', async () => {
+  const actual = await vi.importActual<typeof FramerMotion>('framer-motion');
   return {
     ...actual,
     motion: new Proxy(actual.motion, {
@@ -19,11 +24,14 @@ vi.mock('framer-motion', async (importOriginal) => {
         if (prop === 'span') {
           return (props: Record<string, unknown>) => {
             motionSpanCalls.push(props);
-            const { initial, animate, transition, ...rest } = props;
+            const rest = { ...props };
+            delete rest.initial;
+            delete rest.animate;
+            delete rest.transition;
             return createElement('span', rest);
           };
         }
-        return Reflect.get(target, prop, receiver);
+        return Reflect.get(target, prop, receiver) as unknown;
       },
     }),
   };
@@ -54,7 +62,7 @@ describe('StatPanel transient highlight and grow animation', () => {
     expect(statDef).toBeInTheDocument();
 
     const defCalls = motionSpanCalls.filter(
-      (c) => (c['children'] as unknown) === character.baseStats.def,
+      (c) => c.children === character.baseStats.def,
     );
     expect(defCalls.length).toBeGreaterThan(0);
     const lastCall = defCalls[defCalls.length - 1];
@@ -90,11 +98,11 @@ describe('StatPanel transient highlight and grow animation', () => {
       expect(within(statDef).getByText(String(buffedDef))).toBeInTheDocument();
     });
 
-    const defCalls = motionSpanCalls.filter(
-      (c) => (c['children'] as unknown) === buffedDef,
-    );
+    const defCalls = motionSpanCalls.filter((c) => c.children === buffedDef);
     expect(defCalls.length).toBeGreaterThan(0);
-    const buffCall = defCalls.find((c) => (c.initial as Record<string, unknown>)?.color === '#6ec87c');
+    const buffCall = defCalls.find(
+      (c) => (c.initial as Record<string, unknown>).color === '#6ec87c',
+    );
     expect(buffCall).toBeDefined();
 
     expect(buffCall?.initial).toEqual({ scale: 1.25, color: '#6ec87c' });
@@ -136,14 +144,18 @@ describe('StatPanel transient highlight and grow animation', () => {
     });
 
     await waitFor(() => {
-      expect(within(statDef).getByText(String(character.baseStats.def))).toBeInTheDocument();
+      expect(
+        within(statDef).getByText(String(character.baseStats.def)),
+      ).toBeInTheDocument();
     });
 
     const defCalls = motionSpanCalls.filter(
-      (c) => (c['children'] as unknown) === character.baseStats.def,
+      (c) => c.children === character.baseStats.def,
     );
     expect(defCalls.length).toBeGreaterThan(0);
-    const debuffCall = defCalls.find((c) => (c.initial as Record<string, unknown>)?.color === '#e06060');
+    const debuffCall = defCalls.find(
+      (c) => (c.initial as Record<string, unknown>).color === '#e06060',
+    );
     expect(debuffCall).toBeDefined();
 
     expect(debuffCall?.initial).toEqual({ scale: 1.25, color: '#e06060' });

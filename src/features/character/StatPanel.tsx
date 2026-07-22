@@ -48,7 +48,8 @@ export function StatPanel() {
   const effective = charData
     ? computeEffectiveStats(charData.baseStats, equippedItems ?? [])
     : null;
-  const deltas = charData && effective ? computeDeltas(charData.baseStats, effective) : null;
+  const deltas =
+    charData && effective ? computeDeltas(charData.baseStats, effective) : null;
 
   const prevEffective = prevEffectiveRef.current;
 
@@ -88,14 +89,19 @@ export function StatPanel() {
             initialColor = COLOR_DEBUFF;
           }
 
-          const statusText = delta > 0 ? ` (+${delta} bonus)` : delta < 0 ? ` (${delta} penalty)` : '';
+          const statusText =
+            delta > 0
+              ? ` (+${String(delta)} bonus)`
+              : delta < 0
+                ? ` (${String(delta)} penalty)`
+                : '';
 
           return (
             <div
               key={key}
               data-testid={`stat-${key}`}
               data-delta={kind}
-              aria-label={`${STAT_LABELS[key]}: ${effective[key]}${statusText}`}
+              aria-label={`${STAT_LABELS[key]}: ${String(effective[key])}${statusText}`}
               className="flex flex-col items-center justify-center rounded bg-surface/30 p-2 border border-white/5 transition-colors duration-200 data-[delta=buff]:border-buff/30 data-[delta=buff]:bg-buff/5 data-[delta=debuff]:border-debuff/30 data-[delta=debuff]:bg-debuff/5 sm:p-2.5"
             >
               <dt className="text-[10px] font-semibold uppercase tracking-wider text-ink/80 sm:text-xs">
@@ -104,11 +110,16 @@ export function StatPanel() {
               <dd className="mt-0.5 m-0 font-mono text-sm font-bold tracking-tight text-white flex items-center justify-center">
                 <motion.span
                   key={`${key}-${String(effective[key])}`}
-                  initial={shouldReduceMotion ? false : { scale: 1.25, color: initialColor }}
+                  initial={
+                    shouldReduceMotion ? false : { scale: 1.25, color: initialColor }
+                  }
                   animate={
                     shouldReduceMotion
                       ? { scale: 1.0, color: COLOR_NEUTRAL }
-                      : { scale: [1.25, 1.0], color: [initialColor, initialColor, COLOR_NEUTRAL] }
+                      : {
+                          scale: [1.25, 1.0],
+                          color: [initialColor, initialColor, COLOR_NEUTRAL],
+                        }
                   }
                   transition={
                     shouldReduceMotion
