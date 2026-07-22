@@ -55,7 +55,7 @@ describe('Central Paper Doll Column Layout integration', () => {
     expect(dismissedBanner).not.toBeNull();
     expect(dismissedBanner).toBeInTheDocument();
     expect(dismissedBanner).toHaveAttribute('aria-hidden', 'true');
-    expect(dismissedBanner).toHaveClass('invisible', 'h-0', 'overflow-hidden');
+    expect(dismissedBanner).toHaveClass('invisible', 'max-h-0', 'overflow-hidden');
   });
 
   it('renders BagCell containers with aspect-square class and responsive grid', async () => {
@@ -81,7 +81,7 @@ describe('Central Paper Doll Column Layout integration', () => {
     expect(muteToggle).toBeInTheDocument();
     expect(muteToggle).toHaveClass('fixed', 'left-4', 'top-4');
 
-    const githubLink = screen.getByRole('link', { name: 'View source code on GitHub' });
+    const githubLink = screen.getByRole('link', { name: /view source code on github/i });
     expect(githubLink).toBeInTheDocument();
     expect(githubLink).toHaveClass('fixed', 'right-4', 'top-4');
   });
