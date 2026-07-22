@@ -19,6 +19,7 @@ function Skeleton({ className }: { className: string }) {
 function LoadingScreen() {
   return (
     <div
+      role="status"
       aria-busy="true"
       aria-label="Loading inventory"
       className="mx-auto max-w-2xl px-4 py-6"
@@ -71,8 +72,20 @@ function InventoryScreen() {
 
   return (
     <ItemTooltipProvider>
-      <main className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-4 sm:px-6 sm:py-5">
-        <header className="flex shrink-0 items-center justify-between border-b border-slot-idle/40 pb-4">
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded focus:border focus:border-gold focus:bg-surface-raised focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-gold focus:outline-none"
+      >
+        Skip to main content
+      </a>
+      <MuteToggle />
+      <GitHubLink />
+      <main
+        id="main-content"
+        tabIndex={-1}
+        className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-4 focus:outline-none sm:px-6 sm:py-5"
+      >
+        <header className="flex shrink-0 items-center justify-between border-b border-slot-idle/50 pb-4">
           <h1 className="font-display text-xl font-bold text-ink sm:text-2xl">
             Bagotier
           </h1>
@@ -85,13 +98,13 @@ function InventoryScreen() {
         </div>
 
         {/* Separator */}
-        <hr className="border-t border-slot-idle/30" />
+        <hr aria-hidden="true" className="border-t border-slot-idle/50" />
 
         {/* Stat panel */}
         <StatPanel />
 
         {/* Separator */}
-        <hr className="border-t border-slot-idle/30" />
+        <hr aria-hidden="true" className="border-t border-slot-idle/50" />
 
         {/* Inventory bag — full width, not individually scrollable */}
         <InventoryGrid />
@@ -112,8 +125,6 @@ function InventoryScreen() {
           </div>
         ) : null}
       </main>
-      <MuteToggle />
-      <GitHubLink />
     </ItemTooltipProvider>
   );
 }
