@@ -1,0 +1,12 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[context.production]
+  command = "VITE_BASE=/bagotier-v3/ npm run build"
+
+[context.deploy-preview]
+  command = "VITE_BASE=/ npm run build"
+
+[context.branch-deploy]
+  command = "VITE_BASE=/ npm run build"
