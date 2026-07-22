@@ -1,22 +1,67 @@
-# Repository Guidelines & Instructions
+# Standard Feature Development Workflow Rule
 
-## Feature Development Workflow
+> [!IMPORTANT]
+> **AUTOMATED WORKFLOW DIRECTIVE**: This 5-phase workflow MUST be automatically executed for EVERY feature request, bug fix, or code modification in this workspace. You do NOT need to ask the user to activate it—it is mandatory for all changes. Never skip Phase 1 (Grilling), Phase 2 (Local App Review & Iteration), Phase 3 (Branch & Draft PR), Phase 4 (Parallel Sub-Agents in Worktrees), or Phase 5 (Cleanup).
 
-Whenever making changes to this codebase (features, UI enhancements, refactoring, or bug fixes), **ALWAYS** strictly follow the 5-phase workflow defined in [.gemini/rules/feature-workflow.md](file:///.gemini/rules/feature-workflow.md):
+## Workflow Phases & Rules
 
-1. **Phase 1: Core Feature Implementation**
-   - Automatically grill the user before coding (via interactive questions).
-   - Implement core logic and markup in the workspace (no unit tests or deep styling yet).
-2. **Phase 2: Local App Review & Iteration Loop**
-   - Run `npm run dev` and review locally.
-   - Prompt user via `ask_question` gate to approve advancing to Phase 3.
-3. **Phase 3: Handoff Action (Commit & Draft PR)**
-   - Create feature branch, commit, push, and open Draft PR (`gh pr create --draft`).
-4. **Phase 4: Parallel Sub-Agent Execution in Isolated Git Worktrees**
-   - Create worktrees (`.worktrees/test`, `.worktrees/a11y`, `.worktrees/styling`).
-   - Spawn sub-agents concurrently to write unit tests, perform WCAG audit, and optimize Tailwind CSS.
-5. **Phase 5: Merge, Local Review Gate & Cleanup**
-   - Push sub-agent branches, merge into feature branch, launch `npm run dev`, and present sub-agent reports.
-   - Prompt user via `ask_question` gate to review reports and test app before proceeding.
-   - Run `npm run build`; if errors occur, HALT for triage before cleanup.
-   - Push final merged branch, remove and prune Git worktrees.
+### Phase 1: Core Feature Implementation
+
+- **Alignment & Planning (Mandatory Grilling)**: ALWAYS automatically grill the user (via interactive questions or `/grill-me` interview) before creating an implementation plan to confirm alignment on design decisions, clarify underspecified requirements, explore edge cases, and ensure full alignment on the plan. Once user accepts implementation plan then move onto Scope Focus.
+- **Scope Focus**: Implement core logic, application architecture, state management, and foundational HTML markup directly within the current workspace context.
+- **Constraints**:
+  - Do NOT write unit tests during initial coding.
+  - Do NOT optimize pixel-perfect styling or deep Tailwind responsiveness tweaks.
+  - Do NOT conduct accessibility audits or ARIA fine-tuning during this phase.
+
+---
+
+### Phase 2: Local App Review & Iteration Loop
+
+- **Local Preview**: Launch local dev server (`npm run dev`) and open local preview browser URL.
+- **Interactive Iteration Loop**: Keep the dev server active and perform any requested adjustments to logic/markup iteratively until satisfied.
+- **Explicit Approval Gate**: Prompt the user via the `ask_question` interactive tool to explicitly approve advancing to Phase 3:
+  - _Proceed to Phase 3_ (Staging, Draft PR, Sub-agents).
+  - _Make further core changes_.
+
+---
+
+### Phase 3: Handoff Action (Commit & Draft PR)
+
+_Executes ONLY after explicit user confirmation in Phase 2._
+
+- **Git Operations**:
+  - Stage changes: `git add .`
+  - Commit to new feature branch: `git checkout -b feature/<feature-name>` & `git commit -m "feat: core implementation"`
+  - Push to remote: `git push -u origin feature/<feature-name>`
+  - Create Draft Pull Request via GitHub CLI: `gh pr create --draft --title "..." --body "..."`
+
+---
+
+### Phase 4: Parallel Sub-Agent Execution in Isolated Git Worktrees
+
+- Create 3 isolated Git worktrees off the feature branch:
+  - `.worktrees/test`
+  - `.worktrees/a11y`
+  - `.worktrees/styling`
+- Initiate 3 concurrent sub-agents:
+  1. **Test Agent** (`.worktrees/test`): Writes unit tests (Vitest). Verifies tests pass.
+  2. **Accessibility Agent** (`.worktrees/a11y`): Audits modified files for WCAG compliance and outputs `report.md`.
+  3. **Styling Agent** (`.worktrees/styling`): Audits Tailwind CSS classes and optimizes layout responsiveness.
+
+---
+
+### Phase 5: Merge, Local Review Gate & Cleanup
+
+- **Merge Updates**: Commit and push each sub-agent worktree branch to remote and merge back into `feature/<feature-name>`.
+- **Review Reports & Local Dev Server**:
+  - Provide links to sub-agent reports (e.g. accessibility `report.md`, test summaries, styling changes).
+  - Launch local dev server (`npm run dev`) for final app preview.
+- **Final Review Approval Gate**: Prompt the user via the `ask_question` interactive tool to review sub-agent reports and test the app before proceeding:
+  - _Approve & Run Build Check_.
+  - _Request Further Adjustments_ (Keep worktrees intact for additional updates).
+- **Production Build Verification**:
+  - Run production build command (`npm run build`).
+  - If build succeeds without errors, proceed to worktree cleanup.
+  - If build fails or produces errors, HALT execution immediately and report errors for triage before pruning worktrees.
+- **Worktree Pruning & Push**: Push final merged feature branch to remote, then remove and prune Git worktrees (`git worktree remove .worktrees/...` and `git worktree prune`).
