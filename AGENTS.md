@@ -7,7 +7,6 @@ Whenever making changes to this codebase (features, UI enhancements, refactoring
 1. **Phase 1: Core Feature Implementation**
    - Automatically grill the user before coding (via interactive questions).
    - Implement core logic and markup in the workspace (no unit tests or deep styling yet).
-   - For collapsible UI components (e.g. banners), maintain DOM presence using CSS collapse transitions (`max-h-0 opacity-0 overflow-hidden pointer-events-none invisible`) and `aria-hidden={dismissed ? true : undefined}` to avoid layout shift (CLS).
 2. **Phase 2: Local App Review & Iteration Loop**
    - Run `npm run dev` and review locally.
    - Prompt user via `ask_question` gate to approve advancing to Phase 3.
