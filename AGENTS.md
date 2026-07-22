@@ -12,6 +12,7 @@ Whenever making changes to this codebase (features, UI enhancements, refactoring
    - Prompt user via `ask_question` gate to approve advancing to Phase 3.
 3. **Phase 3: Handoff Action (Commit & Draft PR)**
    - Create feature branch, commit, push, and open Draft PR (`gh pr create --draft`). Use `GH_TOKEN` from git credentials if `gh` CLI auth is needed.
+   - Ensure repository setting `delete_branch_on_merge` is enabled (`gh api -X PATCH repos/:owner/:repo -F delete_branch_on_merge=true`) so feature branches auto-delete upon PR merge.
 4. **Phase 4: Parallel Sub-Agent Execution in Isolated Git Worktrees**
    - Create worktrees (`.worktrees/test`, `.worktrees/a11y`, `.worktrees/styling`).
    - Spawn sub-agents concurrently to write unit tests, perform WCAG audit, and optimize Tailwind CSS.
@@ -22,4 +23,5 @@ Whenever making changes to this codebase (features, UI enhancements, refactoring
    - Push final merged branch, remove and prune Git worktrees.
    - Mark PR as ready for review (`gh pr ready <pr-number>`).
    - Provide the Netlify Deploy Preview link (`https://deploy-preview-<pr-number>--<site-name>.netlify.app`). Production GitHub Pages (`main`) must NEVER be used for PR feature previews; do not run local preview servers after PR submission.
+
 
