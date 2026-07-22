@@ -3,15 +3,16 @@ import { useState } from 'react';
 export function WipBanner() {
   const [dismissed, setDismissed] = useState(false);
 
-  if (dismissed) {
-    return null;
-  }
-
   return (
     <aside
       role="region"
       aria-label="Work in progress notice"
-      className="flex items-center justify-between gap-3 rounded border border-gold/40 bg-surface-raised/90 px-3 py-1.5 text-xs text-ink shadow-sm backdrop-blur-sm sm:px-4 sm:py-2"
+      aria-hidden={dismissed}
+      className={`flex items-center justify-between gap-3 rounded border border-gold/40 bg-surface-raised/90 px-3 py-1.5 text-xs text-ink shadow-sm backdrop-blur-sm transition-all duration-300 sm:px-4 sm:py-2 ${
+        dismissed
+          ? 'pointer-events-none invisible h-0 overflow-hidden border-transparent py-0 opacity-0 sm:py-0'
+          : ''
+      }`}
     >
       <div className="flex items-center gap-2">
         <span

@@ -38,7 +38,7 @@ function BagCell({
   return (
     <div
       data-testid={`cell-${String(index)}`}
-      className="h-cell w-cell border bg-surface p-0.5 transition-colors border-slot-idle/50"
+      className="aspect-square border bg-surface p-0.5 transition-colors border-slot-idle/50"
     >
       {item !== undefined ? (
         <InventoryItem
@@ -77,7 +77,7 @@ export function InventoryGrid() {
       <h2 className="mb-2.5 font-display text-[10px] font-bold uppercase tracking-[0.22em] text-gold/80">
         Bag
       </h2>
-      <div className="grid w-fit max-w-full grid-cols-4 gap-1.5 sm:grid-cols-bag">
+      <div className="grid w-full grid-cols-4 gap-1.5 sm:grid-cols-6 lg:grid-cols-8">
         {bag.map((itemId, index) => (
           <BagCell key={index} index={index} itemId={itemId} />
         ))}
