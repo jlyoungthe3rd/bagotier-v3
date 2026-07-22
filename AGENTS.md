@@ -22,6 +22,6 @@ Whenever making changes to this codebase (features, UI enhancements, refactoring
    - Run `npm run build`; if errors occur, HALT for triage before cleanup.
    - Push final merged branch, remove and prune Git worktrees.
    - Mark PR as ready for review (`gh pr ready <pr-number>`).
-   - Provide the Netlify Deploy Preview link (`https://deploy-preview-<pr-number>--<site-name>.netlify.app`). Production GitHub Pages (`main`) must NEVER be used for PR feature previews; do not run local preview servers after PR submission.
+   - Provide the Netlify Deploy Preview link (`https://deploy-preview-<pr-number>--<site-name>.netlify.app`), formatted so preview links open in a new tab/window. Production GitHub Pages (`main`) must NEVER be used for PR feature previews; do not run local preview servers after PR submission.
 
 
