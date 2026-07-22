@@ -8,20 +8,20 @@ export function WipBanner() {
       role="region"
       aria-label="Work in progress notice"
       aria-hidden={dismissed ? true : undefined}
-      className={`flex items-center justify-between gap-3 rounded border border-gold/40 bg-surface-raised/90 px-3 py-1.5 text-xs text-ink shadow-sm backdrop-blur-sm transition-all duration-300 sm:px-4 sm:py-2 ${
+      className={`flex max-h-16 items-center justify-between gap-3 rounded border border-gold/40 bg-surface-raised/90 px-3 py-1.5 text-xs text-ink shadow-sm backdrop-blur-sm transition-all duration-300 ease-in-out sm:px-4 sm:py-2 ${
         dismissed
-          ? 'pointer-events-none invisible h-0 overflow-hidden border-transparent py-0 opacity-0 sm:py-0'
-          : ''
+          ? 'pointer-events-none invisible max-h-0 overflow-hidden border-transparent py-0 opacity-0 scale-95 sm:py-0'
+          : 'scale-100 opacity-100'
       }`}
     >
       <div className="flex items-center gap-2">
         <span
-          className="flex items-center justify-center rounded bg-gold/20 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-gold border border-gold/40"
+          className="flex items-center justify-center rounded border border-gold/40 bg-gold/20 px-1.5 py-0.5 font-mono text-[10px] font-bold uppercase tracking-wider text-gold"
           aria-hidden="true"
         >
           WIP
         </span>
-        <span className="font-medium text-ink-muted sm:text-xs">
+        <span className="font-medium text-ink-muted">
           Work in Progress &mdash; Features under active development.
         </span>
       </div>

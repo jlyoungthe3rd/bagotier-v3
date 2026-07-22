@@ -22,7 +22,7 @@ function LoadingScreen() {
       role="status"
       aria-busy="true"
       aria-label="Loading inventory"
-      className="mx-auto max-w-2xl px-4 py-6"
+      className="mx-auto max-w-2xl px-4 pb-6 pt-14 sm:px-6 sm:pb-8 sm:pt-16"
     >
       <Skeleton className="mb-1 h-3 w-24" />
       <Skeleton className="mb-6 h-6 w-40" />
@@ -83,7 +83,7 @@ function InventoryScreen() {
       <main
         id="main-content"
         tabIndex={-1}
-        className="mx-auto flex max-w-2xl flex-col gap-6 px-4 py-4 focus:outline-none sm:px-6 sm:py-5"
+        className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-6 pt-14 focus:outline-none sm:px-6 sm:pb-8 sm:pt-16"
       >
         <header className="flex shrink-0 items-center justify-between border-b border-slot-idle/50 pb-4">
           <h1 className="font-display text-xl font-bold text-ink sm:text-2xl">
@@ -98,13 +98,13 @@ function InventoryScreen() {
         </div>
 
         {/* Separator */}
-        <hr aria-hidden="true" className="border-t border-slot-idle/50" />
+        <hr aria-hidden="true" className="border-0 border-t border-slot-idle/50" />
 
         {/* Stat panel */}
         <StatPanel />
 
         {/* Separator */}
-        <hr aria-hidden="true" className="border-t border-slot-idle/50" />
+        <hr aria-hidden="true" className="border-0 border-t border-slot-idle/50" />
 
         {/* Inventory bag — full width, not individually scrollable */}
         <InventoryGrid />

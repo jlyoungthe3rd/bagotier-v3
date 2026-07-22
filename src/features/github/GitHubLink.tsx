@@ -1,4 +1,4 @@
-/** Component displaying a glassmorphic bottom-right anchored link to the GitHub repository. */
+/** Component displaying a glassmorphic top-right anchored link to the GitHub repository. */
 export function GitHubLink() {
   return (
     <a
