@@ -48,10 +48,10 @@ export function getGridColumns(): number {
   if (typeof window !== 'undefined') {
     const matchMediaFn = (window as unknown as Record<string, unknown>).matchMedia;
     if (typeof matchMediaFn === 'function') {
-      return (matchMediaFn as (query: string) => MediaQueryList)('(min-width: 640px)')
-        .matches
-        ? 6
-        : 4;
+      const mm = matchMediaFn as (query: string) => MediaQueryList;
+      if (mm('(min-width: 1024px)').matches) return 8;
+      if (mm('(min-width: 640px)').matches) return 6;
+      return 4;
     }
   }
   return 6;

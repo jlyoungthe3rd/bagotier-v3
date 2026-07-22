@@ -7,7 +7,7 @@ export function WipBanner() {
     <aside
       role="region"
       aria-label="Work in progress notice"
-      aria-hidden={dismissed}
+      aria-hidden={dismissed ? true : undefined}
       className={`flex items-center justify-between gap-3 rounded border border-gold/40 bg-surface-raised/90 px-3 py-1.5 text-xs text-ink shadow-sm backdrop-blur-sm transition-all duration-300 sm:px-4 sm:py-2 ${
         dismissed
           ? 'pointer-events-none invisible h-0 overflow-hidden border-transparent py-0 opacity-0 sm:py-0'
@@ -27,6 +27,7 @@ export function WipBanner() {
       </div>
       <button
         type="button"
+        tabIndex={dismissed ? -1 : undefined}
         onClick={() => setDismissed(true)}
         aria-label="Dismiss work in progress notice"
         className="ml-2 rounded p-1 text-ink-muted transition-colors hover:bg-slot-idle/60 hover:text-ink focus-visible:outline focus-visible:outline-2 focus-visible:outline-gold"
