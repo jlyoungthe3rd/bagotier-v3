@@ -11,7 +11,7 @@ const SKIN_TONES: Readonly<Record<string, string>> = {
 };
 
 /** Layered SVG figure composed from the generated appearance parts. */
-function CharacterFigure({ appearance }: { readonly appearance: CharacterAppearance }) {
+export function CharacterFigure({ appearance }: { readonly appearance: CharacterAppearance }) {
   const skin = SKIN_TONES[appearance.parts.skin ?? ''] ?? '#e8b88a';
 
   return (
