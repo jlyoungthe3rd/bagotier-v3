@@ -18,7 +18,8 @@ function CharacterFigure({ appearance }: { readonly appearance: CharacterAppeara
     <svg
       viewBox="0 0 100 220"
       role="img"
-      aria-label="Generated character"
+      aria-label="Character figure"
+      focusable="false"
       className="h-52 w-auto drop-shadow-lg"
     >
       {/* legs */}
@@ -66,6 +67,8 @@ export function CharacterView() {
       {showTabHint && (
         <div
           data-testid="tab-hint-tooltip"
+          role="status"
+          aria-live="polite"
           className="absolute -top-1.5 z-30 animate-bounce rounded-md border border-gold bg-surface px-3 py-1.5 text-[10px] font-semibold text-gold shadow-lg"
         >
           Press{' '}
@@ -90,7 +93,12 @@ export function CharacterView() {
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
             aria-hidden="true"
           >
-            <svg viewBox="0 0 200 220" className="h-52 w-auto opacity-[0.18]">
+            <svg
+              viewBox="0 0 200 220"
+              aria-hidden="true"
+              focusable="false"
+              className="h-52 w-auto opacity-[0.18]"
+            >
               {/* Outer spinning dashed ring */}
               <g
                 style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
