@@ -5,6 +5,7 @@ import type { CharacterAppearance } from '../../src/types/domain';
 
 function makeAppearance(skin?: string): CharacterAppearance {
   return {
+    seed: 12345,
     parts: {
       skin: skin ?? 'skin-01',
       hair: 'hair-01',
@@ -67,7 +68,7 @@ describe('CharacterFigure (blank face paper doll)', () => {
   });
 
   it('falls back to default skin tone when skin part is missing or unknown', () => {
-    const fallbackAppearance: CharacterAppearance = { parts: {} };
+    const fallbackAppearance: CharacterAppearance = { seed: 12345, parts: {} };
     const { container } = render(<CharacterFigure appearance={fallbackAppearance} />);
     const svg = container.querySelector('svg');
 
