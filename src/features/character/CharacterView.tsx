@@ -18,7 +18,7 @@ export function CharacterFigure({ appearance }: { readonly appearance: Character
     <svg
       viewBox="0 0 100 220"
       role="img"
-      aria-label="Character figure"
+      aria-label="Generated character"
       focusable="false"
       className="h-52 w-auto drop-shadow-lg"
     >
