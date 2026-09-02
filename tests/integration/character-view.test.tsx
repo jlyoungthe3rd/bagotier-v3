@@ -66,4 +66,3 @@ describe('character presentation (US5)', () => {
     expect(rects).toHaveLength(5);
   });
 });
-

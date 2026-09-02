@@ -1,0 +1,344 @@
+
+=== DIRECTORY TREE (max depth 3, source files only) ===
+.eslintignore
+.eslintrc.cjs
+.github
+.github/workflows
+.github/workflows/deploy-pages.yml
+.github/workflows/pr-preview.yml
+.gitignore
+.prettierignore
+.prettierrc
+.vscode
+.vscode/settings.json
+.vscode/tasks.json
+AGENTS.md
+README.md
+docs
+docs/codebase
+docs/codebase/.codebase-scan.txt
+docs/feature_todos.md
+docs/specifications.md
+index.html
+netlify.toml
+package-lock.json
+package.json
+postcss.config.js
+public
+public/sounds
+public/sounds/equip.wav
+public/sounds/invalid.wav
+public/sounds/pickup.wav
+public/sounds/unequip.wav
+report.md
+src
+src/App.tsx
+src/features
+src/features/audio
+src/features/audio/MuteToggle.tsx
+src/features/audio/sounds.ts
+src/features/audio/useSound.ts
+src/features/banner
+src/features/banner/WipBanner.tsx
+src/features/character
+src/features/character/CharacterView.tsx
+src/features/character/EquipmentSlot.tsx
+src/features/character/StatPanel.tsx
+src/features/character/stats.ts
+src/features/character/useCharacterQuery.ts
+src/features/github
+src/features/github/GitHubLink.tsx
+src/features/inventory
+src/features/inventory/InventoryGrid.tsx
+src/features/inventory/InventoryItem.tsx
+src/features/inventory/keyboard.ts
+src/features/inventory/tooltip
+src/features/inventory/useInventoryQuery.ts
+src/index.css
+src/lib
+src/lib/devLog.ts
+src/lib/queryClient.ts
+src/lib/queryKeys.ts
+src/main.tsx
+src/mocks
+src/mocks/api.ts
+src/mocks/character.ts
+src/mocks/items.ts
+src/store
+src/store/useInventoryStore.ts
+src/types
+src/types/domain.ts
+src/types/schemas.ts
+src/vite-env.d.ts
+styling-report.md
+tailwind.config.ts
+tests
+tests/contract
+tests/contract/character.contract.test.ts
+tests/contract/item-tooltip-ui.contract.test.tsx
+tests/contract/items.contract.test.ts
+tests/contract/store.contract.test.ts
+tests/integration
+tests/integration/character-view.test.tsx
+tests/integration/dnd-test-utils.tsx
+tests/integration/inventory-icon-only.test.tsx
+tests/integration/item-tooltip-hover.test.tsx
+tests/integration/item-tooltip-nonblocking.test.tsx
+tests/integration/item-tooltip-placement.test.tsx
+tests/integration/item-tooltip-rapid-movement.test.tsx
+tests/integration/item-tooltip-test-utils.tsx
+tests/integration/keyboard-navigation.test.tsx
+tests/integration/paper-doll-column.test.tsx
+tests/integration/rapid-operations.test.tsx
+tests/integration/sound-once.test.tsx
+tests/integration/stat-panel.test.tsx
+tests/setup.ts
+tests/unit
+tests/unit/character-figure.test.tsx
+tests/unit/github-link.test.tsx
+tests/unit/inventory-item.test.tsx
+tests/unit/item-tooltip-content.test.ts
+tests/unit/item-tooltip-state.test.ts
+tests/unit/keyboard-nav.test.ts
+tests/unit/stat-panel-animation.test.tsx
+tests/unit/stats.test.ts
+tests/unit/store-equip.test.ts
+tests/unit/store-unequip-swap.test.ts
+tests/unit/useSound.test.ts
+tests/unit/wip-banner.test.tsx
+tsconfig.app.json
+tsconfig.json
+tsconfig.node.json
+vercel.json
+vite.config.ts
+vitest.config.ts
+
+=== STACK DETECTION (manifest files) ===
+
+--- package-lock.json ---
+{
+  "name": "bagotier-v3",
+  "version": "0.1.0",
+  "lockfileVersion": 3,
+  "requires": true,
+  "packages": {
+    "": {
+      "name": "bagotier-v3",
+      "version": "0.1.0",
+      "dependencies": {
+        "@floating-ui/react": "^0.27.20",
+        "@tanstack/react-query": "^5.101.2",
+        "framer-motion": "^12.42.2",
+        "react": "^19.2.7",
+        "react-dom": "^19.2.7",
+        "zod": "^4.4.3",
+        "zustand": "^5.0.14"
+      },
+      "devDependencies": {
+        "@testing-library/jest-dom": "^6.9.1",
+        "@testing-library/react": "^16.3.2",
+        "@testing-library/user-event": "^14.6.1",
+        "@types/react": "^19.2.17",
+        "@types/react-dom": "^19.2.3",
+        "@typescript-eslint/eslint-plugin": "^8.63.0",
+        "@typescript-eslint/parser": "^8.63.0",
+        "@vitejs/plugin-react": "^6.0.3",
+        "autoprefixer": "^10.5.2",
+        "eslint": "^8.57.1",
+        "eslint-config-prettier": "^10.1.8",
+        "eslint-plugin-react-hooks": "^4.6.2",
+        "jsdom": "^29.1.1",
+        "postcss": "^8.5.17",
+        "prettier": "^3.9.5",
+        "tailwindcss": "^3.4.19",
+        "typescript": "^5.9.3",
+        "vite": "^8.1.4",
+        "vitest": "^4.1.10"
+      }
+    },
+    "node_modules/@adobe/css-tools": {
+      "version": "4.5.0",
+      "resolved": "https://registry.npmjs.org/@adobe/css-tools/-/css-tools-4.5.0.tgz",
+      "integrity": "sha512-6OzddxPio9UiWTCemp4N8cYLV2ZN1ncRnV1cVGtve7dhPOtRkleRyx32GQCYSwDYgaHU3USMm84tNsvKzRCa1Q==",
+      "dev": true,
+      "license": "MIT"
+    },
+    "node_modules/@alloc/quick-lru": {
+      "version": "5.2.0",
+      "resolved": "https://registry.npmjs.org/@alloc/quick-lru/-/quick-lru-5.2.0.tgz",
+      "integrity": "sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==",
+      "dev": true,
+      "license": "MIT",
+      "engines": {
+        "node": ">=10"
+      },
+      "funding": {
+        "url": "https://github.com/sponsors/sindresorhus"
+      }
+    },
+    "node_modules/@asamuzakjp/css-color": {
+      "version": "5.1.11",
+      "resolved": "https://registry.npmjs.org/@asamuzakjp/css-color/-/css-color-5.1.11.tgz",
+      "integrity": "sha512-KVw6qIiCTUQhByfTd78h2yD1/00waTmm9uy/R7Ck/ctUyAPj+AEDLkQIdJW0T8+qGgj3j5bpNKK7Q3G+LedJWg==",
+      "dev": true,
+      "license": "MIT",
+      "dependencies": {
+        "@asamuzakjp/generational-cache": "^1.0.1",
+        "@csstools/css-calc": "^3.2.0",
+        "@csstools/css-color-parser": "^4.1.0",
+        "@csstools/css-parser-algorithms": "^4.0.0",
+        "@csstools/css-tokenizer": "^4.0.0"
+      },
+      "engines": {
+        "node": "^20.19.0 || ^22.12.0 || >=24.0.0"
+      }
+    },
+    "node_modules/@asamuzakjp/dom-selector": {
+      "version": "7.1.1",
+      "resolved": "https://registry.npmjs.org/@asamuzakjp/dom-selector/-/dom-selector-7.1.1.tgz",
+
+[TRUNCATED] Showing first 80 of 4984 lines.
+--- package.json ---
+{
+  "name": "bagotier-v3",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "lint": "eslint . --max-warnings 0 && prettier --check .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "@floating-ui/react": "^0.27.20",
+    "@tanstack/react-query": "^5.101.2",
+    "framer-motion": "^12.42.2",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "zod": "^4.4.3",
+    "zustand": "^5.0.14"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/react": "^19.2.17",
+    "@types/react-dom": "^19.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.63.0",
+    "@typescript-eslint/parser": "^8.63.0",
+    "@vitejs/plugin-react": "^6.0.3",
+    "autoprefixer": "^10.5.2",
+    "eslint": "^8.57.1",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "jsdom": "^29.1.1",
+    "postcss": "^8.5.17",
+    "prettier": "^3.9.5",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3",
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
+  }
+}
+
+
+=== ENTRY POINTS ===
+No common entry points found. Check 'main' or 'scripts.start' in manifest files above.
+
+=== LINTING AND FORMATTING CONFIG ===
+Found: .eslintrc.cjs
+Found: .prettierrc
+Found: tsconfig.json
+
+=== ENVIRONMENT VARIABLE TEMPLATES ===
+No .env.example or .env.template found. Identify required environment variables by searching the code and config for environment variable reads.
+
+=== TODO / FIXME / HACK (production code only, test dirs excluded) ===
+None found.
+
+=== GIT RECENT COMMITS (last 20) ===
+56e823f Merge pull request #6 from jlyoungthe3rd/update-paper-doll-column
+7e9b52f Merge branch 'main' into update-paper-doll-column
+1aeda18 fix(test): add required seed field to CharacterAppearance mock
+888a684 fix(a11y): harmonize aria-label on CharacterFigure
+3f455ce merge: integrate test, a11y, and styling updates
+cdf0942 test: add unit and integration tests for blank face paper doll
+b5d5f19 a11y: audit and enhance SVG/screen reader accessibility for character view
+3febea8 docs: add styling and layout audit report for blank-face paper doll
+ea5bb56 feat: blank face paper doll
+f629eda Merge branch 'main' into update-paper-doll-column
+e0d9f3b refactor: consolidate feature workflow documentation into AGENTS.md and remove redundant rules file
+638fb39 docs: update AGENTS.md to specify new tab behavior for Netlify preview links
+61e7524 docs: add delete_branch_on_merge requirement to AGENTS.md workflow
+057f9ca docs: remove collapsible UI note from AGENTS.md per review feedback
+a13d0eb docs: update AGENTS.md workflow guidelines with PR deployment & CLS learnings
+8bf877a ci: trigger Netlify PR preview deploy
+8ce7c30 ci: trigger Netlify build for PR preview
+dd11070 ci: add netlify.toml, vercel.json, and pr-preview.yml for PR build previews
+9231615 docs: mark Update UI (Step 1) as completed
+316a996 test: align WipBanner class assertion with max-h-0 styling
+
+=== HIGH-CHURN FILES (last 90 days, top 20) ===
+   8 AGENTS.md
+   7 src/App.tsx
+   7 src/features/character/StatPanel.tsx
+   6 src/features/character/CharacterView.tsx
+   6 .gemini/rules/feature-workflow.md
+   6 README.md
+   4 report.md
+   4 docs/feature_todos.md
+   4 .gitignore
+   4 src/features/banner/WipBanner.tsx
+   4 src/features/github/GitHubLink.tsx
+   4 src/features/inventory/InventoryGrid.tsx
+   4 tests/unit/wip-banner.test.tsx
+   3 tests/unit/stat-panel-animation.test.tsx
+   3 src/mocks/items.ts
+   3 src/types/schemas.ts
+   3 tests/contract/items.contract.test.ts
+   3 tests/integration/stat-panel.test.tsx
+   3 tests/unit/stats.test.ts
+   3 .github/agents/speckit.analyze.agent.md
+
+=== MONOREPO SIGNALS ===
+No monorepo signals detected.
+
+=== CODE METRICS ===
+Total files scanned: 89
+Total lines of code: 9277
+
+Files by language:
+  TypeScript: 33
+  TypeScript/React: 30
+  Other: 25
+  JavaScript: 1
+
+Top 10 largest files:
+package-lock.json: 169.0KB
+public/sounds/equip.wav: 10.8KB
+public/sounds/unequip.wav: 10.8KB
+public/sounds/invalid.wav: 8.7KB
+README.md: 8.2KB
+docs/specifications.md: 7.9KB
+src/store/useInventoryStore.ts: 6.7KB
+src/features/character/CharacterView.tsx: 6.0KB
+tests/unit/stat-panel-animation.test.tsx: 5.4KB
+src/App.tsx: 5.2KB
+
+=== CI/CD PIPELINES ===
+CI/CD: GitHub Actions
+
+=== CONTAINERS & ORCHESTRATION ===
+No containerization configs detected.
+
+=== SECURITY & COMPLIANCE ===
+No security configs detected.
+
+=== PERFORMANCE & TESTING ===
+No performance testing configs detected.
+
+=== SCAN COMPLETE ===

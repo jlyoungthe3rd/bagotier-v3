@@ -50,22 +50,27 @@ describe('CharacterFigure (blank face paper doll)', () => {
     ['skin-01', '#e8b88a'],
     ['skin-02', '#c68e5e'],
     ['skin-03', '#8d5a3b'],
-  ])('applies skin tone %s (%s) to all body and head elements', (skinKey, expectedColor) => {
-    const { container } = render(<CharacterFigure appearance={makeAppearance(skinKey)} />);
-    const svg = container.querySelector('svg');
-    expect(svg).toBeInTheDocument();
+  ])(
+    'applies skin tone %s (%s) to all body and head elements',
+    (skinKey, expectedColor) => {
+      const { container } = render(
+        <CharacterFigure appearance={makeAppearance(skinKey)} />,
+      );
+      const svg = container.querySelector('svg');
+      expect(svg).toBeInTheDocument();
 
-    const rects = Array.from(svg?.querySelectorAll('rect') ?? []);
-    const circles = Array.from(svg?.querySelectorAll('circle') ?? []);
+      const rects = Array.from(svg?.querySelectorAll('rect') ?? []);
+      const circles = Array.from(svg?.querySelectorAll('circle') ?? []);
 
-    expect(rects).toHaveLength(5);
-    expect(circles).toHaveLength(1);
+      expect(rects).toHaveLength(5);
+      expect(circles).toHaveLength(1);
 
-    for (const rect of rects) {
-      expect(rect).toHaveAttribute('fill', expectedColor);
-    }
-    expect(circles[0]).toHaveAttribute('fill', expectedColor);
-  });
+      for (const rect of rects) {
+        expect(rect).toHaveAttribute('fill', expectedColor);
+      }
+      expect(circles[0]).toHaveAttribute('fill', expectedColor);
+    },
+  );
 
   it('falls back to default skin tone when skin part is missing or unknown', () => {
     const fallbackAppearance: CharacterAppearance = { seed: 12345, parts: {} };
