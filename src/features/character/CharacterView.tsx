@@ -10,30 +10,16 @@ const SKIN_TONES: Readonly<Record<string, string>> = {
   'skin-03': '#8d5a3b',
 };
 
-const HAIR_COLORS: Readonly<Record<string, string>> = {
-  'hair-01': '#2f2a26',
-  'hair-02': '#7a4a21',
-  'hair-03': '#c9a227',
-  'hair-04': '#9c3d3d',
-};
-
-const FACE_EXPRESSIONS: Readonly<Record<string, string>> = {
-  'face-01': 'M 40 58 Q 50 64 60 58',
-  'face-02': 'M 40 60 L 60 60',
-  'face-03': 'M 40 62 Q 50 56 60 62',
-};
-
 /** Layered SVG figure composed from the generated appearance parts. */
-function CharacterFigure({ appearance }: { readonly appearance: CharacterAppearance }) {
+export function CharacterFigure({ appearance }: { readonly appearance: CharacterAppearance }) {
   const skin = SKIN_TONES[appearance.parts.skin ?? ''] ?? '#e8b88a';
-  const hair = HAIR_COLORS[appearance.parts.hair ?? ''] ?? '#2f2a26';
-  const mouth = FACE_EXPRESSIONS[appearance.parts.face ?? ''] ?? 'M 40 58 L 60 58';
 
   return (
     <svg
       viewBox="0 0 100 220"
       role="img"
       aria-label="Generated character"
+      focusable="false"
       className="h-52 w-auto drop-shadow-lg"
     >
       {/* legs */}
@@ -46,19 +32,6 @@ function CharacterFigure({ appearance }: { readonly appearance: CharacterAppeara
       <rect x="72" y="88" width="12" height="55" rx="6" fill={skin} />
       {/* head */}
       <circle cx="50" cy="45" r="26" fill={skin} />
-      {/* hair */}
-      <path d="M 24 42 A 26 26 0 0 1 76 42 L 76 34 A 30 30 0 0 0 24 34 Z" fill={hair} />
-      {/* eyes */}
-      <circle cx="41" cy="45" r="3" fill="#1e1b18" />
-      <circle cx="59" cy="45" r="3" fill="#1e1b18" />
-      {/* mouth */}
-      <path
-        d={mouth}
-        stroke="#1e1b18"
-        strokeWidth="2"
-        fill="none"
-        strokeLinecap="round"
-      />
     </svg>
   );
 }
@@ -94,6 +67,8 @@ export function CharacterView() {
       {showTabHint && (
         <div
           data-testid="tab-hint-tooltip"
+          role="status"
+          aria-live="polite"
           className="absolute -top-1.5 z-30 animate-bounce rounded-md border border-gold bg-surface px-3 py-1.5 text-[10px] font-semibold text-gold shadow-lg"
         >
           Press{' '}
@@ -118,7 +93,12 @@ export function CharacterView() {
             className="pointer-events-none absolute inset-0 flex items-center justify-center"
             aria-hidden="true"
           >
-            <svg viewBox="0 0 200 220" className="h-52 w-auto opacity-[0.18]">
+            <svg
+              viewBox="0 0 200 220"
+              aria-hidden="true"
+              focusable="false"
+              className="h-52 w-auto opacity-[0.18]"
+            >
               {/* Outer spinning dashed ring */}
               <g
                 style={{ transformBox: 'fill-box', transformOrigin: 'center' }}

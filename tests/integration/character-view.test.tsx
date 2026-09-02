@@ -44,4 +44,26 @@ describe('character presentation (US5)', () => {
     expect(within(tile).getByText('🪖')).toBeInTheDocument();
     expect(within(tile).queryByText(/iron helm/i)).toBeNull();
   });
+
+  it('renders blank face paper doll figure without eyes, mouth, or hair SVG elements', async () => {
+    await renderApp();
+    const figureSvg = screen.getByRole('img', { name: 'Generated character' });
+    expect(figureSvg).toBeInTheDocument();
+
+    // Exactly one circle representing the blank head (no eye circles)
+    const circles = figureSvg.querySelectorAll('circle');
+    expect(circles).toHaveLength(1);
+    expect(circles[0]).toHaveAttribute('cx', '50');
+    expect(circles[0]).toHaveAttribute('cy', '45');
+    expect(circles[0]).toHaveAttribute('r', '26');
+
+    // No path elements (no hair or mouth)
+    const paths = figureSvg.querySelectorAll('path');
+    expect(paths).toHaveLength(0);
+
+    // 5 body/limb rects (2 legs, 1 torso, 2 arms)
+    const rects = figureSvg.querySelectorAll('rect');
+    expect(rects).toHaveLength(5);
+  });
 });
+
