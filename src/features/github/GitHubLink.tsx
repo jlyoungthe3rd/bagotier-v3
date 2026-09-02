@@ -1,12 +1,12 @@
-/** Component displaying a glassmorphic bottom-right anchored link to the GitHub repository. */
+/** Component displaying a glassmorphic top-right anchored link to the GitHub repository. */
 export function GitHubLink() {
   return (
     <a
       href="https://github.com/jlyoungthe3rd/bagotier-v3"
       target="_blank"
       rel="noopener noreferrer"
-      aria-label="View source code on GitHub"
-      className="fixed bottom-4 right-4 z-50 flex items-center gap-2 rounded-full border border-slot-idle bg-surface-raised/80 px-3 py-1.5 font-mono text-[11px] font-semibold text-ink-muted shadow-lg backdrop-blur-sm transition-all duration-300 hover:border-ember hover:text-ink hover:shadow-[0_0_10px_rgba(212,104,58,0.25)] hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"
+      aria-label="View source code on GitHub (opens in new tab)"
+      className="fixed right-4 top-4 z-50 flex items-center gap-1.5 rounded-full border border-slot-idle bg-surface-raised/80 px-2.5 py-1 font-mono text-[11px] font-semibold text-ink-muted shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-ember hover:text-ink hover:shadow-[0_0_10px_rgba(212,104,58,0.25)] hover:scale-105 active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"
     >
       <svg
         role="img"

@@ -17,7 +17,7 @@ This document tracks planned patches, UI enhancements, and feature ideas for **B
 
 ## 🎨 UI & Layout Enhancements
 
-- [ ] **Update UI (Step 1): Central Paper Doll & Column Layout**
+- [x] **Update UI (Step 1): Central Paper Doll & Column Layout**
   - Make the paper doll central.
   - Move the bag to the bottom of the UI.
   - Use a column layout.

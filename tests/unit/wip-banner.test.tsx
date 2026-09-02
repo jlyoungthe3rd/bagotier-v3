@@ -26,8 +26,17 @@ describe('WipBanner', () => {
 
     await user.click(dismissBtn);
 
+    // Accessible region is hidden from default accessibility queries
     expect(
       screen.queryByRole('region', { name: 'Work in progress notice' }),
     ).not.toBeInTheDocument();
+
+    // Banner stays in DOM (not unmounted) with aria-hidden="true"
+    const bannerInDom = document.querySelector<HTMLElement>(
+      'aside[aria-label="Work in progress notice"]',
+    );
+    expect(bannerInDom).not.toBeNull();
+    expect(bannerInDom).toBeInTheDocument();
+    expect(bannerInDom).toHaveAttribute('aria-hidden', 'true');
   });
 });

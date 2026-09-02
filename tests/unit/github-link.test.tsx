@@ -6,7 +6,7 @@ describe('GitHubLink', () => {
   it('renders correctly with correct href, target, and accessibility labels', () => {
     render(<GitHubLink />);
 
-    const link = screen.getByRole('link', { name: 'View source code on GitHub' });
+    const link = screen.getByRole('link', { name: /View source code on GitHub/i });
     expect(link).toBeInTheDocument();
     expect(link).toHaveAttribute('href', 'https://github.com/jlyoungthe3rd/bagotier-v3');
     expect(link).toHaveAttribute('target', '_blank');
