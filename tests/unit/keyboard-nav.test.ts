@@ -9,16 +9,12 @@ describe('keyboard navigation store state & actions (US1-5)', () => {
   it('initializes with default values', () => {
     const state = useInventoryStore.getState();
     expect(state.focusedSection).toBeNull();
-    expect(state.focusedBagIndex).toBe(0);
     expect(state.focusedSlot).toBe('head');
-    expect(state.tabHintDismissed).toBe(false);
-    expect(state.showTabHint).toBe(false);
+    expect(state.activeFanoutSlot).toBeNull();
+    expect(state.focusedFanoutIndex).toBe(0);
   });
 
   it('sets the focused section correctly', () => {
-    useInventoryStore.getState().setFocusedSection('bag');
-    expect(useInventoryStore.getState().focusedSection).toBe('bag');
-
     useInventoryStore.getState().setFocusedSection('equipment');
     expect(useInventoryStore.getState().focusedSection).toBe('equipment');
 
@@ -26,45 +22,35 @@ describe('keyboard navigation store state & actions (US1-5)', () => {
     expect(useInventoryStore.getState().focusedSection).toBeNull();
   });
 
-  it('sets the focused bag index correctly', () => {
-    useInventoryStore.getState().setFocusedBagIndex(5);
-    expect(useInventoryStore.getState().focusedBagIndex).toBe(5);
-  });
-
   it('sets the focused slot correctly', () => {
     useInventoryStore.getState().setFocusedSlot('legs');
     expect(useInventoryStore.getState().focusedSlot).toBe('legs');
   });
 
-  it('shows/dismisses the TAB hint tooltip correctly', () => {
-    // Arrow key nav triggers hint initially
-    useInventoryStore.getState().triggerArrowKeyNav();
-    expect(useInventoryStore.getState().showTabHint).toBe(true);
-    expect(useInventoryStore.getState().tabHintDismissed).toBe(false);
+  it('manages active fanout slot and focused fanout index', () => {
+    useInventoryStore.getState().setActiveFanoutSlot('head');
+    expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
+    expect(useInventoryStore.getState().focusedFanoutIndex).toBe(0);
 
-    // Dismissing the hint
-    useInventoryStore.getState().dismissTabHint();
-    expect(useInventoryStore.getState().showTabHint).toBe(false);
-    expect(useInventoryStore.getState().tabHintDismissed).toBe(true);
+    useInventoryStore.getState().setFocusedFanoutIndex(1);
+    expect(useInventoryStore.getState().focusedFanoutIndex).toBe(1);
 
-    // Subsequent arrow key nav does not trigger hint
-    useInventoryStore.getState().triggerArrowKeyNav();
-    expect(useInventoryStore.getState().showTabHint).toBe(false);
+    useInventoryStore.getState().setActiveFanoutSlot(null);
+    expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
   });
 
   it('resets keyboard nav state upon reset()', () => {
-    useInventoryStore.getState().setFocusedSection('bag');
-    useInventoryStore.getState().setFocusedBagIndex(12);
+    useInventoryStore.getState().setFocusedSection('equipment');
     useInventoryStore.getState().setFocusedSlot('weapon');
-    useInventoryStore.getState().dismissTabHint();
+    useInventoryStore.getState().setActiveFanoutSlot('weapon');
+    useInventoryStore.getState().setFocusedFanoutIndex(2);
 
     useInventoryStore.getState().reset();
 
     const state = useInventoryStore.getState();
     expect(state.focusedSection).toBeNull();
-    expect(state.focusedBagIndex).toBe(0);
     expect(state.focusedSlot).toBe('head');
-    expect(state.tabHintDismissed).toBe(false);
-    expect(state.showTabHint).toBe(false);
+    expect(state.activeFanoutSlot).toBeNull();
+    expect(state.focusedFanoutIndex).toBe(0);
   });
 });

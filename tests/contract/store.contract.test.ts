@@ -5,7 +5,7 @@ import {
   useInventoryStore,
 } from '../../src/store/useInventoryStore';
 import type { ItemId, SlotType } from '../../src/types/domain';
-import { BAG_CAPACITY, SLOT_TYPES, toItemId } from '../../src/types/domain';
+import { SLOT_TYPES, toItemId } from '../../src/types/domain';
 
 /** Deterministic PRNG so the property-style test is reproducible. */
 function mulberry32(seed: number): () => number {
@@ -33,7 +33,7 @@ function pickState() {
   const s = useInventoryStore.getState();
   return {
     equipped: s.equipped,
-    bag: s.bag,
+    unequipped: Array.from(s.unequipped),
     muted: s.muted,
     feedback: s.feedback,
   };
@@ -41,12 +41,10 @@ function pickState() {
 
 function assertInvariants(): void {
   const s = useInventoryStore.getState();
-  // I3 — bounded bag
-  expect(s.bag).toHaveLength(BAG_CAPACITY);
-  // I1 — single location: each id appears at most once across equipped + bag
+  // I1 — single location: each id appears at most once across equipped + unequipped
   const seen = [
     ...Object.values(s.equipped).filter((v): v is ItemId => v !== null),
-    ...s.bag.filter((v): v is ItemId => v !== null),
+    ...Array.from(s.unequipped),
   ];
   expect(new Set(seen).size).toBe(seen.length);
   // I2 — slot compatibility
@@ -68,9 +66,9 @@ describe('inventory store contract', () => {
     expect(InventoryStoreStateSchema.safeParse(pickState()).success).toBe(true);
   });
 
-  it('preserves invariants I1–I3 under random valid action sequences (SC-006)', () => {
+  it('preserves invariants I1–I2 under random valid action sequences (SC-006)', () => {
     const rand = mulberry32(0xbadc0de);
-    useInventoryStore.getState().seedBag(ids);
+    useInventoryStore.getState().seedUnequipped(ids);
     assertInvariants();
 
     for (let step = 0; step < 300; step++) {
@@ -78,14 +76,10 @@ describe('inventory store contract', () => {
       const roll = rand();
       const itemId = ids[Math.floor(rand() * ids.length)]!;
       const slot = SLOT_TYPES[Math.floor(rand() * SLOT_TYPES.length)]!;
-      if (roll < 0.3) {
+      if (roll < 0.45) {
         s.equip(itemId, slot);
-      } else if (roll < 0.5) {
-        s.swap(itemId, slot);
-      } else if (roll < 0.7) {
-        s.unequip(slot);
       } else if (roll < 0.85) {
-        s.moveInBag(itemId, Math.floor(rand() * BAG_CAPACITY));
+        s.unequip(slot);
       } else {
         s.toggleMute();
       }
@@ -94,7 +88,7 @@ describe('inventory store contract', () => {
   });
 
   it('contains no Item-shaped entity copies in state (invariant I5)', () => {
-    useInventoryStore.getState().seedBag(ids);
+    useInventoryStore.getState().seedUnequipped(ids);
     const state = pickState();
     const stack: unknown[] = [state];
     while (stack.length > 0) {

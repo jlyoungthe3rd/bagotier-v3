@@ -31,9 +31,6 @@ export const STAT_KEYS = ['hp', 'mp', 'def', 'str', 'agi', 'int'] as const;
 
 export type StatKey = (typeof STAT_KEYS)[number];
 
-/** Fixed inventory bag size (invariant I3). */
-export const BAG_CAPACITY = 24;
-
 /** An equippable item from the catalog (React Query owned, immutable). */
 export interface Item {
   readonly id: ItemId;
@@ -58,20 +55,17 @@ export interface Character {
   readonly baseStats: Readonly<Record<StatKey, number>>;
 }
 
-/** Where an item is located (bag cell or equipment slot). */
-export type DragOrigin =
-  | { readonly kind: 'bag'; readonly index: number }
-  | { readonly kind: 'slot'; readonly slot: SlotType };
-
 /** Zustand-owned equipment/session state — IDs only, never entity copies. */
 export interface EquipmentState {
   readonly equipped: Readonly<Record<SlotType, ItemId | null>>;
-  readonly bag: readonly (ItemId | null)[];
+  /** Explicit set of unequipped item IDs for O(1) lookup. */
+  readonly unequipped: ReadonlySet<ItemId>;
   readonly muted: boolean;
   readonly feedback: string | null;
-  readonly focusedSection: 'bag' | 'equipment' | null;
-  readonly focusedBagIndex: number;
+  readonly focusedSection: 'equipment' | null;
   readonly focusedSlot: SlotType;
-  readonly tabHintDismissed: boolean;
-  readonly showTabHint: boolean;
+  /** Which equipment slot currently has its fan-out open, if any. */
+  readonly activeFanoutSlot: SlotType | null;
+  /** Index of the focused item within the active fan-out (Arrow key nav). */
+  readonly focusedFanoutIndex: number;
 }

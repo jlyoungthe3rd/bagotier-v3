@@ -31,49 +31,49 @@ describe('rapid successive operations (Polish)', () => {
   beforeEach(() => {
     useInventoryStore.getState().reset();
     registerItemSlotTypes(Object.fromEntries(items.map((i) => [i.id, i.slotType])));
-    useInventoryStore.getState().seedBag(items.map((i) => i.id));
+    useInventoryStore.getState().seedUnequipped(items.map((i) => i.id));
   });
 
-  it('keeps bag + slots consistent through 20+ mixed operations', () => {
+  it('keeps unequipped + slots consistent through 20+ mixed operations', () => {
     const s = () => useInventoryStore.getState();
     const ops: (() => void)[] = [
       () => s().equip(toItemId('iron-helm'), 'head'),
       () => s().equip(toItemId('steel-cuirass'), 'body'),
       () => s().equip(toItemId('cursed-gauntlets'), 'hands'),
       () => s().equip(toItemId('oak-staff'), 'weapon'),
-      () => s().swap(toItemId('wizard-hat'), 'head'),
-      () => s().swap(toItemId('rusty-sword'), 'weapon'),
+      () => s().equip(toItemId('wizard-hat'), 'head'),
+      () => s().equip(toItemId('bronze-sword'), 'weapon'),
       () => {
         s().unequip('head');
       },
       () => s().equip(toItemId('iron-helm'), 'head'),
-      () => s().equip(toItemId('leather-greaves'), 'legs'),
+      () => s().equip(toItemId('plated-greaves'), 'legs'),
       () => s().equip(toItemId('iron-sabatons'), 'feet'),
       () => s().equip(toItemId('lucky-charm'), 'accessory'),
-      () => s().swap(toItemId('wizard-hat'), 'head'),
+      () => s().equip(toItemId('wizard-hat'), 'head'),
       () => {
         s().unequip('weapon');
       },
       () => s().equip(toItemId('oak-staff'), 'weapon'),
-      () => s().swap(toItemId('rusty-sword'), 'weapon'),
+      () => s().equip(toItemId('bronze-sword'), 'weapon'),
       () => {
         s().unequip('hands');
       },
       () => s().equip(toItemId('cursed-gauntlets'), 'hands'),
-      () => s().swap(toItemId('iron-helm'), 'head'),
+      () => s().equip(toItemId('iron-helm'), 'head'),
       () => {
         s().unequip('accessory');
       },
       () => s().equip(toItemId('lucky-charm'), 'accessory'),
-      () => s().moveInBag(toItemId('wizard-hat'), 20),
-      () => s().moveInBag(toItemId('oak-staff'), 21),
+      () => s().equip(toItemId('silk-robe'), 'body'),
+      () => s().equip(toItemId('travel-boots'), 'feet'),
     ];
     for (const op of ops) op();
 
-    const { bag, equipped } = s();
-    const bagIds = bag.filter((id): id is ItemId => id !== null);
+    const { unequipped, equipped } = s();
+    const unequippedIds = Array.from(unequipped);
     const equippedIds = Object.values(equipped).filter((id): id is ItemId => id !== null);
-    const all = [...bagIds, ...equippedIds];
+    const all = [...unequippedIds, ...equippedIds];
     // No item lost or duplicated.
     expect(all).toHaveLength(items.length);
     expect(new Set(all).size).toBe(items.length);

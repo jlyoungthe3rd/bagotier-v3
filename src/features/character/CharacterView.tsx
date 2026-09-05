@@ -58,7 +58,6 @@ function RegionSlot({
 export function CharacterView() {
   const { data: character } = useCharacterQuery();
   const equipped = useInventoryStore((s) => s.equipped);
-  const showTabHint = useInventoryStore((s) => s.showTabHint);
 
   if (character === undefined) return null;
 
@@ -68,20 +67,6 @@ export function CharacterView() {
       data-testid="character-view"
       className="relative flex flex-col items-center gap-3"
     >
-      {showTabHint && (
-        <div
-          data-testid="tab-hint-tooltip"
-          role="status"
-          aria-live="polite"
-          className="absolute -top-1.5 z-30 animate-bounce rounded-md border border-gold bg-surface px-3 py-1.5 text-[10px] font-semibold text-gold shadow-lg"
-        >
-          Press{' '}
-          <kbd className="mx-0.5 rounded bg-surface-raised px-1 py-0.5 font-mono text-[9px] text-gold border border-gold/50">
-            TAB
-          </kbd>{' '}
-          to switch to the paper doll
-        </div>
-      )}
       <h2 className="font-display text-base font-bold text-gold">{character.name}</h2>
       <div data-region="head" className="flex justify-center">
         <RegionSlot slot="head" equipped={equipped} />

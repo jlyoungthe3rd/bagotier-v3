@@ -15,30 +15,22 @@ describe('exactly-once sound playback (US4)', () => {
     useInventoryStore.getState().reset();
   });
 
-  it('plays equip sound once on direct click-to-equip', async () => {
+  it('plays equip sound once on clicking a fanned-out item', async () => {
     await renderApp();
 
-    const item = screen.getByTestId('item-iron-helm');
-    fireEvent.click(item);
-
-    expect(playback).toHaveBeenCalledTimes(1);
-    expect(playback).toHaveBeenCalledWith('equip');
-  });
-
-  it('plays the equip sound once for a click-to-swap', async () => {
-    await renderApp();
+    // Open fanout for head slot
     act(() => {
-      useInventoryStore.getState().equip(toItemId('iron-helm'), 'head');
+      useInventoryStore.getState().setActiveFanoutSlot('head');
     });
 
-    const wizardHat = screen.getByTestId('item-wizard-hat');
-    fireEvent.click(wizardHat);
+    const fannedItem = screen.getByTestId('fanout-item-iron-helm');
+    fireEvent.click(fannedItem);
 
     expect(playback).toHaveBeenCalledTimes(1);
     expect(playback).toHaveBeenCalledWith('equip');
   });
 
-  it('plays the unequip sound once when unequipping an item', async () => {
+  it('plays the unequip sound once when unequipping an item from slot', async () => {
     await renderApp();
     act(() => {
       useInventoryStore.getState().equip(toItemId('iron-helm'), 'head');
@@ -51,35 +43,15 @@ describe('exactly-once sound playback (US4)', () => {
     expect(playback).toHaveBeenCalledWith('unequip');
   });
 
-  it('plays the invalid sound once when attempting to unequip into a full bag', async () => {
-    await renderApp();
-    act(() => {
-      const ids = Array.from({ length: 24 }, (_, i) =>
-        toItemId(i === 0 ? 'iron-helm' : `item-${String(i)}`),
-      );
-      useInventoryStore.getState().seedBag(ids);
-      useInventoryStore.getState().equip(toItemId('iron-helm'), 'head');
-
-      const bagCopy = [...useInventoryStore.getState().bag];
-      bagCopy[0] = toItemId('extra-item');
-      useInventoryStore.setState({ bag: bagCopy });
-    });
-
-    const item = screen.getByTestId('item-iron-helm');
-    fireEvent.click(item);
-
-    expect(playback).toHaveBeenCalledTimes(1);
-    expect(playback).toHaveBeenCalledWith('invalid');
-  });
-
   it('plays zero sounds when muted (FR-010)', async () => {
     await renderApp();
     act(() => {
       useInventoryStore.getState().toggleMute();
+      useInventoryStore.getState().setActiveFanoutSlot('head');
     });
 
-    const item = screen.getByTestId('item-iron-helm');
-    fireEvent.click(item);
+    const fannedItem = screen.getByTestId('fanout-item-iron-helm');
+    fireEvent.click(fannedItem);
 
     expect(playback).not.toHaveBeenCalled();
     expect(useInventoryStore.getState().equipped.head).toBe('iron-helm');

@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { useInventoryQuery } from './features/inventory/useInventoryQuery';
 import { useCharacterQuery } from './features/character/useCharacterQuery';
 import { registerItemSlotTypes, useInventoryStore } from './store/useInventoryStore';
-import { InventoryGrid } from './features/inventory/InventoryGrid';
 import { ItemTooltipProvider } from './features/inventory/tooltip';
 import { CharacterView } from './features/character/CharacterView';
 import { StatPanel } from './features/character/StatPanel';
@@ -27,8 +26,7 @@ function LoadingScreen() {
       <Skeleton className="mb-1 h-3 w-24" />
       <Skeleton className="mb-6 h-6 w-40" />
       <Skeleton className="mx-auto mb-4 h-64 w-56" />
-      <Skeleton className="mb-4 h-20 w-full" />
-      <Skeleton className="h-48 w-full" />
+      <Skeleton className="h-20 w-full" />
     </div>
   );
 }
@@ -58,18 +56,15 @@ function ErrorScreen({ onRetry }: { onRetry: () => void }) {
 
 /** Seeds the session store from the fetched catalog exactly once per load. */
 function useSeedStore(items: readonly Item[] | undefined) {
-  const seedBag = useInventoryStore((s) => s.seedBag);
+  const seedUnequipped = useInventoryStore((s) => s.seedUnequipped);
   useEffect(() => {
     if (items === undefined) return;
     registerItemSlotTypes(Object.fromEntries(items.map((i) => [i.id, i.slotType])));
-    seedBag(items.map((i) => i.id));
-  }, [items, seedBag]);
+    seedUnequipped(items.map((i) => i.id));
+  }, [items, seedUnequipped]);
 }
 
 function InventoryScreen() {
-  const feedback = useInventoryStore((s) => s.feedback);
-  const dismissFeedback = useInventoryStore((s) => s.dismissFeedback);
-
   return (
     <ItemTooltipProvider>
       <a
@@ -102,28 +97,6 @@ function InventoryScreen() {
 
         {/* Stat panel */}
         <StatPanel />
-
-        {/* Separator */}
-        <hr aria-hidden="true" className="border-0 border-t border-slot-idle/50" />
-
-        {/* Inventory bag — full width, not individually scrollable */}
-        <InventoryGrid />
-
-        {feedback !== null ? (
-          <div
-            role="status"
-            className="flex shrink-0 items-center justify-between rounded border border-slot-invalid/50 bg-surface-raised px-4 py-2.5 text-sm text-ink-muted"
-          >
-            <span>{feedback}</span>
-            <button
-              type="button"
-              onClick={dismissFeedback}
-              className="ml-4 text-xs font-semibold uppercase tracking-wide text-ink-muted underline hover:text-ink"
-            >
-              Dismiss
-            </button>
-          </div>
-        ) : null}
       </main>
     </ItemTooltipProvider>
   );
