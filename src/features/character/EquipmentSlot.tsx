@@ -8,18 +8,8 @@ import { InventoryItem } from '../inventory/InventoryItem';
 import { useItemTooltip } from '../inventory/tooltip';
 import { useSound } from '../audio/useSound';
 import { handleEquipmentKeyDown } from '../inventory/keyboard';
-import { FanOut } from './FanOut';
+import { FanOut, SLOT_LABELS } from './FanOut';
 import { getSlotHoverDelay, recordSlotActivity } from './slotHoverManager';
-
-const SLOT_LABELS: Readonly<Record<SlotType, string>> = {
-  head: 'Head',
-  body: 'Body',
-  legs: 'Legs',
-  hands: 'Hands',
-  feet: 'Feet',
-  weapon: 'Weapon',
-  accessory: 'Accessory',
-};
 
 const SLOT_ICONS: Readonly<Record<SlotType, string>> = {
   head: '🪖',
@@ -55,6 +45,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const unequipped = useInventoryStore((s) => s.unequipped);
   const tooltip = useItemTooltip();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const equippedButtonRef = useRef<HTMLButtonElement | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -76,8 +67,10 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   }, [slot, fanoutItems.length]);
 
   const closeFanout = useCallback(() => {
-    if (useInventoryStore.getState().activeFanoutSlot === slot) {
-      useInventoryStore.getState().setActiveFanoutSlot(null);
+    const store = useInventoryStore.getState();
+    if (store.activeFanoutSlot === slot) {
+      store.setActiveFanoutSlot(null);
+      store.setFeedback(`Closed ${SLOT_LABELS[slot]} slot options.`);
     }
   }, [slot]);
 
@@ -97,12 +90,13 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     }
   }, [isActive, equippedItem]);
 
-  // Restore focus to slot button when fan-out closes while slot is active
+  // Restore focus to slot button or equipped item when fan-out closes while slot is active
   const prevFanoutOpenRef = useRef(isFanoutOpen);
   useEffect(() => {
     if (prevFanoutOpenRef.current && !isFanoutOpen && isActive) {
-      if (buttonRef.current && document.activeElement !== buttonRef.current) {
-        buttonRef.current.focus();
+      const target = buttonRef.current ?? equippedButtonRef.current;
+      if (target && document.activeElement !== target) {
+        target.focus();
       }
     }
     prevFanoutOpenRef.current = isFanoutOpen;
@@ -175,7 +169,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
 
   return (
     <div
-      className={`relative flex flex-col items-center gap-1 transition-transform ${
+      className={`relative flex flex-col items-center gap-1 transition-transform motion-reduce:transition-none ${
         isFanoutOpen ? 'z-30' : 'z-10'
       }`}
       onMouseEnter={handleContainerMouseEnter}
@@ -184,7 +178,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
       <div
         data-testid={`slot-${slot}`}
         aria-label={`${SLOT_LABELS[slot]} slot`}
-        className={`group relative h-cell w-cell border bg-surface p-0.5 transition-all duration-200 ${
+        className={`group relative h-cell w-cell border bg-surface p-0.5 transition-all duration-200 motion-reduce:transition-none ${
           isFanoutOpen
             ? 'border-gold/90 shadow-[0_0_14px_rgba(196,148,58,0.35)] ring-1 ring-gold/40'
             : isActive
@@ -231,6 +225,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               transition={{ duration: reducedMotion === true ? 0 : 0.18 }}
             >
               <InventoryItem
+                ref={equippedButtonRef}
                 item={equippedItem}
                 slot={slot}
                 data-tooltip-surface="equipment"
@@ -263,7 +258,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                   ? `${fanoutItems.length} items available. Press Enter or Space to equip.`
                   : undefined
               }
-              className="flex h-full w-full items-center justify-center bg-transparent transition-colors outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"
+              className="flex h-full w-full items-center justify-center bg-transparent transition-colors outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid motion-reduce:transition-none"
               onFocus={() => {
                 useInventoryStore.getState().setFocusedSection('equipment');
                 useInventoryStore.getState().setFocusedSlot(slot);
@@ -309,14 +304,15 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
             slot={slot}
             items={fanoutItems}
             onDismiss={() => {
-              buttonRef.current?.focus();
+              const target = buttonRef.current ?? equippedButtonRef.current;
+              target?.focus();
             }}
           />
         )}
       </div>
       <span
-        className={`text-[9px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-          isFanoutOpen ? 'text-gold' : 'text-ink-muted/70'
+        className={`text-[9px] font-semibold uppercase tracking-[0.12em] transition-colors motion-reduce:transition-none ${
+          isFanoutOpen ? 'text-gold' : 'text-ink-muted'
         }`}
       >
         {SLOT_LABELS[slot]}

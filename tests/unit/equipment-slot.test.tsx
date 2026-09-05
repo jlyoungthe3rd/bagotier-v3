@@ -161,4 +161,49 @@ describe('EquipmentSlot component', () => {
       playbackSpy.mockRestore();
     });
   });
+
+  describe('focus restoration on Escape dismissal', () => {
+    it('restores focus to empty slot button on Escape', async () => {
+      const user = userEvent.setup();
+      renderEquipmentSlot('head', null);
+
+      const emptyBtn = screen.getByTestId('slot-empty-button-head');
+      act(() => {
+        emptyBtn.focus();
+      });
+
+      expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
+
+      await user.keyboard('{Escape}');
+
+      expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
+      expect(emptyBtn).toHaveFocus();
+      expect(useInventoryStore.getState().feedback).toBe('Closed Head slot options.');
+    });
+
+    it('restores focus to equipped item button on Escape', async () => {
+      const user = userEvent.setup();
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+
+      renderEquipmentSlot('head', 'iron-helm' as never);
+
+      const equippedItem = screen.getByTestId('item-iron-helm');
+      act(() => {
+        equippedItem.focus();
+      });
+
+      // Open fanout manually to simulate unequipped alternatives
+      act(() => {
+        useInventoryStore.getState().setActiveFanoutSlot('head');
+      });
+
+      expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
+
+      await user.keyboard('{Escape}');
+
+      expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
+      expect(equippedItem).toHaveFocus();
+      expect(useInventoryStore.getState().feedback).toBe('Closed Head slot options.');
+    });
+  });
 });
