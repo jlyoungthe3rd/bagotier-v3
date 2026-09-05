@@ -22,6 +22,6 @@ This document tracks planned patches, UI enhancements, and feature ideas for **B
   - Move the bag to the bottom of the UI.
   - Use a column layout.
 
-- [ ] **Update UI (Step 2): Cell-Based Equipment Inspector (Destiny 2 Style)**
+- [x] **Update UI (Step 2): Cell-Based Equipment Inspector (Destiny 2 Style)**
   - Instead of clicking items to place them onto the character, show potential items when an equipment cell is selected (or mouseOvered).
   - Mimic the inventory interaction style in the video game Destiny 2.

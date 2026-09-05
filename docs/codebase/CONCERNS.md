@@ -4,19 +4,16 @@
 
 ### 1) Top Risks (Prioritized)
 
-| Severity | Concern                                       | Evidence                                                                                | Impact                                                                                       | Suggested action                                                                        |
-| -------- | --------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Med      | Outdated Documentation on Drag-and-Drop       | `README.md` lines 22, 37, 75 cite `@dnd-kit/core`, but package is not in `package.json` | Causes significant developer confusion and architectural dissonance for onboarding engineers | Update `README.md` and test comments to accurately document click/keyboard interaction. |
-| Med      | Prettier Check Failures Breaking Lint Command | `npm run lint` fails with exit code 1; 5 files flagged by `prettier --check .`          | Blocks CI pipelines or pre-commit hooks that enforce `npm run lint`                          | Run `npm run format` to bring all tracked files into compliance with `.prettierrc`.     |
-| Low      | Unwrapped `act(...)` Warnings in RTL Tests    | `npm test` outputs multiple React 19 `act(...)` console warnings during component tests | Clutters test output logs; potential indicator of asynchronous timing drift in tests         | Wrap asynchronous query updates and event triggers in `await act(...)` or `userEvent`.  |
+| Severity | Concern                                    | Evidence                                                                                | Impact                                                                                               | Suggested action                                                                                    |
+| -------- | ------------------------------------------ | --------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Low      | Unwrapped `act(...)` Warnings in RTL Tests | `npm test` outputs occasional React 19 `act(...)` console warnings during async queries | Clutters test output logs; potential indicator of asynchronous timing drift in tests                 | Wrap remaining asynchronous query updates and event triggers in `await act(...)` or `userEvent`.    |
+| Low      | Incomplete Keyboard Nav Unit Coverage      | `src/features/inventory/keyboard.ts` line coverage is at 25%                            | Direct unit testing for directional slot arrow transitions is deferred while design decisions evolve | Expand unit tests in `tests/unit/keyboard-nav.test.ts` once keyboard navigation behavior finalized. |
 
 ### 2) Technical Debt
 
-| Debt item                               | Why it exists                                                                                       | Where                                                   | Risk if ignored                                                                                    | Suggested fix                                                            |
-| --------------------------------------- | --------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
-| Residual DnD Test Utility Comments      | DnD kit was previously used and removed in favor of click/keyboard controls                         | `tests/integration/dnd-test-utils.tsx`                  | New contributors may assume dnd-kit is installed or try to restore broken sensor code              | Refactor file to `test-utils.tsx` and clarify jsdom layout mock purpose. |
-| Hardcoded Responsive Breakpoint Mapping | Keyboard grid navigation relies on hardcoded window media queries to compute grid columns (4, 6, 8) | `src/features/inventory/keyboard.ts` (`getGridColumns`) | If Tailwind CSS grid column breakpoints change in `InventoryGrid.tsx`, arrow keys will misnavigate | Centralize grid column breakpoints into a shared config constant.        |
-| Absence of Test Coverage Tooling        | No coverage reporter configured in devDependencies or Vitest config                                 | `package.json`, `vitest.config.ts`                      | Code regressions and untested edge cases may accumulate unnoticed                                  | Install `@vitest/coverage-v8` and define minimum coverage thresholds.    |
+| Debt item                          | Why it exists                                                                  | Where                                  | Risk if ignored                                                          | Suggested fix                                                                               |
+| ---------------------------------- | ------------------------------------------------------------------------------ | -------------------------------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------- |
+| Future Rename for `dnd-test-utils` | File name retains historical `dnd-` prefix although now testing general layout | `tests/integration/dnd-test-utils.tsx` | Minor cosmetic naming inconsistency; no functional risk (all tests pass) | Rename to `test-utils.tsx` or `layout-test-utils.tsx` during future test refactoring cycle. |
 
 ### 3) Security Concerns
 
@@ -27,32 +24,34 @@
 
 ### 4) Performance and Scaling Concerns
 
-| Concern                              | Evidence                                                                                | Current symptom                                                                      | Scaling risk                                                                         | Suggested improvement                                                        |
-| ------------------------------------ | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------- |
-| Broad Grid Component Re-Renders      | `src/features/inventory/InventoryGrid.tsx` subscribes to the full `bag` array           | Entire 24-cell grid re-renders on every single item equip or swap                    | Negligible for 24 cells, but causes UI frame drops if inventory scales to 100+ cells | Pass individual slot selectors to memoized `BagCell` components.             |
-| Just-in-Time Audio Buffer Preloading | `src/features/audio/useSound.ts` initializes audio preloading on first user interaction | First played sound effect can experience subtle latency if assets are not pre-cached | Degraded sound tactile feedback on slower mobile connections                         | Preload sound assets during initial app idle time via `requestIdleCallback`. |
+| Concern                                    | Evidence                                                                                        | Current symptom                                                                      | Scaling risk                                                                | Suggested improvement                                                        |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| Viewport Layout Clamping on Mobile Resizes | `src/features/character/FanOut.tsx` runs `useLayoutEffect` to clamp fanned item X offsets       | Minimal; throttled by browser layout cycle                                           | Rapid resizing or heavy orientation change could trigger multiple relayouts | Debounce resize listener or precalculate boundary positions.                 |
+| Just-in-Time Audio Buffer Preloading       | `src/features/audio/useSound.ts` initializes audio preloading on first user interaction or load | First played sound effect can experience subtle latency if assets are not pre-cached | Degraded sound tactile feedback on slower mobile connections                | Preload sound assets during initial app idle time via `requestIdleCallback`. |
 
 ### 5) Fragile/High-Churn Areas
 
-| Area                                                         | Why fragile                                                                                        | Churn signal                                       | Safe change strategy                                                                                  |
-| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `src/App.tsx`                                                | Central wiring root coordinating React Query, store seeding, layout skeleton, and error boundaries | 7 commits in last 90 days (`.codebase-scan.txt`)   | Keep component minimal and declarative; delegate layout and domain logic to features.                 |
-| `src/features/character/CharacterView.tsx` & `StatPanel.tsx` | Highly active visual centerpiece undergoing UI redesigns (paper doll layout, attribute animations) | 6-7 commits in last 90 days (`.codebase-scan.txt`) | Ensure RTL tests in `character-view.test.tsx` and `stat-panel.test.tsx` pass after any layout change. |
-| `AGENTS.md`                                                  | Workspace directive governing multi-phase autonomous agent feature development                     | 8 commits in last 90 days (`.codebase-scan.txt`)   | Review workflow phases and automated worktree gates before initiating new feature branches.           |
+| Area                                                         | Why fragile                                                                                           | Churn signal                                      | Safe change strategy                                                                                  |
+| ------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- | ------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `src/features/character/FanOut.tsx`                          | Complex radial-to-horizontal animation, focus trapping, roving tabindex, and viewport bounds clamping | 12 commits in last 90 days (`.codebase-scan.txt`) | Run `npm test` and verify all 34 fan-out unit tests and a11y tests pass before modifying animation.   |
+| `src/features/character/EquipmentSlot.tsx`                   | Coordinates hover delay timers, leave grace periods, and equipped vs empty slot states                | 10 commits in last 90 days (`.codebase-scan.txt`) | Verify focus restoration to slot triggers and test with `tests/unit/equipment-slot.test.tsx`.         |
+| `src/features/character/CharacterView.tsx` & `StatPanel.tsx` | Highly active visual centerpiece with responsive paper doll columns and attribute animations          | 10 commits in last 90 days (`.codebase-scan.txt`) | Ensure RTL tests in `character-view.test.tsx` and `stat-panel.test.tsx` pass after any layout change. |
+| `AGENTS.md`                                                  | Workspace directive governing multi-phase autonomous agent feature development                        | 9 commits in last 90 days (`.codebase-scan.txt`)  | Review workflow phases and automated worktree gates before initiating new feature branches.           |
 
 ### 6) `[ASK USER]` Questions & Resolutions
 
 1. **[RESOLVED] Drag-and-Drop / `dnd-kit` References**:
-   - _User Decision_: Remove all references to `dnd-kit`. Drag-and-drop is no longer planned; the inventory operates exclusively via a "click-and-select" flow.
-   - _Action_: Update `README.md` and refactor `tests/integration/dnd-test-utils.tsx` to clean out legacy sensor comments and naming.
+   - _User Decision_: Retired `@dnd-kit/core` completely.
+   - _Action_: `README.md` and `tests/integration/dnd-test-utils.tsx` updated to reflect the Destiny 2 horizontal fan-out interaction model and remove all `@dnd-kit` references.
 2. **[RESOLVED] Equipment Slot Inspector Pattern (Destiny 2 Style)**:
-   - _User Decision_: Confirmed and committed to going forward. When a user focuses, clicks, or hovers an equipment slot on the character, an inspector/flyout displays only the compatible, equipable items for user selection.
-   - _Action_: Feature planned as Step 2 in `docs/feature_todos.md`.
-3. **[RESOLVED] Prettier Code Formatting**:
-   - _User Decision_: Executed `npm run format`.
-   - _Result_: All files now comply with `.prettierrc`; `npm run lint` passes cleanly with zero warnings/errors.
-4. **[RESOLVED] Vitest Coverage Tooling (`@vitest/coverage-v8`)**:
-   - _Status_: Detailed explanation provided to the user on benefits vs. overhead before enabling.
+   - _User Decision_: Implemented, verified, and merged (`FanOut.tsx`).
+   - _Action_: Marked Step 2 as completed `[x]` in `docs/feature_todos.md`.
+3. **[RESOLVED] Keyboard Navigation Coverage Decision**:
+   - _User Decision_: Deferred adding extra unit tests for keyboard navigation at this time, as keyboard design decisions are ongoing.
+4. **[RESOLVED] Prettier Code Formatting**:
+   - _Result_: Fully compliant; `npm run lint` passes cleanly with zero warnings/errors.
+5. **[RESOLVED] Vitest Coverage Tooling (`@vitest/coverage-v8`)**:
+   - _Result_: Configured and operational (`npm run test:coverage`), achieving 89.15% statement and 89.07% line coverage across the project.
 
 ### 7) Evidence
 

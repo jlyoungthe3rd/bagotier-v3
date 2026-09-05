@@ -42,7 +42,7 @@
 
 - Error strategy by layer:
   - UI Data Fetch Errors: Catch errors at query boundary in `App.tsx` and render designed `ErrorScreen` with retry action.
-  - State Invariants: Pure transition functions return deterministic state or typed error unions (`UnequipResult = 'ok' | 'bag-full' | 'no-op'`). Full-bag rejections set user-facing feedback messages in `EquipmentState.feedback`.
+  - State Invariants: Pure transition functions (`equipTransition`, `unequipTransition`) return deterministic immutable `EquipmentState`. Equipping into an occupied slot safely displaces the current item back to the `unequipped` Set; unequipping is infallible and returns the item to the `unequipped` Set without capacity errors.
   - Web Audio: AudioContext creation and asset loading wrapped in `try/catch`; fails gracefully to silent operation on unsupported browsers or autoplay restrictions.
 - Logging style and required context fields: Production code enforces zero console logging via ESLint (`no-console`). Development logging is isolated in `src/lib/devLog.ts`, guarded by `import.meta.env.DEV`, logging performance metrics:
   ```text
@@ -54,14 +54,14 @@
 
 - Test file naming/location rule: All tests located in `tests/` categorized into three distinct folders:
   - `tests/contract/`: Schema validation (`*.contract.test.ts`)
-  - `tests/unit/`: Pure logic functions without React runtime (`*.test.ts`)
+  - `tests/unit/`: Pure logic functions without React runtime (`*.test.ts`, e.g. `fan-out.test.tsx`, `slot-hover-manager.test.ts`)
   - `tests/integration/`: Component interactions with jsdom (`*.test.tsx`)
 - Mocking strategy norm:
   - Pure state isolation: Store reset called via `useInventoryStore.getState().reset()` before test runs.
   - React Query isolation: Tests instantiate fresh `QueryClient` instances with `retry: false` and `staleTime: Infinity`.
   - Audio mocking: Tests spy on `audioEngine.playback` or invoke `__resetAudioForTests()` to avoid audio buffer errors.
   - Layout mocking: `installLayout()` in `tests/integration/dnd-test-utils.tsx` overrides `getBoundingClientRect` for predictable coordinate calculations.
-- Coverage expectation: [TODO] No coverage thresholds or coverage reporting flags are currently configured in `vitest.config.ts`.
+- Coverage expectation: Configured via `@vitest/coverage-v8` (`npm run test:coverage`), generating terminal and HTML reports while excluding `src/main.tsx`, `src/mocks/**`, and `src/vite-env.d.ts`. Minimum threshold flags are currently not enforced.
 
 ### 6) Evidence
 

@@ -16,11 +16,11 @@
 
 ### 2) Data Stores
 
-| Store                       | Role                                                                               | Access layer                                  | Key risk                                                            | Evidence                                         |
-| --------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------ |
-| React Query In-Memory Cache | Master entity store for item definitions and base character stats                  | `src/features/*/use*Query.ts`                 | Ephemeral; state clears on browser reload                           | `src/lib/queryClient.ts`                         |
-| Zustand In-Memory Store     | Session state (equipped slot mappings, bag cell arrays, mute flag, focus tracking) | `src/store/useInventoryStore.ts`              | Ephemeral; not persisted to `localStorage`                          | `src/store/useInventoryStore.ts`                 |
-| Static WAV Assets           | Audio files served from `/sounds/*.wav` via public directory                       | `fetch()` in `src/features/audio/useSound.ts` | Missing files or failed fetches leave specific sound effects silent | `src/features/audio/sounds.ts`, `public/sounds/` |
+| Store                       | Role                                                                                                                               | Access layer                                  | Key risk                                                            | Evidence                                         |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------- | ------------------------------------------------ |
+| React Query In-Memory Cache | Master entity store for item definitions and base character stats                                                                  | `src/features/*/use*Query.ts`                 | Ephemeral; state clears on browser reload                           | `src/lib/queryClient.ts`                         |
+| Zustand In-Memory Store     | Session state (equipped slot mappings, unequipped item set, active fan-out slot, focused fan-out index, mute flag, focus tracking) | `src/store/useInventoryStore.ts`              | Ephemeral; not persisted to `localStorage`                          | `src/store/useInventoryStore.ts`                 |
+| Static WAV Assets           | Audio files served from `/sounds/*.wav` via public directory                                                                       | `fetch()` in `src/features/audio/useSound.ts` | Missing files or failed fetches leave specific sound effects silent | `src/features/audio/sounds.ts`, `public/sounds/` |
 
 ### 3) Secrets and Credentials Handling
 
