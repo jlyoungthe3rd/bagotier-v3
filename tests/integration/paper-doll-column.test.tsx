@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { screen, within } from '@testing-library/react';
+import { screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderApp } from './dnd-test-utils';
 
 describe('Central Paper Doll Column Layout integration', () => {
-  it('renders CharacterView, StatPanel, and InventoryGrid in correct column order', async () => {
+  it('renders CharacterView and StatPanel in correct column order', async () => {
     await renderApp();
 
     const main = screen.getByRole('main');
@@ -12,18 +12,13 @@ describe('Central Paper Doll Column Layout integration', () => {
 
     const characterView = screen.getByTestId('character-view');
     const statPanel = screen.getByTestId('stat-panel');
-    const inventoryGrid = screen.getByTestId('inventory-grid');
 
     expect(characterView).toBeInTheDocument();
     expect(statPanel).toBeInTheDocument();
-    expect(inventoryGrid).toBeInTheDocument();
 
-    // Verify ordering in DOM: CharacterView -> StatPanel -> InventoryGrid
+    // Verify ordering in DOM: CharacterView -> StatPanel
     const posCharacterToStat = characterView.compareDocumentPosition(statPanel);
     expect(posCharacterToStat & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-
-    const posStatToInventory = statPanel.compareDocumentPosition(inventoryGrid);
-    expect(posStatToInventory & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     // Verify paper doll visual centering container
     const characterWrapper = characterView.parentElement;
@@ -58,20 +53,15 @@ describe('Central Paper Doll Column Layout integration', () => {
     expect(dismissedBanner).toHaveClass('invisible', 'max-h-0', 'overflow-hidden');
   });
 
-  it('renders BagCell containers with aspect-square class and responsive grid', async () => {
+  it('renders all equipment slots in the paper doll layout', async () => {
     await renderApp();
 
-    const grid = screen.getByTestId('inventory-grid');
-    const cells = within(grid).getAllByTestId(/^cell-\d+$/);
-    expect(cells).toHaveLength(24);
-
-    for (const cell of cells) {
-      expect(cell).toHaveClass('aspect-square');
+    const slotTypes = ['head', 'body', 'legs', 'hands', 'feet', 'weapon', 'accessory'] as const;
+    for (const slot of slotTypes) {
+      const slotElement = screen.getByTestId(`slot-${slot}`);
+      expect(slotElement).toBeInTheDocument();
+      expect(screen.getByTestId(`slot-empty-${slot}`)).toBeInTheDocument();
     }
-
-    // Grid container responsive columns (4 -> 6 -> 8 cols)
-    const gridContainer = grid.querySelector('.grid');
-    expect(gridContainer).toHaveClass('grid-cols-4', 'sm:grid-cols-6', 'lg:grid-cols-8');
   });
 
   it('renders fixed-positioned utility controls (MuteToggle and GitHubLink)', async () => {

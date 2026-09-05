@@ -40,7 +40,7 @@ vi.mock('framer-motion', async () => {
 function setupStoreAndRender() {
   registerItemSlotTypes(Object.fromEntries(items.map((i) => [i.id, i.slotType])));
   useInventoryStore.getState().reset();
-  useInventoryStore.getState().seedBag(items.map((i) => i.id));
+  useInventoryStore.getState().seedUnequipped(items.map((i) => i.id));
 
   const client = new QueryClient({
     defaultOptions: { queries: { staleTime: Infinity, retry: false } },

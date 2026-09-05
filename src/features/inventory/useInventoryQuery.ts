@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import type { Item, ItemId } from '../../types/domain';
+import type { Item, ItemId, SlotType } from '../../types/domain';
 import { fetchItems } from '../../mocks/api';
 import { queryKeys } from '../../lib/queryKeys';
 
@@ -22,4 +22,14 @@ export function useItem(id: ItemId | null): Item | undefined {
     select: (items) => (id === null ? undefined : items.find((i) => i.id === id)),
   });
   return data;
+}
+
+/** Returns all catalog items matching a given slot type. Used by fan-out to get candidates. */
+export function useItemsForSlot(slot: SlotType): Item[] {
+  const { data } = useQuery({
+    queryKey: queryKeys.items,
+    queryFn: fetchItems,
+    select: (items) => items.filter((i) => i.slotType === slot),
+  });
+  return data ?? [];
 }

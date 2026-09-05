@@ -22,7 +22,7 @@ describe('InventoryItem', () => {
 
     render(
       <ItemTooltipProvider>
-        <InventoryItem item={item} origin={{ kind: 'bag', index: 0 }} />
+        <InventoryItem item={item} slot="head" />
       </ItemTooltipProvider>,
     );
 
@@ -37,7 +37,7 @@ describe('InventoryItem', () => {
 
     render(
       <ItemTooltipProvider>
-        <InventoryItem item={item} origin={{ kind: 'bag', index: 0 }} />
+        <InventoryItem item={item} slot="head" />
       </ItemTooltipProvider>,
     );
 

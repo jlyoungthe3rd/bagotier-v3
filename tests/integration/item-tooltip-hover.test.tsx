@@ -1,6 +1,7 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { renderApp } from './dnd-test-utils';
 import {
   hoverItem,
@@ -13,6 +14,10 @@ describe('item tooltip hover/focus behavior', () => {
   it('opens on hover and closes on unhover', async () => {
     const user = userEvent.setup();
     await renderApp();
+
+    act(() => {
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+    });
 
     const trigger = await hoverItem(user, 'item-iron-helm');
     const tooltip = await waitForTooltip();
@@ -27,8 +32,14 @@ describe('item tooltip hover/focus behavior', () => {
     const user = userEvent.setup();
     await renderApp();
 
+    act(() => {
+      useInventoryStore.getState().equip('wizard-hat' as never, 'head');
+    });
+
     const trigger = screen.getByTestId('item-wizard-hat');
-    trigger.focus();
+    act(() => {
+      trigger.focus();
+    });
     const tooltip = await waitForTooltip();
     expect(tooltip).toHaveTextContent('Wizard Hat');
     expect(trigger).toHaveFocus();

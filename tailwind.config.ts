@@ -42,9 +42,6 @@ export default {
       spacing: {
         cell: '3.5rem',
       },
-      gridTemplateColumns: {
-        bag: 'repeat(6, minmax(0, 3.5rem))',
-      },
       animation: {
         'spin-slow': 'spin 45s linear infinite',
       },

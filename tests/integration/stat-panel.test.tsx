@@ -25,8 +25,13 @@ describe('stat panel (US2)', () => {
     const user = userEvent.setup();
     await renderApp();
 
-    const item = screen.getByTestId('item-iron-helm');
-    await user.click(item);
+    const headEmptySlot = screen.getByTestId('slot-empty-button-head');
+    act(() => {
+      headEmptySlot.focus();
+    });
+
+    const fanoutItem = await screen.findByTestId('fanout-item-iron-helm');
+    await user.click(fanoutItem);
 
     const def = screen.getByTestId('stat-def');
     expect(def).toHaveTextContent(String(character.baseStats.def + 5));

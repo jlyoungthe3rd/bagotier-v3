@@ -4,7 +4,7 @@
  * the validation boundary between mock data and React Query consumers.
  */
 import { z } from 'zod';
-import { BAG_CAPACITY, SLOT_TYPES, STAT_KEYS } from './domain';
+import { SLOT_TYPES, STAT_KEYS } from './domain';
 
 export const SlotTypeSchema = z.enum(SLOT_TYPES);
 
@@ -48,11 +48,6 @@ export const CharacterSchema = z.object({
     ),
 });
 
-export const DragOriginSchema = z.discriminatedUnion('kind', [
-  z.object({ kind: z.literal('bag'), index: z.number().int().nonnegative() }),
-  z.object({ kind: z.literal('slot'), slot: SlotTypeSchema }),
-]);
-
 export const InventoryStoreStateSchema = z.object({
   equipped: z
     .record(SlotTypeSchema, z.string().nullable())
@@ -60,7 +55,7 @@ export const InventoryStoreStateSchema = z.object({
       (e) => SlotTypeSchema.options.every((k) => k in e),
       'all slots must be present',
     ),
-  bag: z.array(z.string().nullable()).length(BAG_CAPACITY),
+  unequipped: z.array(z.string()),
   muted: z.boolean(),
   feedback: z.string().nullable(),
 });

@@ -1,9 +1,6 @@
 import { create } from 'zustand';
 import type { EquipmentState, ItemId, SlotType } from '../types/domain';
-import { BAG_CAPACITY, SLOT_TYPES } from '../types/domain';
-
-/** Result of an `unequip` attempt (US3-AS3 full-bag rejection). */
-export type UnequipResult = 'ok' | 'bag-full' | 'no-op';
+import { SLOT_TYPES } from '../types/domain';
 
 /**
  * Slot-type registry used only to validate equip/swap compatibility
@@ -31,14 +28,13 @@ function emptyEquipped(): Record<SlotType, ItemId | null> {
 function initialState(): EquipmentState {
   return {
     equipped: emptyEquipped(),
-    bag: Array.from({ length: BAG_CAPACITY }, () => null),
+    unequipped: new Set<ItemId>(),
     muted: false,
     feedback: null,
     focusedSection: null,
-    focusedBagIndex: 0,
     focusedSlot: 'head',
-    tabHintDismissed: false,
-    showTabHint: false,
+    activeFanoutSlot: null,
+    focusedFanoutIndex: 0,
   };
 }
 
@@ -46,73 +42,47 @@ function initialState(): EquipmentState {
  * Pure transitions — `(state, args) → state`, unit-tested directly.  *
  * ------------------------------------------------------------------ */
 
-/** Moves an item ID from its bag cell into an empty, type-matching slot. */
+/**
+ * Equips an item from the unequipped set into a type-matching slot.
+ * If the slot is already occupied, the displaced item is returned to the unequipped set.
+ */
 export function equipTransition(
   state: EquipmentState,
   itemId: ItemId,
   slot: SlotType,
 ): EquipmentState {
-  const bagIndex = state.bag.indexOf(itemId);
-  if (bagIndex === -1) return state; // item not in bag
-  if (state.equipped[slot] !== null) return state; // slot occupied → use swap
+  if (!state.unequipped.has(itemId)) return state; // item not available
   if (slotTypeOf(itemId) !== slot) return state; // I2: type mismatch no-ops
-  const bag = state.bag.slice();
-  bag[bagIndex] = null;
-  return { ...state, bag, equipped: { ...state.equipped, [slot]: itemId } };
-}
 
-/** Equips an incoming bag item into an occupied slot, displacing the current item into the incoming item's bag cell (FR-008). */
-export function swapTransition(
-  state: EquipmentState,
-  itemId: ItemId,
-  slot: SlotType,
-): EquipmentState {
-  const bagIndex = state.bag.indexOf(itemId);
+  const nextUnequipped = new Set(state.unequipped);
+  nextUnequipped.delete(itemId);
+
+  // If slot is occupied, displace the current item back to unequipped
   const displaced = state.equipped[slot];
-  if (bagIndex === -1 || displaced === null) return state;
-  if (slotTypeOf(itemId) !== slot) return state; // I2
-  const bag = state.bag.slice();
-  bag[bagIndex] = displaced;
-  return { ...state, bag, equipped: { ...state.equipped, [slot]: itemId } };
-}
+  if (displaced !== null) {
+    nextUnequipped.add(displaced);
+  }
 
-/** Unequips a slot into the targeted (or first free) bag cell; rejects when the bag is full (I3). */
-export function unequipTransition(
-  state: EquipmentState,
-  slot: SlotType,
-  toBagIndex?: number,
-): { state: EquipmentState; result: UnequipResult } {
-  const itemId = state.equipped[slot];
-  if (itemId === null) return { state, result: 'no-op' };
-  const target =
-    toBagIndex !== undefined &&
-    toBagIndex >= 0 &&
-    toBagIndex < BAG_CAPACITY &&
-    state.bag[toBagIndex] === null
-      ? toBagIndex
-      : state.bag.indexOf(null);
-  if (target === -1) return { state, result: 'bag-full' };
-  const bag = state.bag.slice();
-  bag[target] = itemId;
   return {
-    state: { ...state, bag, equipped: { ...state.equipped, [slot]: null } },
-    result: 'ok',
+    ...state,
+    unequipped: nextUnequipped,
+    equipped: { ...state.equipped, [slot]: itemId },
   };
 }
 
-/** Reorders an item to an empty cell within the bag. */
-export function moveInBagTransition(
-  state: EquipmentState,
-  itemId: ItemId,
-  toIndex: number,
-): EquipmentState {
-  const from = state.bag.indexOf(itemId);
-  if (from === -1 || toIndex < 0 || toIndex >= BAG_CAPACITY) return state;
-  if (state.bag[toIndex] !== null || from === toIndex) return state;
-  const bag = state.bag.slice();
-  bag[from] = null;
-  bag[toIndex] = itemId;
-  return { ...state, bag };
+/** Unequips a slot, moving the item back to the unequipped set. */
+export function unequipTransition(state: EquipmentState, slot: SlotType): EquipmentState {
+  const itemId = state.equipped[slot];
+  if (itemId === null) return state; // no-op
+
+  const nextUnequipped = new Set(state.unequipped);
+  nextUnequipped.add(itemId);
+
+  return {
+    ...state,
+    unequipped: nextUnequipped,
+    equipped: { ...state.equipped, [slot]: null },
+  };
 }
 
 /* ------------------------------------------------------------------ *
@@ -120,71 +90,37 @@ export function moveInBagTransition(
  * ------------------------------------------------------------------ */
 
 export interface InventoryStore extends EquipmentState {
-  /** Places catalog IDs into the first bag cells (initial load). */
-  seedBag: (itemIds: readonly ItemId[]) => void;
+  /** Places all catalog IDs into the unequipped set (initial load). */
+  seedUnequipped: (itemIds: readonly ItemId[]) => void;
   equip: (itemId: ItemId, slot: SlotType) => void;
-  swap: (itemId: ItemId, slot: SlotType) => void;
-  unequip: (slot: SlotType, toBagIndex?: number) => UnequipResult;
-  moveInBag: (itemId: ItemId, toIndex: number) => void;
+  unequip: (slot: SlotType) => void;
   toggleMute: () => void;
   setFeedback: (feedback: string | null) => void;
   dismissFeedback: () => void;
-  setFocusedSection: (section: 'bag' | 'equipment' | null) => void;
-  setFocusedBagIndex: (index: number) => void;
+  setFocusedSection: (section: 'equipment' | null) => void;
   setFocusedSlot: (slot: SlotType) => void;
-  dismissTabHint: () => void;
-  triggerArrowKeyNav: () => void;
+  setActiveFanoutSlot: (slot: SlotType | null) => void;
+  setFocusedFanoutIndex: (index: number) => void;
   /** Restores the pristine initial state (tests + reload). */
   reset: () => void;
 }
 
 export const useInventoryStore = create<InventoryStore>()((set, get) => ({
   ...initialState(),
-  seedBag: (itemIds) =>
-    set(() => {
-      const bag: (ItemId | null)[] = Array.from({ length: BAG_CAPACITY }, () => null);
-      itemIds.slice(0, BAG_CAPACITY).forEach((id, i) => {
-        bag[i] = id;
-      });
-      return {
-        ...initialState(),
-        bag,
-        muted: get().muted,
-        tabHintDismissed: get().tabHintDismissed,
-      };
-    }),
+  seedUnequipped: (itemIds) =>
+    set(() => ({
+      ...initialState(),
+      unequipped: new Set(itemIds),
+      muted: get().muted,
+    })),
   equip: (itemId, slot) => set((s) => ({ ...equipTransition(s, itemId, slot) })),
-  swap: (itemId, slot) => set((s) => ({ ...swapTransition(s, itemId, slot) })),
-  unequip: (slot, toBagIndex) => {
-    const { state, result } = unequipTransition(get(), slot, toBagIndex);
-    if (result === 'bag-full') {
-      set({ ...state, feedback: 'Your bag is full — free a cell before unequipping.' });
-    } else {
-      set({ ...state, feedback: null });
-    }
-    return result;
-  },
-  moveInBag: (itemId, toIndex) =>
-    set((s) => ({ ...moveInBagTransition(s, itemId, toIndex) })),
+  unequip: (slot) => set((s) => ({ ...unequipTransition(s, slot) })),
   toggleMute: () => set((s) => ({ muted: !s.muted })),
   setFeedback: (msg) => set({ feedback: msg }),
   dismissFeedback: () => set({ feedback: null }),
-  setFocusedSection: (section) =>
-    set(() => {
-      if (section === 'equipment') {
-        return { focusedSection: section, showTabHint: false, tabHintDismissed: true };
-      }
-      return { focusedSection: section };
-    }),
-  setFocusedBagIndex: (index) => set({ focusedBagIndex: index }),
+  setFocusedSection: (section) => set({ focusedSection: section }),
   setFocusedSlot: (slot) => set({ focusedSlot: slot }),
-  dismissTabHint: () => set({ showTabHint: false, tabHintDismissed: true }),
-  triggerArrowKeyNav: () =>
-    set((s) => {
-      if (!s.tabHintDismissed) {
-        return { showTabHint: true };
-      }
-      return {};
-    }),
+  setActiveFanoutSlot: (slot) => set({ activeFanoutSlot: slot, focusedFanoutIndex: 0 }),
+  setFocusedFanoutIndex: (index) => set({ focusedFanoutIndex: index }),
   reset: () => set(initialState()),
 }));

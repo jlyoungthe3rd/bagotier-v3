@@ -101,7 +101,7 @@ export async function renderApp() {
   });
   const view = render(createElement(QueryClientProvider, { client }, createElement(App)));
   await waitFor(() => {
-    expect(screen.getByTestId('inventory-grid')).toBeInTheDocument();
+    expect(screen.getByTestId('character-view')).toBeInTheDocument();
   });
   return view;
 }

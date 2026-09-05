@@ -1,17 +1,20 @@
 import { useRef, useEffect } from 'react';
-import type { DragOrigin, Item } from '../../types/domain';
+import type { Item, SlotType } from '../../types/domain';
 import { useItemTooltip } from './tooltip';
 import type { ButtonHTMLAttributes } from 'react';
 import { useInventoryStore } from '../../store/useInventoryStore';
 import { useSound } from '../audio/useSound';
-import { handleBagKeyDown, handleEquipmentKeyDown } from './keyboard';
+import { handleEquipmentKeyDown } from './keyboard';
 
 interface InventoryItemProps extends Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
   'item'
 > {
   readonly item: Item;
-  readonly origin: DragOrigin;
+  readonly slot: SlotType;
+  readonly hasFanout?: boolean;
+  readonly isFanoutOpen?: boolean;
+  readonly onDismissFanout?: () => void;
 }
 
 const FALLBACK_ICON = '◻️';
@@ -21,23 +24,26 @@ function resolveIcon(icon: string): string {
 }
 
 /**
- * Focusable item tile. Rendered inside a bag cell or an equipment slot;
- * clicking or pressing Enter/Space instantly equips or unequips the item.
+ * Focusable item tile rendered inside an equipment slot.
+ * Clicking unequips the item from its slot.
  */
-export function InventoryItem({ item, origin, ...buttonProps }: InventoryItemProps) {
+export function InventoryItem({
+  item,
+  slot,
+  hasFanout,
+  isFanoutOpen,
+  onDismissFanout,
+  ...buttonProps
+}: InventoryItemProps) {
   const tooltip = useItemTooltip();
   const describedBy = tooltip.ariaDescribedByFor(item.id);
   const elementRef = useRef<HTMLButtonElement | null>(null);
 
   const focusedSection = useInventoryStore((s) => s.focusedSection);
-  const focusedBagIndex = useInventoryStore((s) => s.focusedBagIndex);
   const focusedSlot = useInventoryStore((s) => s.focusedSlot);
   const play = useSound();
 
-  const isActive =
-    origin.kind === 'bag'
-      ? focusedSection === 'bag' && focusedBagIndex === origin.index
-      : focusedSection === 'equipment' && focusedSlot === origin.slot;
+  const isActive = focusedSection === 'equipment' && focusedSlot === slot;
 
   useEffect(() => {
     if (isActive) {
@@ -47,36 +53,16 @@ export function InventoryItem({ item, origin, ...buttonProps }: InventoryItemPro
     }
   }, [isActive]);
 
+  const isDefaultSlot = focusedSection === null && slot === 'head';
   const tabIndex =
-    origin.kind === 'bag'
-      ? (focusedSection === 'bag' || focusedSection === null) &&
-        focusedBagIndex === origin.index
-        ? 0
-        : -1
-      : focusedSection === 'equipment' && focusedSlot === origin.slot
-        ? 0
-        : -1;
+    (focusedSection === 'equipment' && focusedSlot === slot) || isDefaultSlot ? 0 : -1;
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     buttonProps.onClick?.(e);
     const store = useInventoryStore.getState();
-    if (origin.kind === 'bag') {
-      const currentOccupant = store.equipped[item.slotType];
-      if (currentOccupant === null) {
-        store.equip(item.id, item.slotType);
-        play('equip');
-      } else {
-        store.swap(item.id, item.slotType);
-        play('equip');
-      }
-    } else {
-      const result = store.unequip(origin.slot);
-      if (result === 'bag-full') {
-        play('invalid');
-      } else {
-        play('unequip');
-      }
-    }
+    store.unequip(slot);
+    store.setFeedback(`Unequipped ${item.name} from ${slot} slot.`);
+    play('unequip');
   };
 
   return (
@@ -87,6 +73,12 @@ export function InventoryItem({ item, origin, ...buttonProps }: InventoryItemPro
       tabIndex={tabIndex}
       data-testid={`item-${item.id}`}
       aria-label={`${item.name} (${item.slotType})`}
+      aria-haspopup={hasFanout ? 'listbox' : undefined}
+      aria-expanded={hasFanout ? isFanoutOpen : undefined}
+      aria-controls={
+        hasFanout && isFanoutOpen ? `fanout-listbox-${slot}` : undefined
+      }
+      aria-description="Equipped item. Press Enter or Space to unequip."
       className="flex h-full w-full items-center justify-center bg-surface-raised/80 p-1 text-ink transition-colors outline-offset-2 hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"
       onMouseEnter={() => {
         tooltip.open(item, 'hover', elementRef.current);
@@ -95,13 +87,8 @@ export function InventoryItem({ item, origin, ...buttonProps }: InventoryItemPro
         tooltip.closeFor(item.id, 'hover');
       }}
       onFocus={(e) => {
-        if (origin.kind === 'bag') {
-          useInventoryStore.getState().setFocusedSection('bag');
-          useInventoryStore.getState().setFocusedBagIndex(origin.index);
-        } else {
-          useInventoryStore.getState().setFocusedSection('equipment');
-          useInventoryStore.getState().setFocusedSlot(origin.slot);
-        }
+        useInventoryStore.getState().setFocusedSection('equipment');
+        useInventoryStore.getState().setFocusedSlot(slot);
         tooltip.open(item, 'focus', elementRef.current);
         buttonProps.onFocus?.(e);
       }}
@@ -112,14 +99,14 @@ export function InventoryItem({ item, origin, ...buttonProps }: InventoryItemPro
       onKeyDownCapture={(event) => {
         if (event.key === 'Escape') {
           tooltip.dismiss();
+          if (isFanoutOpen) {
+            event.stopPropagation();
+            onDismissFanout?.();
+          }
         }
       }}
       onKeyDown={(event) => {
-        if (origin.kind === 'bag') {
-          handleBagKeyDown(event, origin.index);
-        } else {
-          handleEquipmentKeyDown(event, origin.slot);
-        }
+        handleEquipmentKeyDown(event, slot);
         buttonProps.onKeyDown?.(event);
       }}
       onClick={handleClick}

@@ -1,6 +1,7 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { renderApp } from './dnd-test-utils';
 import { waitForTooltip } from './item-tooltip-test-utils';
 
@@ -8,6 +9,10 @@ describe('item tooltip placement behavior', () => {
   it('adds placement metadata and uses viewport-safe fallback placements', async () => {
     const user = userEvent.setup();
     await renderApp();
+
+    act(() => {
+      useInventoryStore.getState().equip('ruby-ring' as never, 'accessory');
+    });
 
     await user.hover(screen.getByTestId('item-ruby-ring'));
     const tooltip = await waitForTooltip();
