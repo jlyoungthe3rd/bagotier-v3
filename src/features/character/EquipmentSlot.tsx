@@ -59,6 +59,9 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const openFanout = useCallback(() => {
     if (fanoutItems.length > 0) {
       const store = useInventoryStore.getState();
+      if (store.activeFanoutSlot === slot) {
+        return;
+      }
       store.setActiveFanoutSlot(slot);
       store.setFeedback(
         `${SLOT_LABELS[slot]} slot options opened. ${String(fanoutItems.length)} items available.`,
@@ -126,6 +129,10 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
       clearTimeout(leaveTimerRef.current);
       leaveTimerRef.current = null;
     }
+    // If the fan-out for this slot is already open, do not re-open or re-animate
+    if (useInventoryStore.getState().activeFanoutSlot === slot) {
+      return;
+    }
     // Dynamic hover delay: 300ms base, 200ms when visiting multiple slots within 2000ms
     const delay = getSlotHoverDelay(slot);
     hoverTimerRef.current = setTimeout(() => {
@@ -133,12 +140,17 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     }, delay);
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (e: React.MouseEvent) => {
     recordSlotActivity(slot);
     // Cancel hover timer if still pending
     if (hoverTimerRef.current !== null) {
       clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
+    }
+    // If moving into child elements (like fanned items), do not close
+    const related = e.relatedTarget;
+    if (related instanceof Node && e.currentTarget.contains(related)) {
+      return;
     }
     // Grace period before closing — allows moving to fanned items
     if (isFanoutOpen) {
@@ -312,6 +324,8 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               const target = buttonRef.current ?? equippedButtonRef.current;
               target?.focus();
             }}
+            onMouseEnter={handleContainerMouseEnter}
+            onMouseLeave={handleContainerMouseLeave}
           />
         )}
       </div>

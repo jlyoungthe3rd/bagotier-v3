@@ -105,6 +105,8 @@ interface FanOutProps {
   readonly slot: SlotType;
   readonly items: readonly Item[];
   readonly onDismiss?: () => void;
+  readonly onMouseEnter?: () => void;
+  readonly onMouseLeave?: () => void;
 }
 
 /**
@@ -113,7 +115,13 @@ interface FanOutProps {
  * Features viewport bounding to ensure items never clip or cause overflow.
  * Keyboard: Arrow keys cycle focus, Home/End jump, Enter/Space equips, Escape closes, Tab dismisses.
  */
-export function FanOut({ slot, items, onDismiss }: FanOutProps) {
+export function FanOut({
+  slot,
+  items,
+  onDismiss,
+  onMouseEnter: onMouseEnterProp,
+  onMouseLeave: onMouseLeaveProp,
+}: FanOutProps) {
   const tooltip = useItemTooltip();
   const play = useSound();
   const reducedMotion = useReducedMotion();
@@ -329,9 +337,11 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
                   handleItemKeyDown(e, i);
                 }}
                 onMouseEnter={() => {
+                  onMouseEnterProp?.();
                   tooltip.open(item, 'hover', itemRefs.current[i] ?? null);
                 }}
                 onMouseLeave={() => {
+                  onMouseLeaveProp?.();
                   tooltip.closeFor(item.id, 'hover');
                 }}
                 onFocus={() => {
