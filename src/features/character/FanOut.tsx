@@ -162,52 +162,21 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
     const itemHalfSize = isMobile ? 22 : 28;
     const margin = 12; // Safety margin from viewport edge (px)
 
-    const minLeft = Math.min(
-      ...basePositions.map((pos) => slotCenterX + pos.x - itemHalfSize),
-    );
-    const maxRight = Math.max(
-      ...basePositions.map((pos) => slotCenterX + pos.x + itemHalfSize),
-    );
-
-    const overflowsLeft = minLeft < margin;
-    const overflowsRight = maxRight > window.innerWidth - margin;
-
-    if (!overflowsLeft && !overflowsRight) {
-      setPositions(basePositions);
-      return;
-    }
-
-    // Proportional scaling ensures items compress smoothly without stacking or overlapping
-    const maxNegativeOffset = Math.abs(Math.min(0, ...basePositions.map((p) => p.x)));
-    const maxPositiveOffset = Math.max(0, ...basePositions.map((p) => p.x));
-
-    const maxAvailableLeft = Math.max(0, slotCenterX - margin - itemHalfSize);
-    const maxAvailableRight = Math.max(
-      0,
-      window.innerWidth - margin - itemHalfSize - slotCenterX,
-    );
-
-    const scaleLeft =
-      overflowsLeft && maxNegativeOffset > 0
-        ? Math.min(1, maxAvailableLeft / maxNegativeOffset)
-        : 1;
-
-    const scaleRight =
-      overflowsRight && maxPositiveOffset > 0
-        ? Math.min(1, maxAvailableRight / maxPositiveOffset)
-        : 1;
-
-    const scaled = basePositions.map((pos) => {
+    const clamped = basePositions.map((pos) => {
       let { x } = pos;
-      if (x < 0) {
-        x = Math.round(x * scaleLeft);
-      } else if (x > 0) {
-        x = Math.round(x * scaleRight);
+      const itemLeft = slotCenterX + x - itemHalfSize;
+      const itemRight = slotCenterX + x + itemHalfSize;
+
+      if (itemLeft < margin) {
+        x += margin - itemLeft;
+      } else if (itemRight > window.innerWidth - margin) {
+        x -= itemRight - (window.innerWidth - margin);
       }
-      return { x, y: 0 };
+
+      return { x: Math.round(x), y: 0 };
     });
 
-    setPositions(scaled);
+    setPositions(clamped);
   }, [basePositions, isMobile]);
 
   // Focus the active fan-out item when index changes or on mount

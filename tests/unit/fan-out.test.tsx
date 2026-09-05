@@ -63,6 +63,7 @@ vi.mock('framer-motion', async () => {
   };
 });
 
+const headItems = items.filter((i) => i.slotType === 'head');
 const weaponItems = items.filter((i) => i.slotType === 'weapon');
 const singleItem = [headItems[0] as Item];
 
@@ -77,7 +78,7 @@ function renderFanOut(props: {
       <FanOut slot={slot} items={fanItems} onDismiss={onDismiss} />
     </ItemTooltipProvider>,
   );
-
+}
 
 describe('FanOut component & computeFanPositions', () => {
   beforeEach(() => {
@@ -596,7 +597,6 @@ describe('FanOut component & computeFanPositions', () => {
 
       await user.keyboard('{Home}');
       expect(useInventoryStore.getState().focusedFanoutIndex).toBe(0);
-    });
     });
   });
 
