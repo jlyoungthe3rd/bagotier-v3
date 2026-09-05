@@ -71,10 +71,7 @@ export function equipTransition(
 }
 
 /** Unequips a slot, moving the item back to the unequipped set. */
-export function unequipTransition(
-  state: EquipmentState,
-  slot: SlotType,
-): EquipmentState {
+export function unequipTransition(state: EquipmentState, slot: SlotType): EquipmentState {
   const itemId = state.equipped[slot];
   if (itemId === null) return state; // no-op
 

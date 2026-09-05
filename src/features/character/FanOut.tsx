@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { Item, SlotType } from '../../types/domain';
 import { useInventoryStore } from '../../store/useInventoryStore';
@@ -8,37 +8,53 @@ import { useSound } from '../audio/useSound';
 /**
  * Direction from which the fan-out arcs away, based on the slot's
  * position in the paper doll layout.
+ *
+ * Designed to project outward into empty space around the paper doll:
+ * - Head fans upward to frame the character title.
+ * - Weapon and hands fan outward to the left (angled into open diagonals).
+ * - Body and accessory fan outward to the right (angled into open diagonals).
+ * - Legs and feet fan outward away from each other into lower flanks.
  */
-const SLOT_FAN_DIRECTION: Record<SlotType, number> = {
-  head: -90,       // fans upward
-  weapon: 180,     // fans left
-  hands: 180,      // fans left
-  body: 0,         // fans right
-  accessory: 0,    // fans right
-  legs: 90,        // fans downward-left
-  feet: 90,        // fans downward-right
+export const SLOT_FAN_DIRECTION: Readonly<Record<SlotType, number>> = {
+  head: -90, // fans upward
+  weapon: 165, // fans upward-left into open diagonal
+  hands: 195, // fans downward-left into open flank
+  body: 15, // fans upward-right into open diagonal
+  accessory: 345, // fans downward-right into open flank
+  legs: 120, // fans downward-left away from feet
+  feet: 60, // fans downward-right away from legs
 };
 
-/** Distance from slot center to fanned item center (px). */
-const FAN_RADIUS = 70;
+/** Distance from slot center to fanned item center (px) for desktop/tablet. */
+export const FAN_RADIUS_DESKTOP = 68;
 
-/** Total arc angle (degrees) for the fan spread. */
-const FAN_ARC = 120;
+/** Distance from slot center to fanned item center (px) for mobile. */
+export const FAN_RADIUS_MOBILE = 54;
 
-function computeFanPositions(
+/** Total arc angle (degrees) for the fan spread when 2 items are available. */
+export const FAN_ARC = 80;
+
+export function computeFanPositions(
   slot: SlotType,
   count: number,
+  radius: number = FAN_RADIUS_DESKTOP,
 ): { x: number; y: number }[] {
   const centerAngle = SLOT_FAN_DIRECTION[slot];
-  if (count === 1) {
+  if (count <= 1) {
     const rad = (centerAngle * Math.PI) / 180;
-    return [{ x: Math.cos(rad) * FAN_RADIUS, y: Math.sin(rad) * FAN_RADIUS }];
+    return [
+      { x: Math.round(Math.cos(rad) * radius), y: Math.round(Math.sin(rad) * radius) },
+    ];
   }
-  const halfArc = FAN_ARC / 2;
+  const arc = count === 2 ? FAN_ARC : Math.min(110, 30 * (count - 1));
+  const halfArc = arc / 2;
   return Array.from({ length: count }, (_, i) => {
-    const angle = centerAngle - halfArc + (i / (count - 1)) * FAN_ARC;
+    const angle = centerAngle - halfArc + (i / (count - 1)) * arc;
     const rad = (angle * Math.PI) / 180;
-    return { x: Math.cos(rad) * FAN_RADIUS, y: Math.sin(rad) * FAN_RADIUS };
+    return {
+      x: Math.round(Math.cos(rad) * radius),
+      y: Math.round(Math.sin(rad) * radius),
+    };
   });
 }
 
@@ -56,6 +72,7 @@ interface FanOutProps {
 /**
  * Radial fan-out of unequipped items for a given slot.
  * Items arc outward from the slot, animated with Framer Motion.
+ * Features viewport bounding to ensure items never clip or cause overflow.
  * Keyboard: Arrow Left/Right cycle focus, Enter/Space equips, Escape closes.
  */
 export function FanOut({ slot, items }: FanOutProps) {
@@ -64,8 +81,75 @@ export function FanOut({ slot, items }: FanOutProps) {
   const reducedMotion = useReducedMotion();
   const focusedFanoutIndex = useInventoryStore((s) => s.focusedFanoutIndex);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
-  const positions = computeFanPositions(slot, items.length);
+  // Responsive radius detection (compact for mobile < 640px)
+  const [isMobile, setIsMobile] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.innerWidth < 640;
+  });
+
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 640);
+    };
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+
+  const radius = isMobile ? FAN_RADIUS_MOBILE : FAN_RADIUS_DESKTOP;
+  const basePositions = useMemo(
+    () => computeFanPositions(slot, items.length, radius),
+    [slot, items.length, radius],
+  );
+
+  const [positions, setPositions] = useState<{ x: number; y: number }[]>(basePositions);
+
+  // Viewport bounds clamping: ensure no fanned item clips or overflows viewport edges
+  useLayoutEffect(() => {
+    if (typeof window === 'undefined' || !containerRef.current) {
+      setPositions(basePositions);
+      return;
+    }
+
+    const rect = containerRef.current.getBoundingClientRect();
+    // In headless test environments or hidden containers, rect dimensions may be 0
+    if (rect.width === 0 && rect.height === 0) {
+      setPositions(basePositions);
+      return;
+    }
+
+    const slotCenterX = rect.left + rect.width / 2;
+    const slotCenterY = rect.top + rect.height / 2;
+    const itemHalfSize = isMobile ? 22 : 28;
+    const margin = 12; // Safety margin from viewport edge (px)
+
+    const clamped = basePositions.map((pos) => {
+      let { x, y } = pos;
+      const itemLeft = slotCenterX + x - itemHalfSize;
+      const itemRight = slotCenterX + x + itemHalfSize;
+      const itemTop = slotCenterY + y - itemHalfSize;
+      const itemBottom = slotCenterY + y + itemHalfSize;
+
+      if (itemLeft < margin) {
+        x += margin - itemLeft;
+      } else if (itemRight > window.innerWidth - margin) {
+        x -= itemRight - (window.innerWidth - margin);
+      }
+
+      if (itemTop < margin) {
+        y += margin - itemTop;
+      } else if (itemBottom > window.innerHeight - margin) {
+        y -= itemBottom - (window.innerHeight - margin);
+      }
+
+      return { x: Math.round(x), y: Math.round(y) };
+    });
+
+    setPositions(clamped);
+  }, [basePositions, isMobile]);
 
   // Focus the active fan-out item when index changes
   useEffect(() => {
@@ -118,9 +202,10 @@ export function FanOut({ slot, items }: FanOutProps) {
   return (
     <AnimatePresence>
       <div
+        ref={containerRef}
         role="listbox"
         aria-label={`Available items for ${slot} slot`}
-        className="pointer-events-none absolute inset-0 z-20"
+        className="pointer-events-none absolute inset-0 z-30"
       >
         {items.map((item, i) => {
           const pos = positions[i] ?? { x: 0, y: 0 };
@@ -157,11 +242,17 @@ export function FanOut({ slot, items }: FanOutProps) {
                 aria-selected={isFocused}
                 aria-label={`Equip ${item.name}`}
                 data-testid={`fanout-item-${item.id}`}
-                className={`flex h-cell w-cell items-center justify-center rounded border bg-surface-raised p-1 text-ink shadow-lg shadow-surface-sunken/60 transition-colors outline-offset-2 hover:bg-surface-raised/90 hover:border-gold focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid ${
-                  isFocused ? 'border-gold' : 'border-slot-idle/60'
+                className={`group relative flex h-11 w-11 sm:h-cell sm:w-cell items-center justify-center rounded border bg-surface-raised/95 backdrop-blur-md p-1 text-ink shadow-lg shadow-surface-sunken/80 transition-all duration-200 ease-out outline-offset-2 hover:scale-105 hover:bg-surface-raised hover:border-gold hover:shadow-[0_0_14px_rgba(196,148,58,0.4)] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid ${
+                  isFocused
+                    ? 'border-gold shadow-[0_0_16px_rgba(196,148,58,0.45)] ring-1 ring-gold/60 scale-105'
+                    : 'border-slot-idle/70'
                 }`}
-                onClick={() => { handleItemClick(item); }}
-                onKeyDown={(e) => { handleItemKeyDown(e, i); }}
+                onClick={() => {
+                  handleItemClick(item);
+                }}
+                onKeyDown={(e) => {
+                  handleItemKeyDown(e, i);
+                }}
                 onMouseEnter={() => {
                   tooltip.open(item, 'hover', itemRefs.current[i] ?? null);
                 }}
@@ -177,7 +268,16 @@ export function FanOut({ slot, items }: FanOutProps) {
                 }}
                 tabIndex={isFocused ? 0 : -1}
               >
-                <span aria-hidden="true" className="text-2xl leading-none">
+                {/* Corner bracket accents matching EquipmentSlot JRPG aesthetic */}
+                <div className="pointer-events-none absolute left-0.5 top-0.5 h-1.5 w-1.5 border-l border-t border-gold/30 transition-colors group-hover:border-gold/70" />
+                <div className="pointer-events-none absolute right-0.5 top-0.5 h-1.5 w-1.5 border-r border-t border-gold/30 transition-colors group-hover:border-gold/70" />
+                <div className="pointer-events-none absolute bottom-0.5 left-0.5 h-1.5 w-1.5 border-b border-l border-gold/30 transition-colors group-hover:border-gold/70" />
+                <div className="pointer-events-none absolute bottom-0.5 right-0.5 h-1.5 w-1.5 border-b border-r border-gold/30 transition-colors group-hover:border-gold/70" />
+
+                <span
+                  aria-hidden="true"
+                  className="text-xl sm:text-2xl leading-none drop-shadow"
+                >
                   {resolveIcon(item.icon)}
                 </span>
               </button>

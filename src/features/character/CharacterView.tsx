@@ -24,7 +24,7 @@ export function CharacterFigure({
       role="img"
       aria-label="Generated character"
       focusable="false"
-      className="h-52 w-auto drop-shadow-lg"
+      className="h-44 sm:h-52 md:h-56 w-auto drop-shadow-lg"
     >
       {/* legs */}
       <rect x="38" y="150" width="10" height="55" rx="5" fill={skin} />
@@ -65,14 +65,16 @@ export function CharacterView() {
     <section
       aria-label={`Character ${character.name}`}
       data-testid="character-view"
-      className="relative flex flex-col items-center gap-3"
+      className="relative flex flex-col items-center gap-2.5 sm:gap-3.5 py-1 sm:py-3 px-2 sm:px-4 w-full max-w-lg mx-auto"
     >
-      <h2 className="font-display text-base font-bold text-gold">{character.name}</h2>
+      <h2 className="font-display text-base sm:text-lg font-bold text-gold tracking-wide">
+        {character.name}
+      </h2>
       <div data-region="head" className="flex justify-center">
         <RegionSlot slot="head" equipped={equipped} />
       </div>
-      <div className="flex items-center gap-4">
-        <div data-region="right-hand" className="flex flex-col gap-4">
+      <div className="flex items-center gap-3 sm:gap-6 md:gap-8">
+        <div data-region="right-hand" className="flex flex-col gap-3 sm:gap-4">
           <RegionSlot slot="weapon" equipped={equipped} />
           <RegionSlot slot="hands" equipped={equipped} />
         </div>
@@ -86,7 +88,7 @@ export function CharacterView() {
               viewBox="0 0 200 220"
               aria-hidden="true"
               focusable="false"
-              className="h-52 w-auto opacity-[0.18]"
+              className="h-44 sm:h-52 md:h-56 w-auto opacity-[0.18]"
             >
               {/* Outer spinning dashed ring */}
               <g
@@ -158,12 +160,12 @@ export function CharacterView() {
           </div>
           <CharacterFigure appearance={character.appearance} />
         </div>
-        <div data-region="torso" className="flex flex-col gap-4">
+        <div data-region="torso" className="flex flex-col gap-3 sm:gap-4">
           <RegionSlot slot="body" equipped={equipped} />
           <RegionSlot slot="accessory" equipped={equipped} />
         </div>
       </div>
-      <div data-region="lower-body" className="flex justify-center gap-4">
+      <div data-region="lower-body" className="flex justify-center gap-3.5 sm:gap-5">
         <RegionSlot slot="legs" equipped={equipped} />
         <RegionSlot slot="feet" equipped={equipped} />
       </div>

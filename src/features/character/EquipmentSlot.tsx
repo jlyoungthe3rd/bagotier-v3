@@ -153,22 +153,46 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
 
   return (
     <div
-      className="relative flex flex-col items-center gap-1"
+      className={`relative flex flex-col items-center gap-1 transition-transform ${
+        isFanoutOpen ? 'z-30' : 'z-10'
+      }`}
       onMouseEnter={handleContainerMouseEnter}
       onMouseLeave={handleContainerMouseLeave}
     >
       <div
         data-testid={`slot-${slot}`}
         aria-label={`${SLOT_LABELS[slot]} slot`}
-        className="relative h-cell w-cell border bg-surface p-0.5 transition-all duration-200 border-slot-idle/60"
+        className={`group relative h-cell w-cell border bg-surface p-0.5 transition-all duration-200 ${
+          isFanoutOpen
+            ? 'border-gold/90 shadow-[0_0_14px_rgba(196,148,58,0.35)] ring-1 ring-gold/40'
+            : isActive
+              ? 'border-gold/70 shadow-[0_0_8px_rgba(196,148,58,0.2)]'
+              : 'border-slot-idle/60 hover:border-gold/50'
+        }`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
       >
         {/* Corner bracket accents — the JRPG-style slot framing */}
-        <div className="pointer-events-none absolute left-0.5 top-0.5 h-2.5 w-2.5 border-l border-t border-gold/40" />
-        <div className="pointer-events-none absolute right-0.5 top-0.5 h-2.5 w-2.5 border-r border-t border-gold/40" />
-        <div className="pointer-events-none absolute bottom-0.5 left-0.5 h-2.5 w-2.5 border-b border-l border-gold/40" />
-        <div className="pointer-events-none absolute bottom-0.5 right-0.5 h-2.5 w-2.5 border-b border-r border-gold/40" />
+        <div
+          className={`pointer-events-none absolute left-0.5 top-0.5 h-2.5 w-2.5 border-l border-t transition-colors ${
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+          }`}
+        />
+        <div
+          className={`pointer-events-none absolute right-0.5 top-0.5 h-2.5 w-2.5 border-r border-t transition-colors ${
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+          }`}
+        />
+        <div
+          className={`pointer-events-none absolute bottom-0.5 left-0.5 h-2.5 w-2.5 border-b border-l transition-colors ${
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+          }`}
+        />
+        <div
+          className={`pointer-events-none absolute bottom-0.5 right-0.5 h-2.5 w-2.5 border-b border-r transition-colors ${
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+          }`}
+        />
 
         <AnimatePresence mode="popLayout" initial={false}>
           {equippedItem !== undefined ? (
@@ -223,7 +247,11 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
           <FanOut slot={slot} items={fanoutItems} />
         )}
       </div>
-      <span className="text-[9px] font-semibold uppercase tracking-[0.12em] text-ink-muted/70">
+      <span
+        className={`text-[9px] font-semibold uppercase tracking-[0.12em] transition-colors ${
+          isFanoutOpen ? 'text-gold' : 'text-ink-muted/70'
+        }`}
+      >
         {SLOT_LABELS[slot]}
       </span>
     </div>
