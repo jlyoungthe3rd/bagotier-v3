@@ -90,12 +90,12 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     }
   }, [isActive, equippedItem]);
 
-  // Open fan-out immediately on keyboard focus
+  // Open fan-out immediately on keyboard focus for empty slot
   useEffect(() => {
-    if (isActive && fanoutItems.length > 0) {
+    if (isActive && equippedItem === undefined && fanoutItems.length > 0) {
       openFanout();
     }
-  }, [isActive, openFanout, fanoutItems.length]);
+  }, [isActive, equippedItem, openFanout, fanoutItems.length]);
 
   const tabIndex = focusedSection === 'equipment' && focusedSlot === slot ? 0 : -1;
 

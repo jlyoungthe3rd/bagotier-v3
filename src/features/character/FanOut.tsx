@@ -176,6 +176,7 @@ export function FanOut({ slot, items }: FanOutProps) {
                   tooltip.closeFor(item.id, 'focus');
                 }}
                 tabIndex={isFocused ? 0 : -1}
+                aria-describedby={tooltip.ariaDescribedByFor(item.id) ?? undefined}
               >
                 <span aria-hidden="true" className="text-2xl leading-none">
                   {resolveIcon(item.icon)}

@@ -1,6 +1,7 @@
-import { screen } from '@testing-library/react';
+import { act, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it } from 'vitest';
+import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { renderApp } from '../integration/dnd-test-utils';
 import {
   waitForTooltip,
@@ -11,6 +12,10 @@ describe('item tooltip UI contract', () => {
   it('renders role=tooltip and associates trigger through aria-describedby', async () => {
     const user = userEvent.setup();
     await renderApp();
+
+    act(() => {
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+    });
 
     const trigger = screen.getByTestId('item-iron-helm');
     await user.hover(trigger);
@@ -25,15 +30,20 @@ describe('item tooltip UI contract', () => {
     const user = userEvent.setup();
     await renderApp();
 
+    act(() => {
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+      useInventoryStore.getState().equip('steel-cuirass' as never, 'body');
+    });
+
     await user.hover(screen.getByTestId('item-iron-helm'));
     await waitForTooltip();
-    await user.hover(screen.getByTestId('item-wizard-hat'));
+    await user.hover(screen.getByTestId('item-steel-cuirass'));
 
     const tooltips = screen.getAllByRole('tooltip');
     expect(tooltips).toHaveLength(1);
-    expect(tooltips[0]).toHaveTextContent('Wizard Hat');
+    expect(tooltips[0]).toHaveTextContent('Steel Cuirass');
 
-    await user.unhover(screen.getByTestId('item-wizard-hat'));
+    await user.unhover(screen.getByTestId('item-steel-cuirass'));
     await waitForTooltipToClose();
   });
 });

@@ -62,4 +62,22 @@ describe('slotHoverManager', () => {
     const delay = getSlotHoverDelay('legs', 3500);
     expect(delay).toBe(200);
   });
+
+  it('does not switch to fast delay when repeatedly hovering the same slot', () => {
+    const delay1 = getSlotHoverDelay('head', 1000);
+    expect(delay1).toBe(300);
+
+    // Re-hover same slot at t = 1200
+    const delay2 = getSlotHoverDelay('head', 1200);
+    expect(delay2).toBe(300);
+
+    // Re-hover same slot again at t = 1500
+    const delay3 = getSlotHoverDelay('head', 1500);
+    expect(delay3).toBe(300);
+  });
+
+  it('uses current Date.now() when now parameter is omitted', () => {
+    const delay = getSlotHoverDelay('head');
+    expect(delay).toBe(300);
+  });
 });
