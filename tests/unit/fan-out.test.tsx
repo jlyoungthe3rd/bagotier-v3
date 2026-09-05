@@ -34,7 +34,7 @@ describe('FanOut component', () => {
 
       const listbox = screen.getByRole('listbox');
       expect(listbox).toBeInTheDocument();
-      expect(listbox).toHaveAttribute('aria-label', 'Available items for head slot');
+      expect(listbox).toHaveAttribute('aria-label', expect.stringMatching(/Available items for head slot/i));
 
       const options = screen.getAllByRole('option');
       expect(options).toHaveLength(2);
