@@ -267,7 +267,8 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
         className="pointer-events-none absolute inset-0 z-30"
       >
         <span id={instructionId} className="sr-only">
-          Use left and right arrow keys to navigate, Enter or Space to equip, Escape to close.
+          Use left and right arrow keys to navigate, Enter or Space to equip, Escape to
+          close.
         </span>
         {items.map((item, i) => {
           const pos = positions[i] ?? { x: 0, y: 0 };

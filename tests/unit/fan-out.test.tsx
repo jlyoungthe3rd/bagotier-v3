@@ -37,7 +37,8 @@ vi.mock('framer-motion', async () => {
   const actual = await vi.importActual<typeof FramerMotion>('framer-motion');
   const ActualMotionDiv = actual.motion.div;
   const MockMotionDiv = forwardRef((props: Record<string, unknown>, ref) => {
-    const childProps = (props.children as { props?: Record<string, unknown> } | undefined)?.props;
+    const childProps = (props.children as { props?: Record<string, unknown> } | undefined)
+      ?.props;
     motionDivCalls.push({
       initial: props.initial,
       animate: props.animate,
@@ -65,13 +66,15 @@ vi.mock('framer-motion', async () => {
 
 const headItems = items.filter((i) => i.slotType === 'head');
 const weaponItems = items.filter((i) => i.slotType === 'weapon');
-const singleItem = [headItems[0] as Item];
+const singleItem = [headItems[0]!];
 
-function renderFanOut(props: {
-  slot?: SlotType;
-  items?: readonly Item[];
-  onDismiss?: () => void;
-} = {}) {
+function renderFanOut(
+  props: {
+    slot?: SlotType;
+    items?: readonly Item[];
+    onDismiss?: () => void;
+  } = {},
+) {
   const { slot = 'head', items: fanItems = headItems, onDismiss } = props;
   return render(
     <ItemTooltipProvider>
@@ -99,7 +102,15 @@ describe('FanOut component & computeFanPositions', () => {
     });
 
     it('generates strictly horizontal coordinates with y = 0 for all slots', () => {
-      const slots: SlotType[] = ['head', 'body', 'legs', 'hands', 'feet', 'weapon', 'accessory'];
+      const slots: SlotType[] = [
+        'head',
+        'body',
+        'legs',
+        'hands',
+        'feet',
+        'weapon',
+        'accessory',
+      ];
       for (const slot of slots) {
         const positions = computeFanPositions(slot, 3);
         expect(positions).toHaveLength(3);
@@ -181,7 +192,12 @@ describe('FanOut component & computeFanPositions', () => {
       });
 
       it('preserves backwards compatibility by mapping legacy FAN_RADIUS constants to standard steps', () => {
-        const desktopPositions = computeFanPositions('head', 1, FAN_RADIUS_DESKTOP, false);
+        const desktopPositions = computeFanPositions(
+          'head',
+          1,
+          FAN_RADIUS_DESKTOP,
+          false,
+        );
         expect(desktopPositions).toEqual([{ x: DESKTOP_STEP, y: 0 }]);
 
         const mobilePositions = computeFanPositions('head', 1, FAN_RADIUS_MOBILE, true);
@@ -213,7 +229,10 @@ describe('FanOut component & computeFanPositions', () => {
       const listbox = screen.getByRole('listbox');
       expect(listbox).toBeInTheDocument();
       expect(listbox).toHaveAttribute('aria-orientation', 'horizontal');
-      expect(listbox).toHaveAttribute('aria-label', expect.stringMatching(/Available items for head slot/i));
+      expect(listbox).toHaveAttribute(
+        'aria-label',
+        expect.stringMatching(/Available items for head slot/i),
+      );
       expect(listbox).toHaveAttribute('aria-orientation', 'horizontal');
 
       const options = screen.getAllByRole('option');
@@ -229,7 +248,9 @@ describe('FanOut component & computeFanPositions', () => {
       expect(options[0]).toHaveAttribute('aria-setsize', '2');
       expect(options[0]).toHaveAttribute('aria-posinset', '1');
       expect(options[0]).toHaveAttribute('aria-label', 'Equip Iron Helm');
-      expect(options[0]?.getAttribute('aria-describedby')).toContain('fanout-instructions-head');
+      expect(options[0]?.getAttribute('aria-describedby')).toContain(
+        'fanout-instructions-head',
+      );
       expect(options[0]).toHaveAttribute('tabindex', '0');
 
       expect(options[1]).toHaveAttribute('aria-selected', 'false');
@@ -244,18 +265,22 @@ describe('FanOut component & computeFanPositions', () => {
       expect(options).toHaveLength(2);
 
       // Verify framer-motion props passed to each item wrapper
-      const item0Call = motionDivCalls.filter((c) => c.childTestId === 'fanout-item-iron-helm').at(-1);
-      const item1Call = motionDivCalls.filter((c) => c.childTestId === 'fanout-item-wizard-hat').at(-1);
+      const item0Call = motionDivCalls
+        .filter((c) => c.childTestId === 'fanout-item-iron-helm')
+        .at(-1);
+      const item1Call = motionDivCalls
+        .filter((c) => c.childTestId === 'fanout-item-wizard-hat')
+        .at(-1);
 
       expect(item0Call?.animate).toEqual(
         expect.objectContaining({
-          x: `calc(-50% + ${DESKTOP_STEP}px)`,
+          x: `calc(-50% + ${String(DESKTOP_STEP)}px)`,
           y: '-50%',
         }),
       );
       expect(item1Call?.animate).toEqual(
         expect.objectContaining({
-          x: `calc(-50% + ${2 * DESKTOP_STEP}px)`,
+          x: `calc(-50% + ${String(2 * DESKTOP_STEP)}px)`,
           y: '-50%',
         }),
       );
@@ -268,11 +293,14 @@ describe('FanOut component & computeFanPositions', () => {
       const options = screen.getAllByRole('option');
       expect(options.length).toBeGreaterThanOrEqual(1);
 
-      const firstItemCall = motionDivCalls.filter((c) => c.childTestId === `fanout-item-${weaponItems[0]?.id}`).at(-1);
+      const firstWeapon = weaponItems[0]!;
+      const firstItemCall = motionDivCalls
+        .filter((c) => c.childTestId === `fanout-item-${firstWeapon.id}`)
+        .at(-1);
 
       expect(firstItemCall?.animate).toEqual(
         expect.objectContaining({
-          x: `calc(-50% + -${DESKTOP_STEP}px)`,
+          x: `calc(-50% + -${String(DESKTOP_STEP)}px)`,
           y: '-50%',
         }),
       );
@@ -317,9 +345,11 @@ describe('FanOut component & computeFanPositions', () => {
       // maxRightAllowed = 800 - 12 = 788
       // For head slot item 0: base x = +64 -> itemRight = 775 + 64 + 28 = 867
       // 867 > 788, so x should be clamped to 788 - 775 - 28 = -15
-      renderFanOut({ slot: 'head', items: [headItems[0] as Item] });
+      renderFanOut({ slot: 'head', items: [headItems[0]!] });
 
-      const itemCall = motionDivCalls.filter((c) => c.childTestId === 'fanout-item-iron-helm').at(-1);
+      const itemCall = motionDivCalls
+        .filter((c) => c.childTestId === 'fanout-item-iron-helm')
+        .at(-1);
 
       expect(itemCall?.animate).toEqual(
         expect.objectContaining({
@@ -356,9 +386,12 @@ describe('FanOut component & computeFanPositions', () => {
       // For weapon slot item 0: base x = -64 -> itemLeft = 35 - 64 - 28 = -57
       // -57 < 12, so x should be clamped by adding 12 - (-57) = 69 -> -64 + 69 = 5
       useInventoryStore.getState().setActiveFanoutSlot('weapon');
-      renderFanOut({ slot: 'weapon', items: [weaponItems[0] as Item] });
+      renderFanOut({ slot: 'weapon', items: [weaponItems[0]!] });
 
-      const itemCall = motionDivCalls.filter((c) => c.childTestId === `fanout-item-${weaponItems[0]?.id}`).at(-1);
+      const weaponItem = weaponItems[0]!;
+      const itemCall = motionDivCalls
+        .filter((c) => c.childTestId === `fanout-item-${weaponItem.id}`)
+        .at(-1);
 
       expect(itemCall?.animate).toEqual(
         expect.objectContaining({
@@ -388,11 +421,13 @@ describe('FanOut component & computeFanPositions', () => {
 
       renderFanOut({ slot: 'head', items: singleItem });
 
-      const itemCall = motionDivCalls.filter((c) => c.childTestId === 'fanout-item-iron-helm').at(-1);
+      const itemCall = motionDivCalls
+        .filter((c) => c.childTestId === 'fanout-item-iron-helm')
+        .at(-1);
 
       expect(itemCall?.animate).toEqual(
         expect.objectContaining({
-          x: `calc(-50% + ${DESKTOP_STEP}px)`,
+          x: `calc(-50% + ${String(DESKTOP_STEP)}px)`,
           y: '-50%',
         }),
       );
@@ -407,7 +442,9 @@ describe('FanOut component & computeFanPositions', () => {
 
       renderFanOut({ slot: 'head', items: headItems });
 
-      const itemCall = motionDivCalls.filter((c) => c.childTestId === 'fanout-item-iron-helm').at(-1);
+      const itemCall = motionDivCalls
+        .filter((c) => c.childTestId === 'fanout-item-iron-helm')
+        .at(-1);
 
       expect(itemCall?.initial).toBe(false);
       expect(itemCall?.transition).toEqual({
@@ -425,7 +462,9 @@ describe('FanOut component & computeFanPositions', () => {
 
       renderFanOut({ slot: 'head', items: headItems });
 
-      const itemCall = motionDivCalls.filter((c) => c.childTestId === 'fanout-item-iron-helm').at(-1);
+      const itemCall = motionDivCalls
+        .filter((c) => c.childTestId === 'fanout-item-iron-helm')
+        .at(-1);
 
       expect(itemCall?.initial).toEqual({
         scale: 0.8,
@@ -534,7 +573,9 @@ describe('FanOut component & computeFanPositions', () => {
 
       expect(useInventoryStore.getState().equipped.head).toBe('iron-helm');
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
-      expect(useInventoryStore.getState().feedback).toMatch(/Equipped Iron Helm to Head slot/i);
+      expect(useInventoryStore.getState().feedback).toMatch(
+        /Equipped Iron Helm to Head slot/i,
+      );
       expect(playbackSpy).toHaveBeenCalledWith('equip');
 
       playbackSpy.mockRestore();
@@ -553,7 +594,9 @@ describe('FanOut component & computeFanPositions', () => {
 
       expect(useInventoryStore.getState().equipped.head).toBe('wizard-hat');
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
-      expect(useInventoryStore.getState().feedback).toMatch(/Equipped Wizard Hat to Head slot/i);
+      expect(useInventoryStore.getState().feedback).toMatch(
+        /Equipped Wizard Hat to Head slot/i,
+      );
       expect(playbackSpy).toHaveBeenCalledWith('equip');
 
       playbackSpy.mockRestore();
@@ -652,4 +695,3 @@ describe('FanOut component & computeFanPositions', () => {
     });
   });
 });
-

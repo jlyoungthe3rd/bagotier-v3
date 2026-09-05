@@ -30,21 +30,19 @@ function resolveIcon(icon: string): string {
  */
 export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
   function InventoryItem(
-    {
-      item,
-      slot,
-      hasFanout,
-      isFanoutOpen,
-      onDismissFanout,
-      ...buttonProps
-    },
+    { item, slot, hasFanout, isFanoutOpen, onDismissFanout, ...buttonProps },
     forwardedRef,
   ) {
     const tooltip = useItemTooltip();
     const describedBy = tooltip.ariaDescribedByFor(item.id);
     const elementRef = useRef<HTMLButtonElement | null>(null);
 
-    useImperativeHandle(forwardedRef, () => elementRef.current as HTMLButtonElement);
+    useImperativeHandle(forwardedRef, () => {
+      if (elementRef.current === null) {
+        throw new Error('InventoryItem button ref is not mounted');
+      }
+      return elementRef.current;
+    });
 
     const focusedSection = useInventoryStore((s) => s.focusedSection);
     const focusedSlot = useInventoryStore((s) => s.focusedSlot);
@@ -82,9 +80,7 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
         aria-label={`${item.name} (${item.slotType})`}
         aria-haspopup={hasFanout ? 'listbox' : undefined}
         aria-expanded={hasFanout ? isFanoutOpen : undefined}
-        aria-controls={
-          hasFanout && isFanoutOpen ? `fanout-listbox-${slot}` : undefined
-        }
+        aria-controls={hasFanout && isFanoutOpen ? `fanout-listbox-${slot}` : undefined}
         aria-description={
           hasFanout
             ? 'Equipped item. Press Enter or Space to unequip. Alternate items available in fan-out.'
