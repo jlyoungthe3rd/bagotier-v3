@@ -30,25 +30,28 @@ interface RecordedMotionCall {
   childId?: string;
 }
 
-const mockUseReducedMotion = vi.fn<[], boolean | null>(() => false);
+const mockUseReducedMotion = vi.fn<() => boolean | null>(() => false);
 const motionDivCalls: RecordedMotionCall[] = [];
 
 vi.mock('framer-motion', async () => {
   const actual = await vi.importActual<typeof FramerMotion>('framer-motion');
   const ActualMotionDiv = actual.motion.div;
-  const MockMotionDiv = forwardRef((props: Record<string, unknown>, ref) => {
-    const childProps = (props.children as { props?: Record<string, unknown> } | undefined)
-      ?.props;
-    motionDivCalls.push({
-      initial: props.initial,
-      animate: props.animate,
-      exit: props.exit,
-      transition: props.transition,
-      childTestId: childProps?.['data-testid'] as string | undefined,
-      childId: childProps?.id as string | undefined,
-    });
-    return createElement(ActualMotionDiv, { ...props, ref });
-  });
+  const MockMotionDiv = forwardRef<HTMLDivElement, Record<string, unknown>>(
+    (props, ref) => {
+      const childProps = (
+        props.children as { props?: Record<string, unknown> } | undefined
+      )?.props;
+      motionDivCalls.push({
+        initial: props.initial,
+        animate: props.animate,
+        exit: props.exit,
+        transition: props.transition,
+        childTestId: childProps?.['data-testid'] as string | undefined,
+        childId: childProps?.id as string | undefined,
+      });
+      return createElement(ActualMotionDiv, { ...props, ref });
+    },
+  );
 
   return {
     ...actual,
