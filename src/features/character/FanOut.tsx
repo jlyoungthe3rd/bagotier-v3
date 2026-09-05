@@ -5,58 +5,83 @@ import { useInventoryStore } from '../../store/useInventoryStore';
 import { useItemTooltip } from '../inventory/tooltip';
 import { useSound } from '../audio/useSound';
 
+export type HorizontalFanDirection = 'left' | 'right' | 'center';
+
 /**
- * Direction from which the fan-out arcs away, based on the slot's
- * position in the paper doll layout.
- *
- * Designed to project outward into empty space around the paper doll:
- * - Head fans upward to frame the character title.
- * - Weapon and hands fan outward to the left (angled into open diagonals).
- * - Body and accessory fan outward to the right (angled into open diagonals).
- * - Legs and feet fan outward away from each other into lower flanks.
+ * Horizontal expansion direction based on slot placement in the paper doll:
+ * - Weapon, hands, and legs fan outward to the left
+ * - Head, body, accessory, and feet fan outward to the right
  */
-const SLOT_FAN_DIRECTION: Readonly<Record<SlotType, number>> = {
-  head: -90, // fans upward
-  weapon: 165, // fans upward-left into open diagonal
-  hands: 195, // fans downward-left into open flank
-  body: 15, // fans upward-right into open diagonal
-  accessory: 345, // fans downward-right into open flank
-  legs: 120, // fans downward-left away from feet
-  feet: 60, // fans downward-right away from legs
+export const SLOT_FAN_DIRECTION: Readonly<Record<SlotType, HorizontalFanDirection>> = {
+  weapon: 'left',
+  hands: 'left',
+  legs: 'left',
+  head: 'right',
+  body: 'right',
+  accessory: 'right',
+  feet: 'right',
 };
 
-/** Distance from slot center to fanned item center (px) for desktop/tablet. */
+/** Horizontal step between items (px) for desktop/tablet. */
+export const DESKTOP_STEP = 64;
+
+/** Horizontal step between items (px) for mobile. */
+export const MOBILE_STEP = 50;
+
+/** Distance constants retained for backwards-compatibility */
 export const FAN_RADIUS_DESKTOP = 68;
-
-/** Distance from slot center to fanned item center (px) for mobile. */
 export const FAN_RADIUS_MOBILE = 54;
+export const FAN_ARC = 0;
 
-/** Total arc angle (degrees) for the fan spread when 2 items are available. */
-export const FAN_ARC = 80;
-
+/**
+ * Computes strictly horizontal positions (y = 0) for available items:
+ * - Left slots: negative X offsets stepping outward to the left
+ * - Right slots: positive X offsets stepping outward to the right
+ * - Center slots: flanking symmetrically around the slot center without covering it
+ */
 export function computeFanPositions(
   slot: SlotType,
   count: number,
-  radius: number = FAN_RADIUS_DESKTOP,
+  radius?: number,
+  isMobile: boolean = false,
 ): { x: number; y: number }[] {
-  const centerAngle = SLOT_FAN_DIRECTION[slot];
-  if (count <= 1) {
-    const rad = (centerAngle * Math.PI) / 180;
-    return [
-      { x: Math.round(Math.cos(rad) * radius), y: Math.round(Math.sin(rad) * radius) },
-    ];
+  if (count <= 0) return [];
+
+  const direction = SLOT_FAN_DIRECTION[slot] ?? 'center';
+  const step = radius !== undefined && radius !== FAN_RADIUS_DESKTOP && radius !== FAN_RADIUS_MOBILE
+    ? radius
+    : (isMobile ? MOBILE_STEP : DESKTOP_STEP);
+
+  if (direction === 'left') {
+    return Array.from({ length: count }, (_, i) => ({
+      x: -(i + 1) * step,
+      y: 0,
+    }));
   }
-  const arc = count === 2 ? FAN_ARC : Math.min(110, 30 * (count - 1));
-  const halfArc = arc / 2;
+
+  if (direction === 'right') {
+    return Array.from({ length: count }, (_, i) => ({
+      x: (i + 1) * step,
+      y: 0,
+    }));
+  }
+
+  // 'center': symmetrically flank the slot horizontally at y = 0
+  const leftCount = Math.floor(count / 2);
   return Array.from({ length: count }, (_, i) => {
-    const angle = centerAngle - halfArc + (i / (count - 1)) * arc;
-    const rad = (angle * Math.PI) / 180;
+    if (i < leftCount) {
+      return {
+        x: -(leftCount - i) * step,
+        y: 0,
+      };
+    }
     return {
-      x: Math.round(Math.cos(rad) * radius),
-      y: Math.round(Math.sin(rad) * radius),
+      x: (i - leftCount + 1) * step,
+      y: 0,
     };
   });
 }
+
 
 const FALLBACK_ICON = '◻️';
 
@@ -110,15 +135,14 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
     };
   }, []);
 
-  const radius = isMobile ? FAN_RADIUS_MOBILE : FAN_RADIUS_DESKTOP;
   const basePositions = useMemo(
-    () => computeFanPositions(slot, items.length, radius),
-    [slot, items.length, radius],
+    () => computeFanPositions(slot, items.length, undefined, isMobile),
+    [slot, items.length, isMobile],
   );
 
   const [positions, setPositions] = useState<{ x: number; y: number }[]>(basePositions);
 
-  // Viewport bounds clamping: ensure no fanned item clips or overflows viewport edges
+  // Viewport bounds clamping: ensure no horizontally fanned item clips or overflows viewport edges
   useLayoutEffect(() => {
     if (typeof window === 'undefined' || !containerRef.current) {
       setPositions(basePositions);
@@ -133,16 +157,13 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
     }
 
     const slotCenterX = rect.left + rect.width / 2;
-    const slotCenterY = rect.top + rect.height / 2;
     const itemHalfSize = isMobile ? 22 : 28;
     const margin = 12; // Safety margin from viewport edge (px)
 
     const clamped = basePositions.map((pos) => {
-      let { x, y } = pos;
+      let { x } = pos;
       const itemLeft = slotCenterX + x - itemHalfSize;
       const itemRight = slotCenterX + x + itemHalfSize;
-      const itemTop = slotCenterY + y - itemHalfSize;
-      const itemBottom = slotCenterY + y + itemHalfSize;
 
       if (itemLeft < margin) {
         x += margin - itemLeft;
@@ -150,13 +171,7 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
         x -= itemRight - (window.innerWidth - margin);
       }
 
-      if (itemTop < margin) {
-        y += margin - itemTop;
-      } else if (itemBottom > window.innerHeight - margin) {
-        y -= itemBottom - (window.innerHeight - margin);
-      }
-
-      return { x: Math.round(x), y: Math.round(y) };
+      return { x: Math.round(x), y: 0 };
     });
 
     setPositions(clamped);
@@ -258,18 +273,18 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
               initial={
                 reducedMotion === true
                   ? false
-                  : { scale: 0, opacity: 0, x: '-50%', y: '-50%' }
+                  : { scale: 0.8, opacity: 0, x: '-50%', y: '-50%' }
               }
               animate={{
                 scale: 1,
                 opacity: 1,
                 x: `calc(-50% + ${String(pos.x)}px)`,
-                y: `calc(-50% + ${String(pos.y)}px)`,
+                y: '-50%',
               }}
               exit={
                 reducedMotion === true
                   ? { opacity: 0, transition: { duration: 0 } }
-                  : { scale: 0, opacity: 0, x: '-50%', y: '-50%' }
+                  : { scale: 0.8, opacity: 0, x: '-50%', y: '-50%' }
               }
               transition={{
                 duration: reducedMotion === true ? 0 : 0.2,
