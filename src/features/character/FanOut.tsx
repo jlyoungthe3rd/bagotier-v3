@@ -319,6 +319,7 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
                   tooltip.closeFor(item.id, 'focus');
                 }}
                 tabIndex={isFocused ? 0 : -1}
+                aria-describedby={tooltip.ariaDescribedByFor(item.id) ?? undefined}
               >
                 {/* Corner bracket accents matching EquipmentSlot JRPG aesthetic */}
                 <div className="pointer-events-none absolute left-0.5 top-0.5 h-1.5 w-1.5 border-l border-t border-gold/30 transition-colors group-hover:border-gold/70" />

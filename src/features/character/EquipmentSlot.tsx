@@ -108,14 +108,14 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     prevFanoutOpenRef.current = isFanoutOpen;
   }, [isFanoutOpen, isActive]);
 
-  // Open fan-out when slot transitions to active (keyboard focus)
+  // Open fan-out when empty slot transitions to active (keyboard focus)
   const prevActiveRef = useRef(isActive);
   useEffect(() => {
-    if (!prevActiveRef.current && isActive && fanoutItems.length > 0) {
+    if (!prevActiveRef.current && isActive && equippedItem === undefined && fanoutItems.length > 0) {
       openFanout();
     }
     prevActiveRef.current = isActive;
-  }, [isActive, openFanout, fanoutItems.length]);
+  }, [isActive, equippedItem, openFanout, fanoutItems.length]);
 
   const isDefaultSlot = focusedSection === null && slot === 'head';
   const tabIndex =

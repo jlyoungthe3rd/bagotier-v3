@@ -18,7 +18,7 @@ describe('keyboard navigation integration flows (US1-5)', () => {
       headEmptySlot.focus();
     });
 
-    expect(headEmptySlot).toHaveFocus();
+    expect(screen.getByTestId('fanout-item-iron-helm')).toHaveFocus();
     expect(useInventoryStore.getState().focusedSection).toBe('equipment');
     expect(useInventoryStore.getState().focusedSlot).toBe('head');
 

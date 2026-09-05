@@ -5,12 +5,17 @@ import { toItemId } from '../../src/types/domain';
 import { overrideMockItemIcon, renderApp } from './dnd-test-utils';
 
 describe('inventory icon-only rendering', () => {
-  it('shows icon-only content in bag and equipped slots', async () => {
+  it('shows icon-only content in fanout and equipped slots', async () => {
     await renderApp();
 
-    const bagTile = within(screen.getByTestId('cell-0')).getByTestId('item-iron-helm');
-    expect(within(bagTile).getByText('🪖')).toBeInTheDocument();
-    expect(within(bagTile).queryByText(/iron helm/i)).toBeNull();
+    const headEmptySlot = screen.getByTestId('slot-empty-button-head');
+    act(() => {
+      headEmptySlot.focus();
+    });
+
+    const fanoutTile = within(screen.getByTestId('slot-head')).getByTestId('fanout-item-iron-helm');
+    expect(within(fanoutTile).getByText('🪖')).toBeInTheDocument();
+    expect(within(fanoutTile).queryByText(/iron helm/i)).toBeNull();
 
     act(() => {
       useInventoryStore.getState().equip(toItemId('iron-helm'), 'head');
@@ -29,9 +34,14 @@ describe('inventory icon-only rendering', () => {
     try {
       await renderApp();
 
-      const bagTile = within(screen.getByTestId('cell-0')).getByTestId('item-iron-helm');
-      expect(within(bagTile).getByText('◻️')).toBeInTheDocument();
-      expect(within(bagTile).queryByText(/iron helm/i)).toBeNull();
+      const headEmptySlot = screen.getByTestId('slot-empty-button-head');
+      act(() => {
+        headEmptySlot.focus();
+      });
+
+      const fanoutTile = within(screen.getByTestId('slot-head')).getByTestId('fanout-item-iron-helm');
+      expect(within(fanoutTile).getByText('◻️')).toBeInTheDocument();
+      expect(within(fanoutTile).queryByText(/iron helm/i)).toBeNull();
 
       expect(screen.getByTestId('slot-empty-head')).toBeInTheDocument();
     } finally {
