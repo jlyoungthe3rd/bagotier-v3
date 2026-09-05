@@ -12,6 +12,9 @@ interface InventoryItemProps extends Omit<
 > {
   readonly item: Item;
   readonly slot: SlotType;
+  readonly hasFanout?: boolean;
+  readonly isFanoutOpen?: boolean;
+  readonly onDismissFanout?: () => void;
 }
 
 const FALLBACK_ICON = '◻️';
@@ -24,7 +27,14 @@ function resolveIcon(icon: string): string {
  * Focusable item tile rendered inside an equipment slot.
  * Clicking unequips the item from its slot.
  */
-export function InventoryItem({ item, slot, ...buttonProps }: InventoryItemProps) {
+export function InventoryItem({
+  item,
+  slot,
+  hasFanout,
+  isFanoutOpen,
+  onDismissFanout,
+  ...buttonProps
+}: InventoryItemProps) {
   const tooltip = useItemTooltip();
   const describedBy = tooltip.ariaDescribedByFor(item.id);
   const elementRef = useRef<HTMLButtonElement | null>(null);
@@ -43,12 +53,15 @@ export function InventoryItem({ item, slot, ...buttonProps }: InventoryItemProps
     }
   }, [isActive]);
 
-  const tabIndex = focusedSection === 'equipment' && focusedSlot === slot ? 0 : -1;
+  const isDefaultSlot = focusedSection === null && slot === 'head';
+  const tabIndex =
+    (focusedSection === 'equipment' && focusedSlot === slot) || isDefaultSlot ? 0 : -1;
 
   const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     buttonProps.onClick?.(e);
     const store = useInventoryStore.getState();
     store.unequip(slot);
+    store.setFeedback(`Unequipped ${item.name} from ${slot} slot.`);
     play('unequip');
   };
 
@@ -60,6 +73,12 @@ export function InventoryItem({ item, slot, ...buttonProps }: InventoryItemProps
       tabIndex={tabIndex}
       data-testid={`item-${item.id}`}
       aria-label={`${item.name} (${item.slotType})`}
+      aria-haspopup={hasFanout ? 'listbox' : undefined}
+      aria-expanded={hasFanout ? isFanoutOpen : undefined}
+      aria-controls={
+        hasFanout && isFanoutOpen ? `fanout-listbox-${slot}` : undefined
+      }
+      aria-description="Equipped item. Press Enter or Space to unequip."
       className="flex h-full w-full items-center justify-center bg-surface-raised/80 p-1 text-ink transition-colors outline-offset-2 hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"
       onMouseEnter={() => {
         tooltip.open(item, 'hover', elementRef.current);
@@ -80,6 +99,10 @@ export function InventoryItem({ item, slot, ...buttonProps }: InventoryItemProps
       onKeyDownCapture={(event) => {
         if (event.key === 'Escape') {
           tooltip.dismiss();
+          if (isFanoutOpen) {
+            event.stopPropagation();
+            onDismissFanout?.();
+          }
         }
       }}
       onKeyDown={(event) => {
