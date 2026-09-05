@@ -91,7 +91,7 @@ function resolveIcon(icon: string): string {
   return icon.trim().length > 0 ? icon : FALLBACK_ICON;
 }
 
-const SLOT_LABELS: Readonly<Record<SlotType, string>> = {
+export const SLOT_LABELS: Readonly<Record<SlotType, string>> = {
   head: 'Head',
   body: 'Body',
   legs: 'Legs',
@@ -278,11 +278,14 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
         onDismiss?.();
         break;
       case 'Tab':
-        // Close fanout cleanly on tab out
+        // Close fanout cleanly on tab out and announce state to live region
         store.setActiveFanoutSlot(null);
+        store.setFeedback(`Closed ${SLOT_LABELS[slot]} slot options.`);
         break;
     }
   };
+
+  const instructionId = `fanout-instructions-${slot}`;
 
   return (
     <AnimatePresence>
@@ -294,14 +297,21 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
         aria-orientation="horizontal"
         className="pointer-events-none absolute inset-0 z-30"
       >
+        <span id={instructionId} className="sr-only">
+          Use left and right arrow keys to navigate, Enter or Space to equip, Escape to close.
+        </span>
         {items.map((item, i) => {
           const pos = positions[i] ?? { x: 0, y: 0 };
           const isFocused = focusedFanoutIndex === i;
-          const describedBy = tooltip.ariaDescribedByFor(item.id);
+          const tooltipDescribedBy = tooltip.ariaDescribedByFor(item.id);
+          const describedBy = [tooltipDescribedBy, instructionId]
+            .filter(Boolean)
+            .join(' ');
 
           return (
             <motion.div
               key={item.id}
+              role="presentation"
               className="pointer-events-auto absolute left-1/2 top-1/2"
               initial={
                 reducedMotion === true
@@ -335,9 +345,9 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
                 aria-setsize={items.length}
                 aria-posinset={i + 1}
                 aria-label={`Equip ${item.name}`}
-                aria-describedby={describedBy ?? undefined}
+                aria-describedby={describedBy}
                 data-testid={`fanout-item-${item.id}`}
-                className={`group relative flex h-11 w-11 sm:h-cell sm:w-cell items-center justify-center rounded-sm border bg-surface-raised/95 backdrop-blur-md p-1 text-ink shadow-lg shadow-surface-sunken/80 transition-all duration-200 ease-out outline-offset-2 hover:scale-105 hover:bg-surface-raised hover:border-ember hover:shadow-[0_0_14px_rgba(212,104,58,0.4),0_0_6px_rgba(196,148,58,0.3)] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid ${
+                className={`group relative flex h-11 w-11 sm:h-cell sm:w-cell items-center justify-center rounded-sm border bg-surface-raised/95 backdrop-blur-md p-1 text-ink shadow-lg shadow-surface-sunken/80 transition-all duration-200 ease-out outline-offset-2 hover:scale-105 hover:bg-surface-raised hover:border-ember hover:shadow-[0_0_14px_rgba(212,104,58,0.4),0_0_6px_rgba(196,148,58,0.3)] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid motion-reduce:transition-none motion-reduce:transform-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100 ${
                   isFocused
                     ? 'border-gold shadow-[0_0_16px_rgba(196,148,58,0.45),0_0_8px_rgba(212,104,58,0.3)] ring-1 ring-gold/60 scale-105'
                     : 'border-slot-idle/80'

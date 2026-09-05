@@ -39,15 +39,28 @@ describe('FanOut component', () => {
 
       const listbox = screen.getByRole('listbox');
       expect(listbox).toBeInTheDocument();
-      expect(listbox).toHaveAttribute(
-        'aria-label',
-        expect.stringMatching(/Available items for head slot/i),
-      );
+      expect(listbox).toHaveAttribute('aria-label', expect.stringMatching(/Available items for head slot/i));
+      expect(listbox).toHaveAttribute('aria-orientation', 'horizontal');
 
       const options = screen.getAllByRole('option');
       expect(options).toHaveLength(2);
       expect(options[0]).toHaveAttribute('data-testid', 'fanout-item-iron-helm');
       expect(options[1]).toHaveAttribute('data-testid', 'fanout-item-wizard-hat');
+
+      // Intermediate motion.div wrapper has presentation role
+      expect(options[0]?.parentElement).toHaveAttribute('role', 'presentation');
+
+      // Option ARIA attributes
+      expect(options[0]).toHaveAttribute('aria-selected', 'true');
+      expect(options[0]).toHaveAttribute('aria-setsize', '2');
+      expect(options[0]).toHaveAttribute('aria-posinset', '1');
+      expect(options[0]).toHaveAttribute('aria-label', 'Equip Iron Helm');
+      expect(options[0]?.getAttribute('aria-describedby')).toContain('fanout-instructions-head');
+      expect(options[0]).toHaveAttribute('tabindex', '0');
+
+      expect(options[1]).toHaveAttribute('aria-selected', 'false');
+      expect(options[1]).toHaveAttribute('aria-posinset', '2');
+      expect(options[1]).toHaveAttribute('tabindex', '-1');
     });
 
     it('positions single item directly along center direction angle', () => {
@@ -146,7 +159,7 @@ describe('FanOut component', () => {
       playbackSpy.mockRestore();
     });
 
-    it('Escape key dismisses the fan-out without equipping', async () => {
+    it('Escape key dismisses the fan-out and announces to feedback store', async () => {
       const user = userEvent.setup();
       renderFanOut();
 
@@ -156,6 +169,32 @@ describe('FanOut component', () => {
 
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
       expect(useInventoryStore.getState().equipped.head).toBeNull();
+      expect(useInventoryStore.getState().feedback).toBe('Closed Head slot options.');
+    });
+
+    it('Tab key dismisses the fan-out cleanly and announces to feedback store', async () => {
+      const user = userEvent.setup();
+      renderFanOut();
+
+      expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
+
+      await user.keyboard('{Tab}');
+
+      expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
+      expect(useInventoryStore.getState().feedback).toBe('Closed Head slot options.');
+    });
+
+    it('Home and End keys jump to first and last items', async () => {
+      const user = userEvent.setup();
+      renderFanOut();
+
+      expect(useInventoryStore.getState().focusedFanoutIndex).toBe(0);
+
+      await user.keyboard('{End}');
+      expect(useInventoryStore.getState().focusedFanoutIndex).toBe(1);
+
+      await user.keyboard('{Home}');
+      expect(useInventoryStore.getState().focusedFanoutIndex).toBe(0);
     });
   });
 
