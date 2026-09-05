@@ -70,7 +70,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
       const store = useInventoryStore.getState();
       store.setActiveFanoutSlot(slot);
       store.setFeedback(
-        `${SLOT_LABELS[slot]} slot options opened. ${fanoutItems.length} items available.`,
+        `${SLOT_LABELS[slot]} slot options opened. ${String(fanoutItems.length)} items available.`,
       );
     }
   }, [slot, fanoutItems.length]);
@@ -111,7 +111,12 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   // Open fan-out when empty slot transitions to active (keyboard focus)
   const prevActiveRef = useRef(isActive);
   useEffect(() => {
-    if (!prevActiveRef.current && isActive && equippedItem === undefined && fanoutItems.length > 0) {
+    if (
+      !prevActiveRef.current &&
+      isActive &&
+      equippedItem === undefined &&
+      fanoutItems.length > 0
+    ) {
       openFanout();
     }
     prevActiveRef.current = isActive;
@@ -186,10 +191,10 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
         aria-label={`${SLOT_LABELS[slot]} slot`}
         className={`group relative h-cell w-cell border bg-surface p-0.5 transition-all duration-200 ${
           isFanoutOpen
-            ? 'border-gold/90 shadow-[0_0_14px_rgba(196,148,58,0.35)] ring-1 ring-gold/40'
+            ? 'border-gold/90 shadow-[0_0_14px_rgba(196,148,58,0.35),0_0_6px_rgba(212,104,58,0.25)] ring-1 ring-gold/40'
             : isActive
-              ? 'border-gold/70 shadow-[0_0_8px_rgba(196,148,58,0.2)]'
-              : 'border-slot-idle/60 hover:border-gold/50'
+              ? 'border-gold/70 shadow-[0_0_10px_rgba(196,148,58,0.25),0_0_4px_rgba(212,104,58,0.2)]'
+              : 'border-slot-idle/70 hover:border-ember/70 hover:shadow-[0_0_10px_rgba(212,104,58,0.25)]'
         }`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -197,22 +202,22 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
         {/* Corner bracket accents — the JRPG-style slot framing */}
         <div
           className={`pointer-events-none absolute left-0.5 top-0.5 h-2.5 w-2.5 border-l border-t transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
           }`}
         />
         <div
           className={`pointer-events-none absolute right-0.5 top-0.5 h-2.5 w-2.5 border-r border-t transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
           }`}
         />
         <div
           className={`pointer-events-none absolute bottom-0.5 left-0.5 h-2.5 w-2.5 border-b border-l transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
           }`}
         />
         <div
           className={`pointer-events-none absolute bottom-0.5 right-0.5 h-2.5 w-2.5 border-b border-r transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
           }`}
         />
 
@@ -260,7 +265,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               }
               aria-description={
                 fanoutItems.length > 0
-                  ? `${fanoutItems.length} items available. Press Enter or Space to equip.`
+                  ? `${String(fanoutItems.length)} items available. Press Enter or Space to equip.`
                   : undefined
               }
               className="flex h-full w-full items-center justify-center bg-transparent transition-colors outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"

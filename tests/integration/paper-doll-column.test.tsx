@@ -56,7 +56,15 @@ describe('Central Paper Doll Column Layout integration', () => {
   it('renders all equipment slots in the paper doll layout', async () => {
     await renderApp();
 
-    const slotTypes = ['head', 'body', 'legs', 'hands', 'feet', 'weapon', 'accessory'] as const;
+    const slotTypes = [
+      'head',
+      'body',
+      'legs',
+      'hands',
+      'feet',
+      'weapon',
+      'accessory',
+    ] as const;
     for (const slot of slotTypes) {
       const slotElement = screen.getByTestId(`slot-${slot}`);
       expect(slotElement).toBeInTheDocument();

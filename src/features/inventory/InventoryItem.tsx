@@ -75,9 +75,7 @@ export function InventoryItem({
       aria-label={`${item.name} (${item.slotType})`}
       aria-haspopup={hasFanout ? 'listbox' : undefined}
       aria-expanded={hasFanout ? isFanoutOpen : undefined}
-      aria-controls={
-        hasFanout && isFanoutOpen ? `fanout-listbox-${slot}` : undefined
-      }
+      aria-controls={hasFanout && isFanoutOpen ? `fanout-listbox-${slot}` : undefined}
       aria-description="Equipped item. Press Enter or Space to unequip."
       className="flex h-full w-full items-center justify-center bg-surface-raised/80 p-1 text-ink transition-colors outline-offset-2 hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"
       onMouseEnter={() => {

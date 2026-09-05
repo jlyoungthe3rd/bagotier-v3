@@ -43,14 +43,17 @@ export function computeFanPositions(
   slot: SlotType,
   count: number,
   radius?: number,
-  isMobile: boolean = false,
+  isMobile = false,
 ): { x: number; y: number }[] {
   if (count <= 0) return [];
 
-  const direction = SLOT_FAN_DIRECTION[slot] ?? 'center';
-  const step = radius !== undefined && radius !== FAN_RADIUS_DESKTOP && radius !== FAN_RADIUS_MOBILE
-    ? radius
-    : (isMobile ? MOBILE_STEP : DESKTOP_STEP);
+  const direction = SLOT_FAN_DIRECTION[slot];
+  const step =
+    radius !== undefined && radius !== FAN_RADIUS_DESKTOP && radius !== FAN_RADIUS_MOBILE
+      ? radius
+      : isMobile
+        ? MOBILE_STEP
+        : DESKTOP_STEP;
 
   if (direction === 'left') {
     return Array.from({ length: count }, (_, i) => ({
@@ -81,7 +84,6 @@ export function computeFanPositions(
     };
   });
 }
-
 
 const FALLBACK_ICON = '◻️';
 
@@ -160,21 +162,52 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
     const itemHalfSize = isMobile ? 22 : 28;
     const margin = 12; // Safety margin from viewport edge (px)
 
-    const clamped = basePositions.map((pos) => {
+    const minLeft = Math.min(
+      ...basePositions.map((pos) => slotCenterX + pos.x - itemHalfSize),
+    );
+    const maxRight = Math.max(
+      ...basePositions.map((pos) => slotCenterX + pos.x + itemHalfSize),
+    );
+
+    const overflowsLeft = minLeft < margin;
+    const overflowsRight = maxRight > window.innerWidth - margin;
+
+    if (!overflowsLeft && !overflowsRight) {
+      setPositions(basePositions);
+      return;
+    }
+
+    // Proportional scaling ensures items compress smoothly without stacking or overlapping
+    const maxNegativeOffset = Math.abs(Math.min(0, ...basePositions.map((p) => p.x)));
+    const maxPositiveOffset = Math.max(0, ...basePositions.map((p) => p.x));
+
+    const maxAvailableLeft = Math.max(0, slotCenterX - margin - itemHalfSize);
+    const maxAvailableRight = Math.max(
+      0,
+      window.innerWidth - margin - itemHalfSize - slotCenterX,
+    );
+
+    const scaleLeft =
+      overflowsLeft && maxNegativeOffset > 0
+        ? Math.min(1, maxAvailableLeft / maxNegativeOffset)
+        : 1;
+
+    const scaleRight =
+      overflowsRight && maxPositiveOffset > 0
+        ? Math.min(1, maxAvailableRight / maxPositiveOffset)
+        : 1;
+
+    const scaled = basePositions.map((pos) => {
       let { x } = pos;
-      const itemLeft = slotCenterX + x - itemHalfSize;
-      const itemRight = slotCenterX + x + itemHalfSize;
-
-      if (itemLeft < margin) {
-        x += margin - itemLeft;
-      } else if (itemRight > window.innerWidth - margin) {
-        x -= itemRight - (window.innerWidth - margin);
+      if (x < 0) {
+        x = Math.round(x * scaleLeft);
+      } else if (x > 0) {
+        x = Math.round(x * scaleRight);
       }
-
-      return { x: Math.round(x), y: 0 };
+      return { x, y: 0 };
     });
 
-    setPositions(clamped);
+    setPositions(scaled);
   }, [basePositions, isMobile]);
 
   // Focus the active fan-out item when index changes or on mount
@@ -304,10 +337,10 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
                 aria-label={`Equip ${item.name}`}
                 aria-describedby={describedBy ?? undefined}
                 data-testid={`fanout-item-${item.id}`}
-                className={`group relative flex h-11 w-11 sm:h-cell sm:w-cell items-center justify-center rounded border bg-surface-raised/95 backdrop-blur-md p-1 text-ink shadow-lg shadow-surface-sunken/80 transition-all duration-200 ease-out outline-offset-2 hover:scale-105 hover:bg-surface-raised hover:border-gold hover:shadow-[0_0_14px_rgba(196,148,58,0.4)] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid ${
+                className={`group relative flex h-11 w-11 sm:h-cell sm:w-cell items-center justify-center rounded-sm border bg-surface-raised/95 backdrop-blur-md p-1 text-ink shadow-lg shadow-surface-sunken/80 transition-all duration-200 ease-out outline-offset-2 hover:scale-105 hover:bg-surface-raised hover:border-ember hover:shadow-[0_0_14px_rgba(212,104,58,0.4),0_0_6px_rgba(196,148,58,0.3)] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid ${
                   isFocused
-                    ? 'border-gold shadow-[0_0_16px_rgba(196,148,58,0.45)] ring-1 ring-gold/60 scale-105'
-                    : 'border-slot-idle/70'
+                    ? 'border-gold shadow-[0_0_16px_rgba(196,148,58,0.45),0_0_8px_rgba(212,104,58,0.3)] ring-1 ring-gold/60 scale-105'
+                    : 'border-slot-idle/80'
                 }`}
                 onClick={() => {
                   handleItemClick(item);
@@ -331,10 +364,34 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
                 tabIndex={isFocused ? 0 : -1}
               >
                 {/* Corner bracket accents matching EquipmentSlot JRPG aesthetic */}
-                <div className="pointer-events-none absolute left-0.5 top-0.5 h-1.5 w-1.5 border-l border-t border-gold/30 transition-colors group-hover:border-gold/70" />
-                <div className="pointer-events-none absolute right-0.5 top-0.5 h-1.5 w-1.5 border-r border-t border-gold/30 transition-colors group-hover:border-gold/70" />
-                <div className="pointer-events-none absolute bottom-0.5 left-0.5 h-1.5 w-1.5 border-b border-l border-gold/30 transition-colors group-hover:border-gold/70" />
-                <div className="pointer-events-none absolute bottom-0.5 right-0.5 h-1.5 w-1.5 border-b border-r border-gold/30 transition-colors group-hover:border-gold/70" />
+                <div
+                  className={`pointer-events-none absolute left-0.5 top-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 border-l border-t transition-colors ${
+                    isFocused
+                      ? 'border-gold'
+                      : 'border-gold/40 group-hover:border-ember/90'
+                  }`}
+                />
+                <div
+                  className={`pointer-events-none absolute right-0.5 top-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 border-r border-t transition-colors ${
+                    isFocused
+                      ? 'border-gold'
+                      : 'border-gold/40 group-hover:border-ember/90'
+                  }`}
+                />
+                <div
+                  className={`pointer-events-none absolute bottom-0.5 left-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 border-b border-l transition-colors ${
+                    isFocused
+                      ? 'border-gold'
+                      : 'border-gold/40 group-hover:border-ember/90'
+                  }`}
+                />
+                <div
+                  className={`pointer-events-none absolute bottom-0.5 right-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 border-b border-r transition-colors ${
+                    isFocused
+                      ? 'border-gold'
+                      : 'border-gold/40 group-hover:border-ember/90'
+                  }`}
+                />
 
                 <span
                   aria-hidden="true"

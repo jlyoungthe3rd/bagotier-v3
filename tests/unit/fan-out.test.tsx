@@ -4,14 +4,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { FanOut } from '../../src/features/character/FanOut';
 import { ItemTooltipProvider } from '../../src/features/inventory/tooltip';
 import { audioEngine } from '../../src/features/audio/useSound';
-import { registerItemSlotTypes, useInventoryStore } from '../../src/store/useInventoryStore';
+import {
+  registerItemSlotTypes,
+  useInventoryStore,
+} from '../../src/store/useInventoryStore';
 import { items } from '../../src/mocks/items';
 import type { Item } from '../../src/types/domain';
 
 const headItems = items.filter((i) => i.slotType === 'head'); // [iron-helm, wizard-hat]
-const singleItem = [headItems[0] as Item];
+const singleItem = [headItems[0]!];
 
-function renderFanOut(props: { slot?: 'head' | 'weapon' | 'body'; items?: readonly Item[] } = {}) {
+function renderFanOut(
+  props: { slot?: 'head' | 'weapon' | 'body'; items?: readonly Item[] } = {},
+) {
   const { slot = 'head', items: fanItems = headItems } = props;
   return render(
     <ItemTooltipProvider>
@@ -34,7 +39,10 @@ describe('FanOut component', () => {
 
       const listbox = screen.getByRole('listbox');
       expect(listbox).toBeInTheDocument();
-      expect(listbox).toHaveAttribute('aria-label', expect.stringMatching(/Available items for head slot/i));
+      expect(listbox).toHaveAttribute(
+        'aria-label',
+        expect.stringMatching(/Available items for head slot/i),
+      );
 
       const options = screen.getAllByRole('option');
       expect(options).toHaveLength(2);
@@ -63,7 +71,7 @@ describe('FanOut component', () => {
     });
 
     it('renders fallback icon when item icon is empty', () => {
-      const firstHeadItem = headItems[0] as Item;
+      const firstHeadItem = headItems[0]!;
       const emptyIconItem: Item = {
         ...firstHeadItem,
         id: 'test-helm' as never,

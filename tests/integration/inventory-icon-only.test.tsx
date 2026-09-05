@@ -13,7 +13,9 @@ describe('inventory icon-only rendering', () => {
       headEmptySlot.focus();
     });
 
-    const fanoutTile = within(screen.getByTestId('slot-head')).getByTestId('fanout-item-iron-helm');
+    const fanoutTile = within(screen.getByTestId('slot-head')).getByTestId(
+      'fanout-item-iron-helm',
+    );
     expect(within(fanoutTile).getByText('🪖')).toBeInTheDocument();
     expect(within(fanoutTile).queryByText(/iron helm/i)).toBeNull();
 
@@ -39,7 +41,9 @@ describe('inventory icon-only rendering', () => {
         headEmptySlot.focus();
       });
 
-      const fanoutTile = within(screen.getByTestId('slot-head')).getByTestId('fanout-item-iron-helm');
+      const fanoutTile = within(screen.getByTestId('slot-head')).getByTestId(
+        'fanout-item-iron-helm',
+      );
       expect(within(fanoutTile).getByText('◻️')).toBeInTheDocument();
       expect(within(fanoutTile).queryByText(/iron helm/i)).toBeNull();
 
