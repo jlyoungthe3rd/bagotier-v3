@@ -64,18 +64,29 @@ function resolveIcon(icon: string): string {
   return icon.trim().length > 0 ? icon : FALLBACK_ICON;
 }
 
+const SLOT_LABELS: Readonly<Record<SlotType, string>> = {
+  head: 'Head',
+  body: 'Body',
+  legs: 'Legs',
+  hands: 'Hands',
+  feet: 'Feet',
+  weapon: 'Weapon',
+  accessory: 'Accessory',
+};
+
 interface FanOutProps {
   readonly slot: SlotType;
   readonly items: readonly Item[];
+  readonly onDismiss?: () => void;
 }
 
 /**
  * Radial fan-out of unequipped items for a given slot.
  * Items arc outward from the slot, animated with Framer Motion.
  * Features viewport bounding to ensure items never clip or cause overflow.
- * Keyboard: Arrow Left/Right cycle focus, Enter/Space equips, Escape closes.
+ * Keyboard: Arrow keys cycle focus, Home/End jump, Enter/Space equips, Escape closes, Tab dismisses.
  */
-export function FanOut({ slot, items }: FanOutProps) {
+export function FanOut({ slot, items, onDismiss }: FanOutProps) {
   const tooltip = useItemTooltip();
   const play = useSound();
   const reducedMotion = useReducedMotion();
@@ -151,11 +162,16 @@ export function FanOut({ slot, items }: FanOutProps) {
     setPositions(clamped);
   }, [basePositions, isMobile]);
 
-  // Focus the active fan-out item when index changes
+  // Focus the active fan-out item when index changes ONLY if focus is already inside the fan-out
   useEffect(() => {
-    const el = itemRefs.current[focusedFanoutIndex];
-    if (el && document.activeElement !== el) {
-      el.focus();
+    const hasFocusInFanout = itemRefs.current.some(
+      (ref) => ref !== null && document.activeElement === ref,
+    );
+    if (hasFocusInFanout) {
+      const el = itemRefs.current[focusedFanoutIndex];
+      if (el && document.activeElement !== el) {
+        el.focus();
+      }
     }
   }, [focusedFanoutIndex]);
 
@@ -163,6 +179,7 @@ export function FanOut({ slot, items }: FanOutProps) {
     const store = useInventoryStore.getState();
     store.equip(item.id, slot);
     store.setActiveFanoutSlot(null);
+    store.setFeedback(`Equipped ${item.name} to ${SLOT_LABELS[slot]} slot.`);
     play('equip');
   };
 
@@ -173,12 +190,31 @@ export function FanOut({ slot, items }: FanOutProps) {
     const store = useInventoryStore.getState();
     switch (event.key) {
       case 'ArrowLeft':
-      case 'ArrowRight': {
+      case 'ArrowUp': {
         event.preventDefault();
         event.stopPropagation();
-        const delta = event.key === 'ArrowRight' ? 1 : -1;
-        const nextIndex = (index + delta + items.length) % items.length;
+        const nextIndex = (index - 1 + items.length) % items.length;
         store.setFocusedFanoutIndex(nextIndex);
+        break;
+      }
+      case 'ArrowRight':
+      case 'ArrowDown': {
+        event.preventDefault();
+        event.stopPropagation();
+        const nextIndex = (index + 1) % items.length;
+        store.setFocusedFanoutIndex(nextIndex);
+        break;
+      }
+      case 'Home': {
+        event.preventDefault();
+        event.stopPropagation();
+        store.setFocusedFanoutIndex(0);
+        break;
+      }
+      case 'End': {
+        event.preventDefault();
+        event.stopPropagation();
+        store.setFocusedFanoutIndex(items.length - 1);
         break;
       }
       case 'Enter':
@@ -195,6 +231,12 @@ export function FanOut({ slot, items }: FanOutProps) {
         event.preventDefault();
         event.stopPropagation();
         store.setActiveFanoutSlot(null);
+        store.setFeedback(`Closed ${SLOT_LABELS[slot]} slot options.`);
+        onDismiss?.();
+        break;
+      case 'Tab':
+        // Close fanout cleanly on tab out
+        store.setActiveFanoutSlot(null);
         break;
     }
   };
@@ -203,13 +245,16 @@ export function FanOut({ slot, items }: FanOutProps) {
     <AnimatePresence>
       <div
         ref={containerRef}
+        id={`fanout-listbox-${slot}`}
         role="listbox"
-        aria-label={`Available items for ${slot} slot`}
+        aria-label={`Available items for ${SLOT_LABELS[slot]} slot`}
+        aria-orientation="horizontal"
         className="pointer-events-none absolute inset-0 z-30"
       >
         {items.map((item, i) => {
           const pos = positions[i] ?? { x: 0, y: 0 };
           const isFocused = focusedFanoutIndex === i;
+          const describedBy = tooltip.ariaDescribedByFor(item.id);
 
           return (
             <motion.div
@@ -231,16 +276,23 @@ export function FanOut({ slot, items }: FanOutProps) {
                   ? { opacity: 0, transition: { duration: 0 } }
                   : { scale: 0, opacity: 0, x: '-50%', y: '-50%' }
               }
-              transition={{ duration: 0.2, ease: 'easeOut' }}
+              transition={{
+                duration: reducedMotion === true ? 0 : 0.2,
+                ease: 'easeOut',
+              }}
             >
               <button
                 ref={(el) => {
                   itemRefs.current[i] = el;
                 }}
+                id={`fanout-item-${item.id}`}
                 type="button"
                 role="option"
                 aria-selected={isFocused}
+                aria-setsize={items.length}
+                aria-posinset={i + 1}
                 aria-label={`Equip ${item.name}`}
+                aria-describedby={describedBy ?? undefined}
                 data-testid={`fanout-item-${item.id}`}
                 className={`group relative flex h-11 w-11 sm:h-cell sm:w-cell items-center justify-center rounded border bg-surface-raised/95 backdrop-blur-md p-1 text-ink shadow-lg shadow-surface-sunken/80 transition-all duration-200 ease-out outline-offset-2 hover:scale-105 hover:bg-surface-raised hover:border-gold hover:shadow-[0_0_14px_rgba(196,148,58,0.4)] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid ${
                   isFocused

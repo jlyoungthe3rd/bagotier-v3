@@ -6,6 +6,7 @@ import { useItem } from '../inventory/useInventoryQuery';
 import { useItemsForSlot } from '../inventory/useInventoryQuery';
 import { InventoryItem } from '../inventory/InventoryItem';
 import { useItemTooltip } from '../inventory/tooltip';
+import { useSound } from '../audio/useSound';
 import { handleEquipmentKeyDown } from '../inventory/keyboard';
 import { FanOut } from './FanOut';
 import { getSlotHoverDelay, recordSlotActivity } from './slotHoverManager';
@@ -45,10 +46,12 @@ interface EquipmentSlotProps {
 export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const equippedItem = useItem(itemId);
   const reducedMotion = useReducedMotion();
+  const play = useSound();
 
   const focusedSection = useInventoryStore((s) => s.focusedSection);
   const focusedSlot = useInventoryStore((s) => s.focusedSlot);
   const activeFanoutSlot = useInventoryStore((s) => s.activeFanoutSlot);
+  const focusedFanoutIndex = useInventoryStore((s) => s.focusedFanoutIndex);
   const unequipped = useInventoryStore((s) => s.unequipped);
   const tooltip = useItemTooltip();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
@@ -64,7 +67,11 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
 
   const openFanout = useCallback(() => {
     if (fanoutItems.length > 0) {
-      useInventoryStore.getState().setActiveFanoutSlot(slot);
+      const store = useInventoryStore.getState();
+      store.setActiveFanoutSlot(slot);
+      store.setFeedback(
+        `${SLOT_LABELS[slot]} slot options opened. ${fanoutItems.length} items available.`,
+      );
     }
   }, [slot, fanoutItems.length]);
 
@@ -90,14 +97,29 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     }
   }, [isActive, equippedItem]);
 
-  // Open fan-out immediately on keyboard focus
+  // Restore focus to slot button when fan-out closes while slot is active
+  const prevFanoutOpenRef = useRef(isFanoutOpen);
   useEffect(() => {
-    if (isActive && fanoutItems.length > 0) {
+    if (prevFanoutOpenRef.current && !isFanoutOpen && isActive) {
+      if (buttonRef.current && document.activeElement !== buttonRef.current) {
+        buttonRef.current.focus();
+      }
+    }
+    prevFanoutOpenRef.current = isFanoutOpen;
+  }, [isFanoutOpen, isActive]);
+
+  // Open fan-out when slot transitions to active (keyboard focus)
+  const prevActiveRef = useRef(isActive);
+  useEffect(() => {
+    if (!prevActiveRef.current && isActive && fanoutItems.length > 0) {
       openFanout();
     }
+    prevActiveRef.current = isActive;
   }, [isActive, openFanout, fanoutItems.length]);
 
-  const tabIndex = focusedSection === 'equipment' && focusedSlot === slot ? 0 : -1;
+  const isDefaultSlot = focusedSection === null && slot === 'head';
+  const tabIndex =
+    (focusedSection === 'equipment' && focusedSlot === slot) || isDefaultSlot ? 0 : -1;
 
   const handleMouseEnter = () => {
     // Cancel any pending leave timer
@@ -206,12 +228,15 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                   ? { opacity: 0, transition: { duration: 0 } }
                   : { scale: 0.6, opacity: 0 }
               }
-              transition={{ duration: 0.18 }}
+              transition={{ duration: reducedMotion === true ? 0 : 0.18 }}
             >
               <InventoryItem
                 item={equippedItem}
                 slot={slot}
                 data-tooltip-surface="equipment"
+                hasFanout={fanoutItems.length > 0}
+                isFanoutOpen={isFanoutOpen}
+                onDismissFanout={closeFanout}
               />
             </motion.div>
           ) : (
@@ -221,6 +246,23 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               tabIndex={tabIndex}
               data-testid={`slot-empty-button-${slot}`}
               aria-label={`Empty ${SLOT_LABELS[slot]} slot`}
+              aria-haspopup={fanoutItems.length > 0 ? 'listbox' : undefined}
+              aria-expanded={fanoutItems.length > 0 ? isFanoutOpen : undefined}
+              aria-controls={
+                isFanoutOpen && fanoutItems.length > 0
+                  ? `fanout-listbox-${slot}`
+                  : undefined
+              }
+              aria-activedescendant={
+                isFanoutOpen && fanoutItems[focusedFanoutIndex]
+                  ? `fanout-item-${fanoutItems[focusedFanoutIndex].id}`
+                  : undefined
+              }
+              aria-description={
+                fanoutItems.length > 0
+                  ? `${fanoutItems.length} items available. Press Enter or Space to equip.`
+                  : undefined
+              }
               className="flex h-full w-full items-center justify-center bg-transparent transition-colors outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"
               onFocus={() => {
                 useInventoryStore.getState().setFocusedSection('equipment');
@@ -228,6 +270,25 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                 tooltip.dismiss();
               }}
               onKeyDown={(event) => {
+                if (
+                  (event.key === 'Enter' || event.key === ' ') &&
+                  isFanoutOpen &&
+                  fanoutItems.length > 0
+                ) {
+                  event.preventDefault();
+                  const selectedItem =
+                    fanoutItems[useInventoryStore.getState().focusedFanoutIndex];
+                  if (selectedItem !== undefined) {
+                    const store = useInventoryStore.getState();
+                    store.equip(selectedItem.id, slot);
+                    store.setActiveFanoutSlot(null);
+                    store.setFeedback(
+                      `Equipped ${selectedItem.name} to ${SLOT_LABELS[slot]} slot.`,
+                    );
+                    play('equip');
+                  }
+                  return;
+                }
                 handleEquipmentKeyDown(event, slot, fanoutItems.length);
               }}
             >
@@ -244,7 +305,13 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
 
         {/* Radial fan-out of unequipped items */}
         {isFanoutOpen && fanoutItems.length > 0 && (
-          <FanOut slot={slot} items={fanoutItems} />
+          <FanOut
+            slot={slot}
+            items={fanoutItems}
+            onDismiss={() => {
+              buttonRef.current?.focus();
+            }}
+          />
         )}
       </div>
       <span

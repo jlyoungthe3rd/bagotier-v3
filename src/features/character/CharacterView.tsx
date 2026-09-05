@@ -93,7 +93,7 @@ export function CharacterView() {
               {/* Outer spinning dashed ring */}
               <g
                 style={{ transformBox: 'fill-box', transformOrigin: 'center' }}
-                className="animate-spin-slow"
+                className="motion-safe:animate-spin-slow"
               >
                 <circle
                   cx="100"
