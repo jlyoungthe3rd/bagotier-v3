@@ -1,9 +1,8 @@
 /**
- * Test utilities for exercising real dnd-kit wiring in jsdom.
+ * Test utilities for exercising layout and slot interactions in jsdom.
  *
- * jsdom has no layout, so we assign deterministic rects to droppables and
- * draggables by test id. The dnd-kit KeyboardSensor moves the drag overlay
- * 25px per arrow press, letting tests navigate between rects predictably.
+ * jsdom has no layout engine, so we assign deterministic rects to slots and
+ * items by test id to allow predictable viewport and position measurement.
  */
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
@@ -63,9 +62,8 @@ let pickedRect: Rect | null = null;
 const originalGetBoundingClientRect = Element.prototype.getBoundingClientRect;
 
 /**
- * Global measurement patch: droppables/draggables report their deterministic
- * layout rect; the DragOverlay reports the picked item's initial rect
- * (dnd-kit applies keyboard deltas on top of it).
+ * Global measurement patch: slots and items report their deterministic
+ * layout rect to support simulated pointer, focus, and tooltip interactions.
  */
 export function installLayout(): void {
   Element.prototype.getBoundingClientRect = function (this: Element): DOMRect {
@@ -118,8 +116,8 @@ export async function arrow(
 }
 
 /**
- * Picks up a draggable via the keyboard sensor: focus + Enter.
- * Records the item's rect so the DragOverlay measures correctly.
+ * Focuses and activates an item via spacebar navigation.
+ * Records the item's rect for deterministic measurement.
  */
 export async function pickUp(
   user: ReturnType<typeof userEvent.setup>,

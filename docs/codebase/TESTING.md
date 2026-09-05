@@ -57,13 +57,15 @@ npx vitest run tests/unit/stats.test.ts            # Run a single target test fi
 
 - Coverage tool + threshold: `@vitest/coverage-v8` (v4.1.11). Running in informational mode without blocking thresholds, generating terminal text summary and HTML reports in `coverage/`. Excludes `src/main.tsx`, `src/mocks/**`, and `src/vite-env.d.ts`.
 - Current reported coverage:
-  - Statements: 93.04%
-  - Branches: 84.87%
-  - Functions: 95.80%
-  - Lines: 93.61%
-  - Core domain models & pure transitions (`domain.ts`, `schemas.ts`, `stats.ts`, `InventoryItem.tsx`): 100% lines/branches.
+  - Statements: 89.15%
+  - Branches: 81.74%
+  - Functions: 94.64%
+  - Lines: 89.07%
+  - Core domain models & pure domain utilities (`domain.ts`, `schemas.ts`, `stats.ts`, `slotHoverManager.ts`): 100% lines/branches/statements/functions.
+  - FanOut component (`FanOut.tsx`): 96.87% statements, 89.18% branches, 97.56% lines.
 - Known gaps/flaky areas:
-  - Current suite consists of 27 test files and 89 tests; all 89 tests pass consistently.
+  - Current suite consists of 30 test files and 127 tests; all 127 tests pass consistently.
+  - Keyboard navigation file (`src/features/inventory/keyboard.ts`) has 25% line coverage (some slot directional mappings unexercised in unit tests, though covered in integration flows).
   - Legacy comments in `tests/integration/dnd-test-utils.tsx` refer to dnd-kit KeyboardSensors even though dnd-kit was uninstalled.
   - TypeScript `composite` mode reports TS2742 when `renderApp` in `dnd-test-utils.tsx` lacks an explicit return type in symlinked build environments.
 

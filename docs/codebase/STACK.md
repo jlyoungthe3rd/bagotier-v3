@@ -13,18 +13,18 @@
 
 ### 2) Production Frameworks and Dependencies
 
-| Dependency              | Version  | Role in system                                                                           | Evidence                                                                                           |
-| ----------------------- | -------- | ---------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `react`                 | ^19.2.7  | Core UI library for component trees, hooks, and suspense                                 | `package.json`, `src/App.tsx`                                                                      |
-| `react-dom`             | ^19.2.7  | DOM renderer for React web application                                                   | `package.json`, `src/main.tsx`                                                                     |
-| `zustand`               | ^5.0.14  | Client session and UI state management (equipped item IDs, bag slots, audio mute, focus) | `package.json`, `src/store/useInventoryStore.ts`                                                   |
-| `@tanstack/react-query` | ^5.101.2 | Data caching layer for character details and item catalog                                | `package.json`, `src/lib/queryClient.ts`, `src/features/inventory/useInventoryQuery.ts`            |
-| `framer-motion`         | ^12.42.2 | Micro-interactions: item slot popLayout animations and stat counter highlights           | `package.json`, `src/features/character/EquipmentSlot.tsx`, `src/features/character/StatPanel.tsx` |
-| `@floating-ui/react`    | ^0.27.20 | Viewport-aware tooltip anchoring, autoUpdate, flip, shift, and portal rendering          | `package.json`, `src/features/inventory/tooltip/ItemTooltipPresenter.tsx`                          |
-| `zod`                   | ^4.4.3   | Runtime schema validation and boundary contract enforcement                              | `package.json`, `src/types/schemas.ts`                                                             |
+| Dependency              | Version  | Role in system                                                                                                  | Evidence                                                                                    |
+| ----------------------- | -------- | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `react`                 | ^19.2.7  | Core UI library for component trees, hooks, and suspense                                                        | `package.json`, `src/App.tsx`                                                               |
+| `react-dom`             | ^19.2.7  | DOM renderer for React web application                                                                          | `package.json`, `src/main.tsx`                                                              |
+| `zustand`               | ^5.0.14  | Client session and UI state management (equipped slot mappings, unequipped item set, active fanout slot, focus) | `package.json`, `src/store/useInventoryStore.ts`                                            |
+| `@tanstack/react-query` | ^5.101.2 | Data caching layer for character details and item catalog                                                       | `package.json`, `src/lib/queryClient.ts`, `src/features/inventory/useInventoryQuery.ts`     |
+| `framer-motion`         | ^12.42.2 | Micro-interactions: slot popLayout, horizontal fan-out expansion, and stat change animations                    | `package.json`, `src/features/character/FanOut.tsx`, `src/features/character/StatPanel.tsx` |
+| `@floating-ui/react`    | ^0.27.20 | Viewport-aware tooltip anchoring, autoUpdate, flip, shift, and portal rendering                                 | `package.json`, `src/features/inventory/tooltip/ItemTooltipPresenter.tsx`                   |
+| `zod`                   | ^4.4.3   | Runtime schema validation and boundary contract enforcement                                                     | `package.json`, `src/types/schemas.ts`                                                      |
 
 > [!NOTE]
-> `README.md` previously cited `@dnd-kit/core` as a dependency; however, `@dnd-kit/core` is not present in `package.json`. The application currently implements click and keyboard-based equip/unequip interactions.
+> `README.md` previously cited `@dnd-kit/core` as a dependency; however, `@dnd-kit/core` is not present in `package.json`. The application implements a Destiny 2 style interactive horizontal fan-out inspector with click and keyboard controls.
 
 ### 3) Development Toolchain
 

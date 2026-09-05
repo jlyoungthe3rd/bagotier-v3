@@ -1,6 +1,6 @@
 # Bagotier V3
 
-A browser-based game inventory management UI built entirely client-side with **React 19**, **TypeScript** (strict), and **Vite** — ~~drag-and-drop item equipping~~, live stat calculations, sound effects, and viewport-aware tooltips.
+A browser-based game inventory management UI built entirely client-side with **React 19**, **TypeScript** (strict), and **Vite** — Destiny 2 style equipment fan-out inspector, live stat calculations, sound effects, and viewport-aware tooltips.
 
 **Live demo**: [jlyoungthe3rd.github.io/bagotier-v3](https://jlyoungthe3rd.github.io/bagotier-v3)
 
@@ -17,10 +17,10 @@ This project is an engineering portfolio piece. The domain (RPG inventory) is in
 | **React**            | React 19 with hooks, custom selectors, and suspense-compatible async state                         |
 | **TypeScript**       | Strict mode + `noUncheckedIndexedAccess`; branded types; discriminated unions as control flow      |
 | **State management** | Zustand (session/UI) + React Query (data); explicit ownership boundaries and no entity duplication |
-| **Component design** | Pure state transitions decoupled from components; single-responsibility droppable/draggable split  |
-| **Testing**          | Contract → Unit → Integration pyramid; tests defined before implementation                         |
-| **Accessibility**    | dnd-kit `KeyboardSensor`, screen-reader `Announcements`, WCAG 2.1 AA contrast                      |
-| **Performance**      | 60 fps drag, ≤ 100 ms stat update, ≤ 250 KB gz bundle — declared as acceptance criteria upfront    |
+| **Component design** | Pure state transitions decoupled from components; directional horizontal fan-out inspector         |
+| **Testing**          | Contract → Unit → Integration pyramid; 127 tests passing across 30 test files                      |
+| **Accessibility**    | Roving tabindex, polite screen-reader live announcements, WCAG 2.1 AA contrast                     |
+| **Performance**      | ≤ 100 ms stat update, ≤ 250 KB gz bundle, 60 fps layout transitions                                |
 | **Tooling**          | Vite, ESLint (zero warnings), Prettier, GitHub Actions → GitHub Pages                              |
 
 ---
@@ -34,7 +34,7 @@ This project is an engineering portfolio piece. The domain (RPG inventory) is in
 | Language            | TypeScript 5 (strict + `noUncheckedIndexedAccess`) |
 | State — session     | Zustand 5                                          |
 | State — data        | TanStack React Query 5                             |
-| Drag and drop       | @dnd-kit/core                                      |
+| Inspector UI        | Directional horizontal fan-out with bounds clamp   |
 | Animation           | Framer Motion                                      |
 | Tooltip positioning | @floating-ui/react                                 |
 | Styling             | Tailwind CSS 3                                     |
@@ -50,30 +50,31 @@ Single-page app, no backend. All data is client-local. The design challenge was 
 
 ### State ownership split
 
-| Owner           | Holds                                        | Never holds           |
-| --------------- | -------------------------------------------- | --------------------- |
-| **React Query** | Item catalog, character, base stats          | Session state         |
-| **Zustand**     | `ItemId[]` references, mute flag, drag state | `Item` entity objects |
+| Owner           | Holds                                                                                  | Never holds           |
+| --------------- | -------------------------------------------------------------------------------------- | --------------------- |
+| **React Query** | Item catalog, character, base stats                                                    | Session state         |
+| **Zustand**     | `equipped` slot mappings, `unequipped` ItemId Set, active fanout slot, mute preference | `Item` entity objects |
 
 Components resolve IDs → full items via a `useItem(id)` selector on the React Query cache. Effective stats are always derived (`base + Σ equipped modifiers`), never stored — so they can't drift under rapid interactions.
 
 ### Formal invariants (documented before implementation)
 
-|                           |                                                                           |
-| ------------------------- | ------------------------------------------------------------------------- |
-| **I1** Single location    | Every `ItemId` lives in exactly one place: bag cell, slot, or nowhere     |
-| **I2** Slot compatibility | `equipped[slot] = id` requires `catalog[id].slotType === slot`            |
-| **I3** Bounded bag        | `bag.length === BAG_CAPACITY` always; unequip into a full bag is rejected |
-| **I4** Derived stats only | Stats computed on the fly — cannot double-count modifiers                 |
-| **I5** No entity copies   | Zustand holds only IDs and primitives; enforced by a contract test        |
+|                                |                                                                                           |
+| ------------------------------ | ----------------------------------------------------------------------------------------- |
+| **I1** Single location         | Every `ItemId` lives in exactly one place: slot, unequipped set, or catalog               |
+| **I2** Slot compatibility      | `equipped[slot] = id` requires `catalog[id].slotType === slot`                            |
+| **I3** Infallible displacement | Unequipping moves to unequipped set; equipping onto occupied slot displaces existing item |
+| **I4** Derived stats only      | Stats computed on the fly — cannot double-count modifiers                                 |
+| **I5** No entity copies        | Zustand holds only IDs and primitives; enforced by a contract test                        |
 
 ### Notable implementation choices
 
-- **Pure state transitions** — `equip`, `swap`, `unequip` are `(state, args) → state` functions defined outside the store and unit-tested without React
-- **`DropOutcome` discriminated union** — one value per drag-end drives both the state transition and the sound effect; structurally impossible to fire them out of sync
+- **Pure state transitions** — `equip` and `unequip` are `(state, args) → state` functions defined outside the store and unit-tested without React
 - **Branded `ItemId`** — `string & { readonly [brand]: true }` catches ID misuse at compile time
-- **Accessibility** — dnd-kit `KeyboardSensor` + screen-reader `Announcements`; WCAG 2.1 AA contrast via Tailwind tokens; loading/error/empty states are designed, not blank
-- **Performance budgets declared upfront** — 60 fps drag, ≤ 100 ms stat update, ≤ 3 s load, ≤ 250 KB gz bundle
+- **Directional horizontal fan-out** — items fan left or right depending on paper doll position, with viewport bounding to prevent clipping
+- **Dynamic hover delay curve** — 300ms initial inspection delay warms to 200ms when scanning multiple slots within 2 seconds
+- **Accessibility** — Roving tabindex + screen-reader live announcements; WCAG 2.1 AA contrast via Tailwind tokens; loading/error/empty states are designed, not blank
+- **Performance budgets declared upfront** — ≤ 100 ms stat update, ≤ 3 s load, ≤ 250 KB gz bundle
 
 ---
 
@@ -83,9 +84,9 @@ Tests are written alongside (or before) implementation. The suite has three laye
 
 **Contract tests** (`tests/contract/`) — Validate mock data against Zod schemas at the query boundary. Ensure the item catalog has ≥ 10 items covering all 7 slot types; assert the store's initial state has no `Item`-shaped objects.
 
-**Unit tests** (`tests/unit/`) — Test pure functions in isolation: `equipTransition`, `swapTransition`, `unequipTransition`, `moveInBagTransition`, `computeEffectiveStats`, `useSound` idempotency.
+**Unit tests** (`tests/unit/`) — Test pure functions in isolation: `equipTransition`, `unequipTransition`, `computeEffectiveStats`, `getSlotHoverDelay`, `computeFanPositions`, `useSound` idempotency.
 
-**Integration tests** (`tests/integration/`) — React Testing Library tests covering full drag flows (equip, unequip, swap, invalid drop, rapid sequences), tooltip placement and lifecycle, sound firing exactly-once per interaction, and stat panel accuracy.
+**Integration tests** (`tests/integration/`) — React Testing Library tests covering full interaction flows (equip, unequip, fan-out open/close, focus restoration, rapid sequences), tooltip placement and lifecycle, sound firing exactly-once per interaction, and stat panel accuracy.
 
 ```
 tests/
