@@ -15,7 +15,7 @@ import { useSound } from '../audio/useSound';
  * - Body and accessory fan outward to the right (angled into open diagonals).
  * - Legs and feet fan outward away from each other into lower flanks.
  */
-export const SLOT_FAN_DIRECTION: Readonly<Record<SlotType, number>> = {
+const SLOT_FAN_DIRECTION: Readonly<Record<SlotType, number>> = {
   head: -90, // fans upward
   weapon: 165, // fans upward-left into open diagonal
   hands: 195, // fans downward-left into open flank
