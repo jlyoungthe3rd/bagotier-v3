@@ -8,7 +8,7 @@
   }
 
   body {
-    @apply min-h-screen antialiased;
+    @apply min-h-screen antialiased overflow-x-hidden;
     /* Subtle rune-purple radial emanating from top — sets the dungeon-arcane atmosphere */
     background-image: radial-gradient(
       ellipse at 50% -10%,

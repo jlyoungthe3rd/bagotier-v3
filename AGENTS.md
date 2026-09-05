@@ -1,7 +1,7 @@
 # Standard Feature Development Workflow Rule
 
 > [!IMPORTANT]
-> **AUTOMATED WORKFLOW DIRECTIVE**: This 5-phase workflow MUST be automatically executed for EVERY feature request, bug fix, or code modification in this workspace. You do NOT need to ask the user to activate it—it is mandatory for all changes. Never skip Phase 1 (Grilling), Phase 2 (Local App Review & Iteration), Phase 3 (Branch & Draft PR), Phase 4 (Parallel Sub-Agents in Worktrees), or Phase 5 (Cleanup).
+> **AUTOMATED WORKFLOW DIRECTIVE**: This 5-phase workflow MUST be automatically executed for EVERY feature request, bug fix, or code modification in this workspace. You do NOT need to ask the user to activate it—it is mandatory for all changes. Never skip Phase 1 (Grilling), Phase 2 (Local App Review & Iteration), Phase 3 (Feature Branch & Staging), Phase 4 (Parallel Sub-Agents in Worktrees), or Phase 5 (Review, Merge to Main & Cleanup).
 
 ## Workflow Phases & Rules
 
@@ -21,12 +21,12 @@
 - **Local Preview**: Launch local dev server (`npm run dev`) and open local preview browser URL.
 - **Interactive Iteration Loop**: Keep the dev server active and perform any requested adjustments to logic/markup iteratively until satisfied.
 - **Explicit Approval Gate**: Prompt the user via the `ask_question` interactive tool to explicitly approve advancing to Phase 3:
-  - _Proceed to Phase 3_ (Staging, Draft PR, Sub-agents).
+  - _Proceed to Phase 3_ (Staging, Feature Branch & Sub-agents).
   - _Make further core changes_.
 
 ---
 
-### Phase 3: Handoff Action (Commit & Draft PR)
+### Phase 3: Handoff Action (Feature Branch Setup & Staging)
 
 _Executes ONLY after explicit user confirmation in Phase 2._
 
@@ -34,7 +34,7 @@ _Executes ONLY after explicit user confirmation in Phase 2._
   - Stage changes: `git add .`
   - Commit to new feature branch: `git checkout -b feature/<feature-name>` & `git commit -m "feat: core implementation"`
   - Push to remote: `git push -u origin feature/<feature-name>`
-  - Create Draft Pull Request via GitHub CLI: `gh pr create --draft --title "..." --body "..."`
+  - **No PR Creation**: Do NOT create a GitHub pull request (`gh pr create`). All review and merging will happen directly and locally into `main` after Phase 4 sub-agent checks and Phase 5 review.
 
 ---
 
@@ -51,17 +51,29 @@ _Executes ONLY after explicit user confirmation in Phase 2._
 
 ---
 
-### Phase 5: Merge, Local Review Gate & Cleanup
+### Phase 5: Local Review, Sign-Off, Direct Merge to Main & Cleanup
 
-- **Merge Updates**: Commit and push each sub-agent worktree branch to remote and merge back into `feature/<feature-name>`.
-- **Review Reports & Local Dev Server**:
-  - Provide links to sub-agent reports (e.g. accessibility `report.md`, test summaries, styling changes).
-  - Launch local dev server (`npm run dev`) for final app preview.
-- **Final Review Approval Gate**: Prompt the user via the `ask_question` interactive tool to review sub-agent reports and test the app before proceeding:
-  - _Approve & Run Build Check_.
-  - _Request Further Adjustments_ (Keep worktrees intact for additional updates).
+- **Merge Updates**: Commit and merge each sub-agent worktree branch back into `feature/<feature-name>`.
+- **Review Prompt, Code Review & Local Dev Server**:
+  - Ensure local dev server is running (`npm run dev`) and provide the local browser preview URL so the user can inspect the app in the browser.
+  - Present the code diff (`git diff main...feature/<feature-name>`) and summary of changes for user code review.
+  - Provide direct links to sub-agent reports (e.g. accessibility `report.md`, test summaries, styling changes).
+  - Prompt the user to:
+    1. Take a look at the app in the browser.
+    2. Perform a code review of the merged changes.
+    3. Perform their final check.
+- **Final Sign-Off Approval Gate**: Prompt the user via the `ask_question` interactive tool to sign off on merging into `main`:
+  - _Sign off & merge into main_ (Run build check, merge `feature/<feature-name>` into `main`, and push).
+  - _Request further adjustments_ (Keep worktrees intact for additional updates).
 - **Production Build Verification**:
   - Run production build command (`npm run build`).
-  - If build succeeds without errors, proceed to worktree cleanup.
-  - If build fails or produces errors, HALT execution immediately and report errors for triage before pruning worktrees.
-- **Worktree Pruning & Push**: Push final merged feature branch to remote, then remove and prune Git worktrees (`git worktree remove .worktrees/...` and `git worktree prune`).
+  - If build succeeds without errors, proceed to merge into `main`.
+  - If build fails or produces errors, HALT execution immediately and report errors for triage before touching branches or worktrees.
+- **Direct Merge into Main**:
+  - Switch to main branch: `git checkout main` (or if `main` is active in the primary repo worktree, execute the merge in that worktree with `git -C <main-worktree> merge feature/<feature-name>`).
+  - Ensure main is up to date: `git pull origin main`
+  - Merge the feature branch: `git merge feature/<feature-name>`
+  - Push updated main to remote: `git push origin main`
+- **Worktree Pruning & Cleanup**:
+  - Remove and prune Git worktrees (`git worktree remove .worktrees/test`, `git worktree remove .worktrees/a11y`, `git worktree remove .worktrees/styling` and `git worktree prune`).
+  - Delete the feature branch locally (`git branch -d feature/<feature-name>`) and on remote (`git push origin --delete feature/<feature-name>`).

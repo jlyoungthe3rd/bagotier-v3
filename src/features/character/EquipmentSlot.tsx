@@ -8,18 +8,8 @@ import { InventoryItem } from '../inventory/InventoryItem';
 import { useItemTooltip } from '../inventory/tooltip';
 import { useSound } from '../audio/useSound';
 import { handleEquipmentKeyDown } from '../inventory/keyboard';
-import { FanOut } from './FanOut';
+import { FanOut, SLOT_LABELS } from './FanOut';
 import { getSlotHoverDelay, recordSlotActivity } from './slotHoverManager';
-
-const SLOT_LABELS: Readonly<Record<SlotType, string>> = {
-  head: 'Head',
-  body: 'Body',
-  legs: 'Legs',
-  hands: 'Hands',
-  feet: 'Feet',
-  weapon: 'Weapon',
-  accessory: 'Accessory',
-};
 
 const SLOT_ICONS: Readonly<Record<SlotType, string>> = {
   head: '🪖',
@@ -55,6 +45,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const unequipped = useInventoryStore((s) => s.unequipped);
   const tooltip = useItemTooltip();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const equippedButtonRef = useRef<HTMLButtonElement | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -68,16 +59,21 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const openFanout = useCallback(() => {
     if (fanoutItems.length > 0) {
       const store = useInventoryStore.getState();
+      if (store.activeFanoutSlot === slot) {
+        return;
+      }
       store.setActiveFanoutSlot(slot);
       store.setFeedback(
-        `${SLOT_LABELS[slot]} slot options opened. ${fanoutItems.length} items available.`,
+        `${SLOT_LABELS[slot]} slot options opened. ${String(fanoutItems.length)} items available.`,
       );
     }
   }, [slot, fanoutItems.length]);
 
   const closeFanout = useCallback(() => {
-    if (useInventoryStore.getState().activeFanoutSlot === slot) {
-      useInventoryStore.getState().setActiveFanoutSlot(null);
+    const store = useInventoryStore.getState();
+    if (store.activeFanoutSlot === slot) {
+      store.setActiveFanoutSlot(null);
+      store.setFeedback(`Closed ${SLOT_LABELS[slot]} slot options.`);
     }
   }, [slot]);
 
@@ -97,12 +93,13 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     }
   }, [isActive, equippedItem]);
 
-  // Restore focus to slot button when fan-out closes while slot is active
+  // Restore focus to slot button or equipped item when fan-out closes while slot is active
   const prevFanoutOpenRef = useRef(isFanoutOpen);
   useEffect(() => {
     if (prevFanoutOpenRef.current && !isFanoutOpen && isActive) {
-      if (buttonRef.current && document.activeElement !== buttonRef.current) {
-        buttonRef.current.focus();
+      const target = buttonRef.current ?? equippedButtonRef.current;
+      if (target && document.activeElement !== target) {
+        target.focus();
       }
     }
     prevFanoutOpenRef.current = isFanoutOpen;
@@ -111,7 +108,12 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   // Open fan-out when empty slot transitions to active (keyboard focus)
   const prevActiveRef = useRef(isActive);
   useEffect(() => {
-    if (!prevActiveRef.current && isActive && equippedItem === undefined && fanoutItems.length > 0) {
+    if (
+      !prevActiveRef.current &&
+      isActive &&
+      equippedItem === undefined &&
+      fanoutItems.length > 0
+    ) {
       openFanout();
     }
     prevActiveRef.current = isActive;
@@ -127,6 +129,10 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
       clearTimeout(leaveTimerRef.current);
       leaveTimerRef.current = null;
     }
+    // If the fan-out for this slot is already open, do not re-open or re-animate
+    if (useInventoryStore.getState().activeFanoutSlot === slot) {
+      return;
+    }
     // Dynamic hover delay: 300ms base, 200ms when visiting multiple slots within 2000ms
     const delay = getSlotHoverDelay(slot);
     hoverTimerRef.current = setTimeout(() => {
@@ -134,12 +140,17 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     }, delay);
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (e: React.MouseEvent) => {
     recordSlotActivity(slot);
     // Cancel hover timer if still pending
     if (hoverTimerRef.current !== null) {
       clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
+    }
+    // If moving into child elements (like fanned items), do not close
+    const related = e.relatedTarget;
+    if (related instanceof Node && e.currentTarget.contains(related)) {
+      return;
     }
     // Grace period before closing — allows moving to fanned items
     if (isFanoutOpen) {
@@ -149,47 +160,39 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     }
   };
 
-  // When mouse re-enters the fan-out area (the outer container), cancel the leave timer
-  const handleContainerMouseEnter = () => {
-    recordSlotActivity(slot);
+  // Cancel a pending leave timer (used when mouse enters a fanned item)
+  const cancelLeaveTimer = useCallback(() => {
     if (leaveTimerRef.current !== null) {
       clearTimeout(leaveTimerRef.current);
       leaveTimerRef.current = null;
     }
-  };
+  }, []);
 
-  const handleContainerMouseLeave = () => {
-    recordSlotActivity(slot);
-    // Cancel hover timer
-    if (hoverTimerRef.current !== null) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-    // Close fan-out with grace period
+  // Start a leave timer to close the fan-out after a grace period
+  // (used when mouse leaves a fanned item into empty space)
+  const startLeaveTimer = useCallback(() => {
     if (isFanoutOpen) {
       leaveTimerRef.current = setTimeout(() => {
         closeFanout();
       }, FANOUT_LEAVE_GRACE);
     }
-  };
+  }, [isFanoutOpen, closeFanout]);
 
   return (
     <div
-      className={`relative flex flex-col items-center gap-1 transition-transform ${
+      className={`relative flex flex-col items-center gap-1 transition-transform motion-reduce:transition-none ${
         isFanoutOpen ? 'z-30' : 'z-10'
       }`}
-      onMouseEnter={handleContainerMouseEnter}
-      onMouseLeave={handleContainerMouseLeave}
     >
       <div
         data-testid={`slot-${slot}`}
         aria-label={`${SLOT_LABELS[slot]} slot`}
-        className={`group relative h-cell w-cell border bg-surface p-0.5 transition-all duration-200 ${
+        className={`group relative h-cell w-cell border bg-surface p-0.5 transition-all duration-200 motion-reduce:transition-none ${
           isFanoutOpen
-            ? 'border-gold/90 shadow-[0_0_14px_rgba(196,148,58,0.35)] ring-1 ring-gold/40'
+            ? 'border-gold/90 shadow-[0_0_14px_rgba(196,148,58,0.35),0_0_6px_rgba(212,104,58,0.25)] ring-1 ring-gold/40'
             : isActive
-              ? 'border-gold/70 shadow-[0_0_8px_rgba(196,148,58,0.2)]'
-              : 'border-slot-idle/60 hover:border-gold/50'
+              ? 'border-gold/70 shadow-[0_0_10px_rgba(196,148,58,0.25),0_0_4px_rgba(212,104,58,0.2)]'
+              : 'border-slot-idle/70 hover:border-ember/70 hover:shadow-[0_0_10px_rgba(212,104,58,0.25)]'
         }`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -197,22 +200,22 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
         {/* Corner bracket accents — the JRPG-style slot framing */}
         <div
           className={`pointer-events-none absolute left-0.5 top-0.5 h-2.5 w-2.5 border-l border-t transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
           }`}
         />
         <div
           className={`pointer-events-none absolute right-0.5 top-0.5 h-2.5 w-2.5 border-r border-t transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
           }`}
         />
         <div
           className={`pointer-events-none absolute bottom-0.5 left-0.5 h-2.5 w-2.5 border-b border-l transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
           }`}
         />
         <div
           className={`pointer-events-none absolute bottom-0.5 right-0.5 h-2.5 w-2.5 border-b border-r transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-gold/60'
+            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
           }`}
         />
 
@@ -231,6 +234,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               transition={{ duration: reducedMotion === true ? 0 : 0.18 }}
             >
               <InventoryItem
+                ref={equippedButtonRef}
                 item={equippedItem}
                 slot={slot}
                 data-tooltip-surface="equipment"
@@ -260,10 +264,10 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               }
               aria-description={
                 fanoutItems.length > 0
-                  ? `${fanoutItems.length} items available. Press Enter or Space to equip.`
+                  ? `${String(fanoutItems.length)} items available. Press Enter or Space to equip.`
                   : undefined
               }
-              className="flex h-full w-full items-center justify-center bg-transparent transition-colors outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid"
+              className="flex h-full w-full items-center justify-center bg-transparent transition-colors outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid motion-reduce:transition-none"
               onFocus={() => {
                 useInventoryStore.getState().setFocusedSection('equipment');
                 useInventoryStore.getState().setFocusedSlot(slot);
@@ -302,21 +306,27 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
             </button>
           )}
         </AnimatePresence>
-
-        {/* Radial fan-out of unequipped items */}
-        {isFanoutOpen && fanoutItems.length > 0 && (
-          <FanOut
-            slot={slot}
-            items={fanoutItems}
-            onDismiss={() => {
-              buttonRef.current?.focus();
-            }}
-          />
-        )}
       </div>
+
+      {/* Horizontal fan-out of unequipped items — rendered outside inner slot
+          div so mouse movement from slot to fanned items stays within the
+          outer container's mouse-event bounds and doesn't trigger premature
+          close. */}
+      {isFanoutOpen && fanoutItems.length > 0 && (
+        <FanOut
+          slot={slot}
+          items={fanoutItems}
+          onDismiss={() => {
+            const target = buttonRef.current ?? equippedButtonRef.current;
+            target?.focus();
+          }}
+          onMouseEnter={cancelLeaveTimer}
+          onMouseLeave={startLeaveTimer}
+        />
+      )}
       <span
-        className={`text-[9px] font-semibold uppercase tracking-[0.12em] transition-colors ${
-          isFanoutOpen ? 'text-gold' : 'text-ink-muted/70'
+        className={`text-[9px] font-semibold uppercase tracking-[0.12em] transition-colors motion-reduce:transition-none ${
+          isFanoutOpen ? 'text-gold' : 'text-ink-muted'
         }`}
       >
         {SLOT_LABELS[slot]}

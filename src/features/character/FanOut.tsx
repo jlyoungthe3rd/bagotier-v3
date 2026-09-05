@@ -5,55 +5,82 @@ import { useInventoryStore } from '../../store/useInventoryStore';
 import { useItemTooltip } from '../inventory/tooltip';
 import { useSound } from '../audio/useSound';
 
+export type HorizontalFanDirection = 'left' | 'right' | 'center';
+
 /**
- * Direction from which the fan-out arcs away, based on the slot's
- * position in the paper doll layout.
- *
- * Designed to project outward into empty space around the paper doll:
- * - Head fans upward to frame the character title.
- * - Weapon and hands fan outward to the left (angled into open diagonals).
- * - Body and accessory fan outward to the right (angled into open diagonals).
- * - Legs and feet fan outward away from each other into lower flanks.
+ * Horizontal expansion direction based on slot placement in the paper doll:
+ * - Weapon, hands, and legs fan outward to the left
+ * - Head, body, accessory, and feet fan outward to the right
  */
-const SLOT_FAN_DIRECTION: Readonly<Record<SlotType, number>> = {
-  head: -90, // fans upward
-  weapon: 165, // fans upward-left into open diagonal
-  hands: 195, // fans downward-left into open flank
-  body: 15, // fans upward-right into open diagonal
-  accessory: 345, // fans downward-right into open flank
-  legs: 120, // fans downward-left away from feet
-  feet: 60, // fans downward-right away from legs
+export const SLOT_FAN_DIRECTION: Readonly<Record<SlotType, HorizontalFanDirection>> = {
+  weapon: 'left',
+  hands: 'left',
+  legs: 'left',
+  head: 'right',
+  body: 'right',
+  accessory: 'right',
+  feet: 'right',
 };
 
-/** Distance from slot center to fanned item center (px) for desktop/tablet. */
+/** Horizontal step between items (px) for desktop/tablet. */
+export const DESKTOP_STEP = 64;
+
+/** Horizontal step between items (px) for mobile. */
+export const MOBILE_STEP = 50;
+
+/** Distance constants retained for backwards-compatibility */
 export const FAN_RADIUS_DESKTOP = 68;
-
-/** Distance from slot center to fanned item center (px) for mobile. */
 export const FAN_RADIUS_MOBILE = 54;
+export const FAN_ARC = 0;
 
-/** Total arc angle (degrees) for the fan spread when 2 items are available. */
-export const FAN_ARC = 80;
-
+/**
+ * Computes strictly horizontal positions (y = 0) for available items:
+ * - Left slots: negative X offsets stepping outward to the left
+ * - Right slots: positive X offsets stepping outward to the right
+ * - Center slots: flanking symmetrically around the slot center without covering it
+ */
 export function computeFanPositions(
   slot: SlotType,
   count: number,
-  radius: number = FAN_RADIUS_DESKTOP,
+  radius?: number,
+  isMobile = false,
 ): { x: number; y: number }[] {
-  const centerAngle = SLOT_FAN_DIRECTION[slot];
-  if (count <= 1) {
-    const rad = (centerAngle * Math.PI) / 180;
-    return [
-      { x: Math.round(Math.cos(rad) * radius), y: Math.round(Math.sin(rad) * radius) },
-    ];
+  if (count <= 0) return [];
+
+  const direction = SLOT_FAN_DIRECTION[slot];
+  const step =
+    radius !== undefined && radius !== FAN_RADIUS_DESKTOP && radius !== FAN_RADIUS_MOBILE
+      ? radius
+      : isMobile
+        ? MOBILE_STEP
+        : DESKTOP_STEP;
+
+  if (direction === 'left') {
+    return Array.from({ length: count }, (_, i) => ({
+      x: -(i + 1) * step,
+      y: 0,
+    }));
   }
-  const arc = count === 2 ? FAN_ARC : Math.min(110, 30 * (count - 1));
-  const halfArc = arc / 2;
+
+  if (direction === 'right') {
+    return Array.from({ length: count }, (_, i) => ({
+      x: (i + 1) * step,
+      y: 0,
+    }));
+  }
+
+  // 'center': symmetrically flank the slot horizontally at y = 0
+  const leftCount = Math.floor(count / 2);
   return Array.from({ length: count }, (_, i) => {
-    const angle = centerAngle - halfArc + (i / (count - 1)) * arc;
-    const rad = (angle * Math.PI) / 180;
+    if (i < leftCount) {
+      return {
+        x: -(leftCount - i) * step,
+        y: 0,
+      };
+    }
     return {
-      x: Math.round(Math.cos(rad) * radius),
-      y: Math.round(Math.sin(rad) * radius),
+      x: (i - leftCount + 1) * step,
+      y: 0,
     };
   });
 }
@@ -64,7 +91,7 @@ function resolveIcon(icon: string): string {
   return icon.trim().length > 0 ? icon : FALLBACK_ICON;
 }
 
-const SLOT_LABELS: Readonly<Record<SlotType, string>> = {
+export const SLOT_LABELS: Readonly<Record<SlotType, string>> = {
   head: 'Head',
   body: 'Body',
   legs: 'Legs',
@@ -78,6 +105,8 @@ interface FanOutProps {
   readonly slot: SlotType;
   readonly items: readonly Item[];
   readonly onDismiss?: () => void;
+  readonly onMouseEnter?: () => void;
+  readonly onMouseLeave?: () => void;
 }
 
 /**
@@ -86,7 +115,13 @@ interface FanOutProps {
  * Features viewport bounding to ensure items never clip or cause overflow.
  * Keyboard: Arrow keys cycle focus, Home/End jump, Enter/Space equips, Escape closes, Tab dismisses.
  */
-export function FanOut({ slot, items, onDismiss }: FanOutProps) {
+export function FanOut({
+  slot,
+  items,
+  onDismiss,
+  onMouseEnter: onMouseEnterProp,
+  onMouseLeave: onMouseLeaveProp,
+}: FanOutProps) {
   const tooltip = useItemTooltip();
   const play = useSound();
   const reducedMotion = useReducedMotion();
@@ -110,15 +145,14 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
     };
   }, []);
 
-  const radius = isMobile ? FAN_RADIUS_MOBILE : FAN_RADIUS_DESKTOP;
   const basePositions = useMemo(
-    () => computeFanPositions(slot, items.length, radius),
-    [slot, items.length, radius],
+    () => computeFanPositions(slot, items.length, undefined, isMobile),
+    [slot, items.length, isMobile],
   );
 
   const [positions, setPositions] = useState<{ x: number; y: number }[]>(basePositions);
 
-  // Viewport bounds clamping: ensure no fanned item clips or overflows viewport edges
+  // Viewport bounds clamping: ensure no horizontally fanned item clips or overflows viewport edges
   useLayoutEffect(() => {
     if (typeof window === 'undefined' || !containerRef.current) {
       setPositions(basePositions);
@@ -133,16 +167,13 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
     }
 
     const slotCenterX = rect.left + rect.width / 2;
-    const slotCenterY = rect.top + rect.height / 2;
     const itemHalfSize = isMobile ? 22 : 28;
     const margin = 12; // Safety margin from viewport edge (px)
 
     const clamped = basePositions.map((pos) => {
-      let { x, y } = pos;
+      let { x } = pos;
       const itemLeft = slotCenterX + x - itemHalfSize;
       const itemRight = slotCenterX + x + itemHalfSize;
-      const itemTop = slotCenterY + y - itemHalfSize;
-      const itemBottom = slotCenterY + y + itemHalfSize;
 
       if (itemLeft < margin) {
         x += margin - itemLeft;
@@ -150,13 +181,7 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
         x -= itemRight - (window.innerWidth - margin);
       }
 
-      if (itemTop < margin) {
-        y += margin - itemTop;
-      } else if (itemBottom > window.innerHeight - margin) {
-        y -= itemBottom - (window.innerHeight - margin);
-      }
-
-      return { x: Math.round(x), y: Math.round(y) };
+      return { x: Math.round(x), y: 0 };
     });
 
     setPositions(clamped);
@@ -230,11 +255,14 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
         onDismiss?.();
         break;
       case 'Tab':
-        // Close fanout cleanly on tab out
+        // Close fanout cleanly on tab out and announce state to live region
         store.setActiveFanoutSlot(null);
+        store.setFeedback(`Closed ${SLOT_LABELS[slot]} slot options.`);
         break;
     }
   };
+
+  const instructionId = `fanout-instructions-${slot}`;
 
   return (
     <AnimatePresence>
@@ -246,30 +274,38 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
         aria-orientation="horizontal"
         className="pointer-events-none absolute inset-0 z-30"
       >
+        <span id={instructionId} className="sr-only">
+          Use left and right arrow keys to navigate, Enter or Space to equip, Escape to
+          close.
+        </span>
         {items.map((item, i) => {
           const pos = positions[i] ?? { x: 0, y: 0 };
           const isFocused = focusedFanoutIndex === i;
-          const describedBy = tooltip.ariaDescribedByFor(item.id);
+          const tooltipDescribedBy = tooltip.ariaDescribedByFor(item.id);
+          const describedBy = [tooltipDescribedBy, instructionId]
+            .filter(Boolean)
+            .join(' ');
 
           return (
             <motion.div
               key={item.id}
+              role="presentation"
               className="pointer-events-auto absolute left-1/2 top-1/2"
               initial={
                 reducedMotion === true
                   ? false
-                  : { scale: 0, opacity: 0, x: '-50%', y: '-50%' }
+                  : { scale: 0.8, opacity: 0, x: '-50%', y: '-50%' }
               }
               animate={{
                 scale: 1,
                 opacity: 1,
                 x: `calc(-50% + ${String(pos.x)}px)`,
-                y: `calc(-50% + ${String(pos.y)}px)`,
+                y: '-50%',
               }}
               exit={
                 reducedMotion === true
                   ? { opacity: 0, transition: { duration: 0 } }
-                  : { scale: 0, opacity: 0, x: '-50%', y: '-50%' }
+                  : { scale: 0.8, opacity: 0, x: '-50%', y: '-50%' }
               }
               transition={{
                 duration: reducedMotion === true ? 0 : 0.2,
@@ -287,12 +323,12 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
                 aria-setsize={items.length}
                 aria-posinset={i + 1}
                 aria-label={`Equip ${item.name}`}
-                aria-describedby={describedBy ?? undefined}
+                aria-describedby={describedBy}
                 data-testid={`fanout-item-${item.id}`}
-                className={`group relative flex h-11 w-11 sm:h-cell sm:w-cell items-center justify-center rounded border bg-surface-raised/95 backdrop-blur-md p-1 text-ink shadow-lg shadow-surface-sunken/80 transition-all duration-200 ease-out outline-offset-2 hover:scale-105 hover:bg-surface-raised hover:border-gold hover:shadow-[0_0_14px_rgba(196,148,58,0.4)] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid ${
+                className={`group relative flex h-11 w-11 sm:h-cell sm:w-cell items-center justify-center rounded-sm border bg-surface-raised/95 backdrop-blur-md p-1 text-ink shadow-lg shadow-surface-sunken/80 transition-all duration-200 ease-out outline-offset-2 hover:scale-105 hover:bg-surface-raised hover:border-ember hover:shadow-[0_0_14px_rgba(212,104,58,0.4),0_0_6px_rgba(196,148,58,0.3)] active:scale-95 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid motion-reduce:transition-none motion-reduce:transform-none motion-reduce:hover:scale-100 motion-reduce:active:scale-100 ${
                   isFocused
-                    ? 'border-gold shadow-[0_0_16px_rgba(196,148,58,0.45)] ring-1 ring-gold/60 scale-105'
-                    : 'border-slot-idle/70'
+                    ? 'border-gold shadow-[0_0_16px_rgba(196,148,58,0.45),0_0_8px_rgba(212,104,58,0.3)] ring-1 ring-gold/60 scale-105'
+                    : 'border-slot-idle/80'
                 }`}
                 onClick={() => {
                   handleItemClick(item);
@@ -301,9 +337,11 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
                   handleItemKeyDown(e, i);
                 }}
                 onMouseEnter={() => {
+                  onMouseEnterProp?.();
                   tooltip.open(item, 'hover', itemRefs.current[i] ?? null);
                 }}
                 onMouseLeave={() => {
+                  onMouseLeaveProp?.();
                   tooltip.closeFor(item.id, 'hover');
                 }}
                 onFocus={() => {
@@ -316,10 +354,34 @@ export function FanOut({ slot, items, onDismiss }: FanOutProps) {
                 tabIndex={isFocused ? 0 : -1}
               >
                 {/* Corner bracket accents matching EquipmentSlot JRPG aesthetic */}
-                <div className="pointer-events-none absolute left-0.5 top-0.5 h-1.5 w-1.5 border-l border-t border-gold/30 transition-colors group-hover:border-gold/70" />
-                <div className="pointer-events-none absolute right-0.5 top-0.5 h-1.5 w-1.5 border-r border-t border-gold/30 transition-colors group-hover:border-gold/70" />
-                <div className="pointer-events-none absolute bottom-0.5 left-0.5 h-1.5 w-1.5 border-b border-l border-gold/30 transition-colors group-hover:border-gold/70" />
-                <div className="pointer-events-none absolute bottom-0.5 right-0.5 h-1.5 w-1.5 border-b border-r border-gold/30 transition-colors group-hover:border-gold/70" />
+                <div
+                  className={`pointer-events-none absolute left-0.5 top-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 border-l border-t transition-colors ${
+                    isFocused
+                      ? 'border-gold'
+                      : 'border-gold/40 group-hover:border-ember/90'
+                  }`}
+                />
+                <div
+                  className={`pointer-events-none absolute right-0.5 top-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 border-r border-t transition-colors ${
+                    isFocused
+                      ? 'border-gold'
+                      : 'border-gold/40 group-hover:border-ember/90'
+                  }`}
+                />
+                <div
+                  className={`pointer-events-none absolute bottom-0.5 left-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 border-b border-l transition-colors ${
+                    isFocused
+                      ? 'border-gold'
+                      : 'border-gold/40 group-hover:border-ember/90'
+                  }`}
+                />
+                <div
+                  className={`pointer-events-none absolute bottom-0.5 right-0.5 h-2 w-2 sm:h-2.5 sm:w-2.5 border-b border-r transition-colors ${
+                    isFocused
+                      ? 'border-gold'
+                      : 'border-gold/40 group-hover:border-ember/90'
+                  }`}
+                />
 
                 <span
                   aria-hidden="true"
