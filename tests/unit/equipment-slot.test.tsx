@@ -124,9 +124,8 @@ describe('EquipmentSlot component', () => {
       });
       expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
 
-      // Mouse leaves outer container
-      const container = slotElement.parentElement!;
-      fireEvent.mouseLeave(container);
+      // Mouse leaves slot element (starts grace period close timer)
+      fireEvent.mouseLeave(slotElement);
 
       // Grace period (200ms) before close
       act(() => {

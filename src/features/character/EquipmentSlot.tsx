@@ -160,37 +160,29 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     }
   };
 
-  // When mouse re-enters the fan-out area (the outer container), cancel the leave timer
-  const handleContainerMouseEnter = () => {
-    recordSlotActivity(slot);
+  // Cancel a pending leave timer (used when mouse enters a fanned item)
+  const cancelLeaveTimer = useCallback(() => {
     if (leaveTimerRef.current !== null) {
       clearTimeout(leaveTimerRef.current);
       leaveTimerRef.current = null;
     }
-  };
+  }, []);
 
-  const handleContainerMouseLeave = () => {
-    recordSlotActivity(slot);
-    // Cancel hover timer
-    if (hoverTimerRef.current !== null) {
-      clearTimeout(hoverTimerRef.current);
-      hoverTimerRef.current = null;
-    }
-    // Close fan-out with grace period
+  // Start a leave timer to close the fan-out after a grace period
+  // (used when mouse leaves a fanned item into empty space)
+  const startLeaveTimer = useCallback(() => {
     if (isFanoutOpen) {
       leaveTimerRef.current = setTimeout(() => {
         closeFanout();
       }, FANOUT_LEAVE_GRACE);
     }
-  };
+  }, [isFanoutOpen, closeFanout]);
 
   return (
     <div
       className={`relative flex flex-col items-center gap-1 transition-transform motion-reduce:transition-none ${
         isFanoutOpen ? 'z-30' : 'z-10'
       }`}
-      onMouseEnter={handleContainerMouseEnter}
-      onMouseLeave={handleContainerMouseLeave}
     >
       <div
         data-testid={`slot-${slot}`}
@@ -314,21 +306,24 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
             </button>
           )}
         </AnimatePresence>
-
-        {/* Radial fan-out of unequipped items */}
-        {isFanoutOpen && fanoutItems.length > 0 && (
-          <FanOut
-            slot={slot}
-            items={fanoutItems}
-            onDismiss={() => {
-              const target = buttonRef.current ?? equippedButtonRef.current;
-              target?.focus();
-            }}
-            onMouseEnter={handleContainerMouseEnter}
-            onMouseLeave={handleContainerMouseLeave}
-          />
-        )}
       </div>
+
+      {/* Horizontal fan-out of unequipped items — rendered outside inner slot
+          div so mouse movement from slot to fanned items stays within the
+          outer container's mouse-event bounds and doesn't trigger premature
+          close. */}
+      {isFanoutOpen && fanoutItems.length > 0 && (
+        <FanOut
+          slot={slot}
+          items={fanoutItems}
+          onDismiss={() => {
+            const target = buttonRef.current ?? equippedButtonRef.current;
+            target?.focus();
+          }}
+          onMouseEnter={cancelLeaveTimer}
+          onMouseLeave={startLeaveTimer}
+        />
+      )}
       <span
         className={`text-[9px] font-semibold uppercase tracking-[0.12em] transition-colors motion-reduce:transition-none ${
           isFanoutOpen ? 'text-gold' : 'text-ink-muted'
