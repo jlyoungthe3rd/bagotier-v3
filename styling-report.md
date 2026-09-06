@@ -173,3 +173,51 @@ dist/assets/index-DSNse8y5.js   413.31 kB │ gzip: 131.87 kB
    - Updated non-null assertions to comply with `@typescript-eslint/non-nullable-type-assertion-style`.
 5. [`styling-report.md`](styling-report.md):
    - Updated comprehensive styling report detailing the horizontal fan-out audit and findings.
+
+---
+
+## 7. Slot-Anchored Directional Tooltip Styling & Layout Audit
+
+**Feature**: Slot-Anchored Directional Tooltips  
+**Audited Components**:
+
+- [`src/features/inventory/tooltip/ItemTooltipPresenter.tsx`](src/features/inventory/tooltip/ItemTooltipPresenter.tsx)
+- [`src/features/character/EquipmentSlot.tsx`](src/features/character/EquipmentSlot.tsx)
+- [`src/features/character/FanOut.tsx`](src/features/character/FanOut.tsx)
+- [`src/features/inventory/InventoryItem.tsx`](src/features/inventory/InventoryItem.tsx)
+- [`src/index.css`](src/index.css)
+
+### Audit Checklist & Findings
+
+1. **Tooltip Responsiveness**:
+   - `max-w-56` (14rem = 224px) is optimal for dark fantasy item cards: wide enough for item names and stat lines while leaving ample margins on narrow 320px+ viewports.
+   - Inner padding `px-3 py-2` (12px horizontal, 8px vertical) preserves compact density without crowding text.
+   - Added `break-words` to item title to guard against unexpected long string overflows.
+
+2. **Tailwind Class Consistency**:
+   - **Background & Frosted Glass**: Enhanced tooltip with `bg-surface-raised/95 backdrop-blur-md` (`#1f1930`), matching the frosted runic glass aesthetic in `FanOut`.
+   - **Borders & Shadows**: `border-gold/40` matches the idle gold framing of slots. Upgraded shadow to `shadow-xl shadow-surface-sunken/80` for consistent depth above underlying parchment/void surfaces.
+   - **Stat Typography**: Applied `font-mono text-[11px]` to stat metadata lines in `ItemTooltipPresenter.tsx`, fulfilling the design token specification in `tailwind.config.ts` (_"Cinzel serif + JetBrains Mono for stat data"_).
+   - **Icon Depth**: Added `drop-shadow` to the equipped item icon in `InventoryItem.tsx`, aligning with fanned-out item tiles.
+
+3. **Mobile Layout & Viewport Safety**:
+   - Anchoring tooltips to the slot container element and inverting `SLOT_FAN_DIRECTION` (slots fanning left project tooltips to the right, and vice versa) successfully prevents visual collision between fanned items and tooltips.
+   - Directional `flip` fallbacks (`['left', 'bottom', 'top']` or `['right', 'bottom', 'top']`) combined with `shift({ padding: 8 })` guarantee tooltips never clip off-screen on compact mobile viewports (down to 320px).
+
+4. **Dark Theme Harmony**:
+   - Surface colors strictly follow the Forge & Rune palette: `surface-raised` (`#1f1930`), `surface-sunken` (`#080610`), `ink` (`#e8ddd0` with 17:1 WCAG contrast), `ink-muted` (`#7a7060`), and `gold` (`#c4943a`).
+
+5. **Z-Index Layering**:
+   - Hierarchy is clean and collision-free:
+     - Base slot container: `z-10`
+     - Fan-out menu: `z-30`
+     - Floating tooltip: `z-50` rendered via `<FloatingPortal>` at document body root.
+   - `pointer-events-none` on the tooltip ensures that even at `z-50` it never blocks click/hover/drag interactions with slots or fanned items.
+
+6. **Animation & Reduced Motion**:
+   - Added `@keyframes tooltipFadeIn` with `motion-safe:animate-[tooltipFadeIn_120ms_ease-out]` in `src/index.css`.
+   - The animation operates purely on `opacity`, completely avoiding `transform` conflicts with Floating UI's dynamic inline styles.
+   - Instantaneous appearance when `prefers-reduced-motion: reduce` is enabled.
+
+7. **Code Hygiene**:
+   - Formatted multi-line prop destructuring in `InventoryItem.tsx` to fix Prettier validation.

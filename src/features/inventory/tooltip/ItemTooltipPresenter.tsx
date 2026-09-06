@@ -82,17 +82,17 @@ function TooltipNode({
         ref={refs.setFloating}
         role="tooltip"
         data-placement={placement}
-        className="item-tooltip pointer-events-none z-50 max-w-56 rounded border border-gold/40 bg-surface-raised/95 px-3 py-2 text-left text-xs text-ink shadow-[0_10px_24px_rgba(0,0,0,0.35)]"
+        className="item-tooltip pointer-events-none z-50 max-w-56 rounded border border-gold/40 bg-surface-raised/95 backdrop-blur-md px-3 py-2 text-left text-xs text-ink shadow-xl shadow-surface-sunken/80"
         style={floatingStyles}
       >
-        <p className="font-semibold leading-snug">{snapshot.content.title}</p>
+        <p className="font-semibold leading-snug break-words">{snapshot.content.title}</p>
         {snapshot.content.subtitle !== undefined ? (
           <p className="mt-0.5 text-[10px] uppercase tracking-[0.1em] text-gold/90">
             {snapshot.content.subtitle}
           </p>
         ) : null}
         {snapshot.content.metadataLines.length > 0 ? (
-          <ul className="mt-1.5 space-y-0.5 text-[11px] text-ink-muted">
+          <ul className="mt-1.5 space-y-0.5 font-mono text-[11px] text-ink-muted">
             {snapshot.content.metadataLines.map((line) => (
               <li key={line}>{line}</li>
             ))}

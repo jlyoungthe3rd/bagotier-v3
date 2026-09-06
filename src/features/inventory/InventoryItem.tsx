@@ -32,7 +32,16 @@ function resolveIcon(icon: string): string {
  */
 export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
   function InventoryItem(
-    { item, slot, slotElement, tooltipPlacement, hasFanout, isFanoutOpen, onDismissFanout, ...buttonProps },
+    {
+      item,
+      slot,
+      slotElement,
+      tooltipPlacement,
+      hasFanout,
+      isFanoutOpen,
+      onDismissFanout,
+      ...buttonProps
+    },
     forwardedRef,
   ) {
     const tooltip = useItemTooltip();
@@ -134,7 +143,7 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
         onClick={handleClick}
         aria-describedby={describedBy ?? undefined}
       >
-        <span aria-hidden="true" className="text-2xl leading-none">
+        <span aria-hidden="true" className="text-2xl leading-none drop-shadow">
           {resolveIcon(item.icon)}
         </span>
       </button>
