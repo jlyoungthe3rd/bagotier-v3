@@ -45,9 +45,10 @@ _Executes ONLY after explicit user confirmation in Phase 2._
   - `.worktrees/a11y`
   - `.worktrees/styling`
 - Initiate 3 concurrent sub-agents:
-  1. **Test Agent** (`.worktrees/test`): Writes unit tests (Vitest). Verifies tests pass.
-  2. **Accessibility Agent** (`.worktrees/a11y`): Audits modified files for WCAG compliance and outputs `report.md`.
-  3. **Styling Agent** (`.worktrees/styling`): Audits Tailwind CSS classes and optimizes layout responsiveness.
+  1. **Test Agent** (`.worktrees/test`): Writes unit tests (Vitest). Verifies tests pass (`npm run test`), strict type-checking passes (`npx tsc --noEmit`), and code style passes (`npm run lint`).
+  2. **Accessibility Agent** (`.worktrees/a11y`): Audits modified files for WCAG compliance and outputs `report.md`. Verifies `npm run lint` on report/changes.
+  3. **Styling Agent** (`.worktrees/styling`): Audits Tailwind CSS classes and optimizes layout responsiveness. Verifies `npm run build` and `npm run lint` on modified files.
+- **Sub-Agent Commit Invariant**: Every sub-agent MUST run `npx tsc --noEmit` and `npm run lint` in its worktree and resolve all warnings/errors before committing its worktree branch.
 
 ---
 
