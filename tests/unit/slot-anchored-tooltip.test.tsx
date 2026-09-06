@@ -11,15 +11,19 @@ import {
 } from '../../src/store/useInventoryStore';
 import { items } from '../../src/mocks/items';
 import { resetSlotHoverManager } from '../../src/features/character/slotHoverManager';
-import type { Item, ItemId, SlotType } from '../../src/types/domain';
+import type { ItemId, SlotType } from '../../src/types/domain';
+
+import type * as TooltipModule from '../../src/features/inventory/tooltip';
 
 const mockOpen = vi.fn();
 const mockCloseFor = vi.fn();
 const mockDismiss = vi.fn();
 const mockAriaDescribedByFor = vi.fn();
 
-vi.mock('../../src/features/inventory/tooltip', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../../src/features/inventory/tooltip')>();
+vi.mock('../../src/features/inventory/tooltip', async () => {
+  const actual = await vi.importActual<typeof TooltipModule>(
+    '../../src/features/inventory/tooltip',
+  );
   return {
     ...actual,
     useItemTooltip: () => ({
@@ -87,8 +91,8 @@ describe('Slot-anchored directional tooltip positioning', () => {
         'right',
       );
       // Explicitly verify it is anchored to slot container, not item button
-      expect(mockOpen.mock.calls[0][2]).toBe(slotElement);
-      expect(mockOpen.mock.calls[0][2]).not.toBe(itemButton);
+      expect(mockOpen.mock.calls[0]![2]).toBe(slotElement);
+      expect(mockOpen.mock.calls[0]![2]).not.toBe(itemButton);
     });
 
     it('calls tooltip.open with slot container element and "left" placement for right-fanning head slot on hover', async () => {
@@ -112,8 +116,8 @@ describe('Slot-anchored directional tooltip positioning', () => {
         slotElement,
         'left',
       );
-      expect(mockOpen.mock.calls[0][2]).toBe(slotElement);
-      expect(mockOpen.mock.calls[0][2]).not.toBe(itemButton);
+      expect(mockOpen.mock.calls[0]![2]).toBe(slotElement);
+      expect(mockOpen.mock.calls[0]![2]).not.toBe(itemButton);
     });
 
     it('calls tooltip.open with slot container element and placement on keyboard focus', () => {
@@ -160,8 +164,8 @@ describe('Slot-anchored directional tooltip positioning', () => {
         slotElement,
         'right',
       );
-      expect(mockOpen.mock.calls[0][2]).toBe(slotElement);
-      expect(mockOpen.mock.calls[0][2]).not.toBe(fanoutButton);
+      expect(mockOpen.mock.calls[0]![2]).toBe(slotElement);
+      expect(mockOpen.mock.calls[0]![2]).not.toBe(fanoutButton);
     });
 
     it('calls tooltip.open with slot container element and "left" placement for right-fanning head fan-out items on hover', async () => {
@@ -183,8 +187,8 @@ describe('Slot-anchored directional tooltip positioning', () => {
         slotElement,
         'left',
       );
-      expect(mockOpen.mock.calls[0][2]).toBe(slotElement);
-      expect(mockOpen.mock.calls[0][2]).not.toBe(fanoutButton);
+      expect(mockOpen.mock.calls[0]![2]).toBe(slotElement);
+      expect(mockOpen.mock.calls[0]![2]).not.toBe(fanoutButton);
     });
 
     it('calls tooltip.open with slot container element and placement on fan-out keyboard focus', () => {
@@ -220,12 +224,7 @@ describe('Slot-anchored directional tooltip positioning', () => {
       const button = screen.getByRole('button');
       await user.hover(button);
 
-      expect(mockOpen).toHaveBeenCalledWith(
-        testItem,
-        'hover',
-        button,
-        undefined,
-      );
+      expect(mockOpen).toHaveBeenCalledWith(testItem, 'hover', button, undefined);
     });
 
     it('FanOut falls back to individual fan-out item buttons when slotElement is omitted', async () => {
