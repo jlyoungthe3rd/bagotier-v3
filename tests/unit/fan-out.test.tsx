@@ -12,7 +12,10 @@ import {
   FAN_RADIUS_MOBILE,
   SLOT_FAN_DIRECTION,
 } from '../../src/features/character/FanOut';
-import { ItemTooltipProvider } from '../../src/features/inventory/tooltip';
+import {
+  ItemTooltipProvider,
+  type TooltipPlacement,
+} from '../../src/features/inventory/tooltip';
 import { audioEngine } from '../../src/features/audio/useSound';
 import {
   registerItemSlotTypes,
@@ -75,13 +78,27 @@ function renderFanOut(
   props: {
     slot?: SlotType;
     items?: readonly Item[];
+    slotElement?: HTMLElement | null;
+    tooltipPlacement?: TooltipPlacement;
     onDismiss?: () => void;
   } = {},
 ) {
-  const { slot = 'head', items: fanItems = headItems, onDismiss } = props;
+  const {
+    slot = 'head',
+    items: fanItems = headItems,
+    slotElement,
+    tooltipPlacement,
+    onDismiss,
+  } = props;
   return render(
     <ItemTooltipProvider>
-      <FanOut slot={slot} items={fanItems} onDismiss={onDismiss} />
+      <FanOut
+        slot={slot}
+        items={fanItems}
+        slotElement={slotElement}
+        tooltipPlacement={tooltipPlacement}
+        onDismiss={onDismiss}
+      />
     </ItemTooltipProvider>,
   );
 }
@@ -181,6 +198,42 @@ describe('FanOut component & computeFanPositions', () => {
             { x: MOBILE_STEP, y: 0 },
             { x: 2 * MOBILE_STEP, y: 0 },
           ]);
+        }
+      });
+    });
+
+    describe('SLOT_FAN_DIRECTION tooltip placement mapping', () => {
+      const allSlots: SlotType[] = [
+        'head',
+        'body',
+        'legs',
+        'hands',
+        'feet',
+        'weapon',
+        'accessory',
+      ];
+
+      it('maps every slot type to either left or right fan direction', () => {
+        for (const slot of allSlots) {
+          expect(['left', 'right']).toContain(SLOT_FAN_DIRECTION[slot]);
+        }
+      });
+
+      it('inverts left-fanning slots to right tooltip placement', () => {
+        const leftSlots: SlotType[] = ['weapon', 'hands', 'legs'];
+        for (const slot of leftSlots) {
+          const tooltipPlacement =
+            SLOT_FAN_DIRECTION[slot] === 'right' ? 'left' : 'right';
+          expect(tooltipPlacement).toBe('right');
+        }
+      });
+
+      it('inverts right-fanning slots to left tooltip placement', () => {
+        const rightSlots: SlotType[] = ['head', 'body', 'accessory', 'feet'];
+        for (const slot of rightSlots) {
+          const tooltipPlacement =
+            SLOT_FAN_DIRECTION[slot] === 'right' ? 'left' : 'right';
+          expect(tooltipPlacement).toBe('left');
         }
       });
     });
@@ -695,6 +748,60 @@ describe('FanOut component & computeFanPositions', () => {
         secondBtn.blur();
       });
       expect(screen.queryByRole('tooltip')).toBeNull();
+    });
+
+    it('renders tooltip with data-placement="left" when tooltipPlacement is "left" on hover', async () => {
+      const user = userEvent.setup();
+      const mockSlotEl = document.createElement('div');
+      renderFanOut({ slotElement: mockSlotEl, tooltipPlacement: 'left' });
+
+      const itemBtn = screen.getByTestId('fanout-item-iron-helm');
+      await user.hover(itemBtn);
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Iron Helm');
+      expect(tooltip.getAttribute('data-placement')).toBe('left');
+    });
+
+    it('renders tooltip with data-placement="right" when tooltipPlacement is "right" on hover', async () => {
+      const user = userEvent.setup();
+      const mockSlotEl = document.createElement('div');
+      renderFanOut({ slotElement: mockSlotEl, tooltipPlacement: 'right' });
+
+      const itemBtn = screen.getByTestId('fanout-item-iron-helm');
+      await user.hover(itemBtn);
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Iron Helm');
+      expect(tooltip.getAttribute('data-placement')).toBe('right');
+    });
+
+    it('renders tooltip with data-placement="left" when tooltipPlacement is "left" on focus', async () => {
+      const mockSlotEl = document.createElement('div');
+      renderFanOut({ slotElement: mockSlotEl, tooltipPlacement: 'left' });
+
+      const secondBtn = screen.getByTestId('fanout-item-wizard-hat');
+      act(() => {
+        secondBtn.focus();
+      });
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Wizard Hat');
+      expect(tooltip.getAttribute('data-placement')).toBe('left');
+    });
+
+    it('renders tooltip with data-placement="right" when tooltipPlacement is "right" on focus', async () => {
+      const mockSlotEl = document.createElement('div');
+      renderFanOut({ slotElement: mockSlotEl, tooltipPlacement: 'right' });
+
+      const secondBtn = screen.getByTestId('fanout-item-wizard-hat');
+      act(() => {
+        secondBtn.focus();
+      });
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Wizard Hat');
+      expect(tooltip.getAttribute('data-placement')).toBe('right');
     });
   });
 });

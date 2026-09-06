@@ -208,4 +208,64 @@ describe('EquipmentSlot component', () => {
       expect(useInventoryStore.getState().feedback).toBe('Closed Head slot options.');
     });
   });
+
+  describe('directional tooltip positioning', () => {
+    it('positions tooltip to left for right-fanning head slot equipped item', async () => {
+      const user = userEvent.setup();
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+      renderEquipmentSlot('head', 'iron-helm' as never);
+
+      const item = screen.getByTestId('item-iron-helm');
+      await user.hover(item);
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Iron Helm');
+      expect(tooltip.getAttribute('data-placement')).toBe('left');
+    });
+
+    it('positions tooltip to right for left-fanning weapon slot equipped item', async () => {
+      const user = userEvent.setup();
+      useInventoryStore.getState().equip('bronze-sword' as never, 'weapon');
+      renderEquipmentSlot('weapon', 'bronze-sword' as never);
+
+      const item = screen.getByTestId('item-bronze-sword');
+      await user.hover(item);
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Bronze Sword');
+      expect(tooltip.getAttribute('data-placement')).toBe('right');
+    });
+
+    it('positions tooltip to left for right-fanning head slot fanout item', async () => {
+      const user = userEvent.setup();
+      renderEquipmentSlot('head', null);
+
+      act(() => {
+        useInventoryStore.getState().setActiveFanoutSlot('head');
+      });
+
+      const fanoutItem = screen.getByTestId('fanout-item-iron-helm');
+      await user.hover(fanoutItem);
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Iron Helm');
+      expect(tooltip.getAttribute('data-placement')).toBe('left');
+    });
+
+    it('positions tooltip to right for left-fanning weapon slot fanout item', async () => {
+      const user = userEvent.setup();
+      renderEquipmentSlot('weapon', null);
+
+      act(() => {
+        useInventoryStore.getState().setActiveFanoutSlot('weapon');
+      });
+
+      const fanoutItem = screen.getByTestId('fanout-item-bronze-sword');
+      await user.hover(fanoutItem);
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Bronze Sword');
+      expect(tooltip.getAttribute('data-placement')).toBe('right');
+    });
+  });
 });
