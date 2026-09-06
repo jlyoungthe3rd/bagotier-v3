@@ -5,10 +5,10 @@ import { useInventoryStore } from '../../store/useInventoryStore';
 import { useItem } from '../inventory/useInventoryQuery';
 import { useItemsForSlot } from '../inventory/useInventoryQuery';
 import { InventoryItem } from '../inventory/InventoryItem';
-import { useItemTooltip } from '../inventory/tooltip';
+import { useItemTooltip, type TooltipPlacement } from '../inventory/tooltip';
 import { useSound } from '../audio/useSound';
 import { handleEquipmentKeyDown } from '../inventory/keyboard';
-import { FanOut, SLOT_LABELS } from './FanOut';
+import { FanOut, SLOT_LABELS, SLOT_FAN_DIRECTION } from './FanOut';
 import { getSlotHoverDelay, recordSlotActivity } from './slotHoverManager';
 
 const SLOT_ICONS: Readonly<Record<SlotType, string>> = {
@@ -46,8 +46,13 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const tooltip = useItemTooltip();
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const equippedButtonRef = useRef<HTMLButtonElement | null>(null);
+  const slotContainerRef = useRef<HTMLDivElement | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Tooltip appears on the opposite side of the fan-out direction
+  const tooltipPlacement: TooltipPlacement =
+    SLOT_FAN_DIRECTION[slot] === 'right' ? 'left' : 'right';
 
   const isActive = focusedSection === 'equipment' && focusedSlot === slot;
   const isFanoutOpen = activeFanoutSlot === slot;
@@ -185,6 +190,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
       }`}
     >
       <div
+        ref={slotContainerRef}
         data-testid={`slot-${slot}`}
         aria-label={`${SLOT_LABELS[slot]} slot`}
         className={`group relative h-cell w-cell border bg-surface p-0.5 transition-all duration-200 motion-reduce:transition-none ${
@@ -237,6 +243,8 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                 ref={equippedButtonRef}
                 item={equippedItem}
                 slot={slot}
+                slotElement={slotContainerRef.current}
+                tooltipPlacement={tooltipPlacement}
                 data-tooltip-surface="equipment"
                 hasFanout={fanoutItems.length > 0}
                 isFanoutOpen={isFanoutOpen}
@@ -316,6 +324,8 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
         <FanOut
           slot={slot}
           items={fanoutItems}
+          slotElement={slotContainerRef.current}
+          tooltipPlacement={tooltipPlacement}
           onDismiss={() => {
             const target = buttonRef.current ?? equippedButtonRef.current;
             target?.focus();

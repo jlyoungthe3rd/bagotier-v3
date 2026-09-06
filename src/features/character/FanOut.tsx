@@ -2,7 +2,7 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { Item, SlotType } from '../../types/domain';
 import { useInventoryStore } from '../../store/useInventoryStore';
-import { useItemTooltip } from '../inventory/tooltip';
+import { useItemTooltip, type TooltipPlacement } from '../inventory/tooltip';
 import { useSound } from '../audio/useSound';
 
 export type HorizontalFanDirection = 'left' | 'right' | 'center';
@@ -104,6 +104,8 @@ export const SLOT_LABELS: Readonly<Record<SlotType, string>> = {
 interface FanOutProps {
   readonly slot: SlotType;
   readonly items: readonly Item[];
+  readonly slotElement?: HTMLElement | null;
+  readonly tooltipPlacement?: TooltipPlacement;
   readonly onDismiss?: () => void;
   readonly onMouseEnter?: () => void;
   readonly onMouseLeave?: () => void;
@@ -118,6 +120,8 @@ interface FanOutProps {
 export function FanOut({
   slot,
   items,
+  slotElement,
+  tooltipPlacement,
   onDismiss,
   onMouseEnter: onMouseEnterProp,
   onMouseLeave: onMouseLeaveProp,
@@ -338,7 +342,12 @@ export function FanOut({
                 }}
                 onMouseEnter={() => {
                   onMouseEnterProp?.();
-                  tooltip.open(item, 'hover', itemRefs.current[i] ?? null);
+                  tooltip.open(
+                    item,
+                    'hover',
+                    slotElement ?? itemRefs.current[i] ?? null,
+                    tooltipPlacement,
+                  );
                 }}
                 onMouseLeave={() => {
                   onMouseLeaveProp?.();
@@ -346,7 +355,12 @@ export function FanOut({
                 }}
                 onFocus={() => {
                   useInventoryStore.getState().setFocusedFanoutIndex(i);
-                  tooltip.open(item, 'focus', itemRefs.current[i] ?? null);
+                  tooltip.open(
+                    item,
+                    'focus',
+                    slotElement ?? itemRefs.current[i] ?? null,
+                    tooltipPlacement,
+                  );
                 }}
                 onBlur={() => {
                   tooltip.closeFor(item.id, 'focus');

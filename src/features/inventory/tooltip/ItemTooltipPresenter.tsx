@@ -17,6 +17,7 @@ import type { Item, ItemId } from '../../../types/domain';
 import {
   useItemTooltipState,
   type ItemTooltipController,
+  type TooltipPlacement,
   type TooltipTriggerMode,
 } from './useItemTooltipState';
 
@@ -26,6 +27,7 @@ interface ItemTooltipContextValue {
     item: Item,
     mode: TooltipTriggerMode,
     element: HTMLElement | null,
+    placement?: TooltipPlacement,
   ) => void;
   readonly closeFor: (itemId: ItemId, mode: TooltipTriggerMode) => void;
   readonly dismiss: () => void;
@@ -42,12 +44,18 @@ function TooltipNode({
   tooltipId: string;
 }) {
   const { snapshot } = controller;
+  const preferredPlacement = snapshot.placement;
   const { refs, floatingStyles, update, placement } = useFloating({
     open: snapshot.open,
-    placement: 'right',
+    placement: preferredPlacement,
     middleware: [
-      offset(10),
-      flip({ fallbackPlacements: ['left', 'top', 'bottom'] }),
+      offset(12),
+      flip({
+        fallbackPlacements:
+          preferredPlacement === 'left'
+            ? ['right', 'bottom', 'top']
+            : ['left', 'bottom', 'top'],
+      }),
       shift({ padding: 8 }),
     ],
     whileElementsMounted: autoUpdate,
@@ -103,7 +111,8 @@ export function ItemTooltipProvider({ children }: PropsWithChildren) {
     <ItemTooltipContext.Provider
       value={{
         tooltipId,
-        open: (item, mode, element) => controller.open({ item, mode, element }),
+        open: (item, mode, element, placement) =>
+          controller.open({ item, mode, element, placement }),
         closeFor: controller.closeFor,
         dismiss: controller.dismiss,
         ariaDescribedByFor: (itemId) =>

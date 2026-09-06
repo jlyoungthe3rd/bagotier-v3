@@ -1,6 +1,6 @@
 import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
 import type { Item, SlotType } from '../../types/domain';
-import { useItemTooltip } from './tooltip';
+import { useItemTooltip, type TooltipPlacement } from './tooltip';
 import type { ButtonHTMLAttributes } from 'react';
 import { useInventoryStore } from '../../store/useInventoryStore';
 import { useSound } from '../audio/useSound';
@@ -13,6 +13,8 @@ interface InventoryItemProps extends Omit<
 > {
   readonly item: Item;
   readonly slot: SlotType;
+  readonly slotElement?: HTMLElement | null;
+  readonly tooltipPlacement?: TooltipPlacement;
   readonly hasFanout?: boolean;
   readonly isFanoutOpen?: boolean;
   readonly onDismissFanout?: () => void;
@@ -30,7 +32,7 @@ function resolveIcon(icon: string): string {
  */
 export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
   function InventoryItem(
-    { item, slot, hasFanout, isFanoutOpen, onDismissFanout, ...buttonProps },
+    { item, slot, slotElement, tooltipPlacement, hasFanout, isFanoutOpen, onDismissFanout, ...buttonProps },
     forwardedRef,
   ) {
     const tooltip = useItemTooltip();
@@ -88,7 +90,12 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
         }
         className="flex h-full w-full items-center justify-center bg-surface-raised/80 p-1 text-ink transition-colors outline-offset-2 hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid motion-reduce:transition-none"
         onMouseEnter={() => {
-          tooltip.open(item, 'hover', elementRef.current);
+          tooltip.open(
+            item,
+            'hover',
+            slotElement ?? elementRef.current,
+            tooltipPlacement,
+          );
         }}
         onMouseLeave={() => {
           tooltip.closeFor(item.id, 'hover');
@@ -96,7 +103,12 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
         onFocus={(e) => {
           useInventoryStore.getState().setFocusedSection('equipment');
           useInventoryStore.getState().setFocusedSlot(slot);
-          tooltip.open(item, 'focus', elementRef.current);
+          tooltip.open(
+            item,
+            'focus',
+            slotElement ?? elementRef.current,
+            tooltipPlacement,
+          );
           buttonProps.onFocus?.(e);
         }}
         onBlur={(e) => {

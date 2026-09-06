@@ -4,18 +4,22 @@ import { mapTooltipContent, type TooltipContent } from './mapTooltipContent';
 
 export type TooltipTriggerMode = 'hover' | 'focus';
 
+export type TooltipPlacement = 'left' | 'right';
+
 export interface ItemTooltipSnapshot {
   readonly open: boolean;
   readonly activeItemId: ItemId | null;
   readonly triggerMode: TooltipTriggerMode | null;
   readonly referenceElement: HTMLElement | null;
   readonly content: TooltipContent | null;
+  readonly placement: TooltipPlacement;
 }
 
 interface OpenArgs {
   readonly item: Item;
   readonly mode: TooltipTriggerMode;
   readonly element: HTMLElement | null;
+  readonly placement?: TooltipPlacement;
 }
 
 export function useItemTooltipState() {
@@ -25,6 +29,7 @@ export function useItemTooltipState() {
     triggerMode: null,
     referenceElement: null,
     content: null,
+    placement: 'right',
   });
   const sourcesRef = useRef<{ hover: boolean; focus: boolean }>({
     hover: false,
@@ -39,11 +44,12 @@ export function useItemTooltipState() {
       triggerMode: null,
       referenceElement: null,
       content: null,
+      placement: 'right',
     });
   }, []);
 
   const open = useCallback(
-    ({ item, mode, element }: OpenArgs) => {
+    ({ item, mode, element, placement }: OpenArgs) => {
       const content = mapTooltipContent(item);
       if (content.isEmpty) {
         closeNow();
@@ -56,6 +62,7 @@ export function useItemTooltipState() {
         triggerMode: mode,
         referenceElement: element,
         content,
+        placement: placement ?? 'right',
       });
     },
     [closeNow],
@@ -77,6 +84,7 @@ export function useItemTooltipState() {
         triggerMode: null,
         referenceElement: null,
         content: null,
+        placement: 'right',
       };
     });
   }, []);
