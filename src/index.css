@@ -28,8 +28,17 @@
   }
 }
 
+@keyframes tooltipFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
 @layer components {
   .item-tooltip {
-    @apply pointer-events-none select-none;
+    @apply pointer-events-none select-none motion-safe:animate-[tooltipFadeIn_120ms_ease-out];
   }
 }
