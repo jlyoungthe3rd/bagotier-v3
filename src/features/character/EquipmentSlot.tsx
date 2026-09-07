@@ -88,35 +88,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
 
   const isHoveringRef = useRef(false);
   const prevEquippedItemRef = useRef(equippedItem);
-
-  useEffect(() => {
-    if (isHoveringRef.current) {
-      return;
-    }
-    if (isActive) {
-      const target = buttonRef.current ?? equippedButtonRef.current;
-      if (target && document.activeElement !== target) {
-        target.focus();
-      }
-    }
-  }, [isActive]);
-
-  // Restore focus to slot button or equipped item when fan-out closes while slot is active
-  const prevFanoutOpenRef = useRef(isFanoutOpen);
-  useEffect(() => {
-    if (prevFanoutOpenRef.current && !isFanoutOpen && isActive) {
-      const target = buttonRef.current ?? equippedButtonRef.current;
-      if (
-        target &&
-        document.activeElement !== target &&
-        (document.activeElement === document.body ||
-          slotContainerRef.current?.contains(document.activeElement))
-      ) {
-        target.focus();
-      }
-    }
-    prevFanoutOpenRef.current = isFanoutOpen;
-  }, [isFanoutOpen, isActive]);
+  const wasFanoutOpenRef = useRef(isFanoutOpen);
 
   // Focus permanence on equip / unequip transitions
   useEffect(() => {
@@ -126,34 +98,15 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     } else if (
       prevEquippedItemRef.current === undefined &&
       equippedItem !== undefined &&
-      prevFanoutOpenRef.current
+      wasFanoutOpenRef.current
     ) {
       // Equip transition from open fanout: preserve focus on newly equipped item button
       equippedButtonRef.current?.focus();
     }
     prevEquippedItemRef.current = equippedItem;
-  }, [equippedItem]);
+    wasFanoutOpenRef.current = isFanoutOpen;
+  }, [equippedItem, isFanoutOpen]);
 
-  // Open fan-out when empty slot transitions to active WITH DOM focus (keyboard navigation/tab)
-  const prevActiveRef = useRef(isActive);
-  useEffect(() => {
-    if (isHoveringRef.current || dismissedRef.current) {
-      prevActiveRef.current = isActive;
-      return;
-    }
-    const isDomFocused =
-      buttonRef.current !== null && document.activeElement === buttonRef.current;
-    if (
-      !prevActiveRef.current &&
-      isActive &&
-      isDomFocused &&
-      equippedItem === undefined &&
-      fanoutItems.length > 0
-    ) {
-      openFanout();
-    }
-    prevActiveRef.current = isActive;
-  }, [isActive, equippedItem, openFanout, fanoutItems.length]);
   const isDefaultSlot = focusedSlot === null && slot === 'head';
   const tabIndex = focusedSlot === slot || isDefaultSlot ? 0 : -1;
 
