@@ -85,32 +85,50 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     };
   }, []);
 
-  useEffect(() => {
-    if (isActive && equippedItem === undefined) {
-      if (buttonRef.current && document.activeElement !== buttonRef.current) {
-        buttonRef.current.focus();
-      }
-    }
-  }, [isActive, equippedItem]);
+  const prevEquippedItemRef = useRef(equippedItem);
 
   // Restore focus to slot button or equipped item when fan-out closes while slot is active
   const prevFanoutOpenRef = useRef(isFanoutOpen);
   useEffect(() => {
     if (prevFanoutOpenRef.current && !isFanoutOpen && isActive) {
       const target = buttonRef.current ?? equippedButtonRef.current;
-      if (target && document.activeElement !== target) {
+      if (
+        target &&
+        document.activeElement !== target &&
+        (document.activeElement === document.body ||
+          slotContainerRef.current?.contains(document.activeElement))
+      ) {
         target.focus();
       }
     }
     prevFanoutOpenRef.current = isFanoutOpen;
   }, [isFanoutOpen, isActive]);
 
-  // Open fan-out when empty slot transitions to active (keyboard focus)
+  // Focus permanence on equip / unequip transitions
+  useEffect(() => {
+    if (prevEquippedItemRef.current !== undefined && equippedItem === undefined) {
+      // Unequip transition: preserve focus on the newly mounted empty slot button
+      buttonRef.current?.focus();
+    } else if (
+      prevEquippedItemRef.current === undefined &&
+      equippedItem !== undefined &&
+      prevFanoutOpenRef.current
+    ) {
+      // Equip transition from open fanout: preserve focus on newly equipped item button
+      equippedButtonRef.current?.focus();
+    }
+    prevEquippedItemRef.current = equippedItem;
+  }, [equippedItem]);
+
+  // Open fan-out when empty slot transitions to active WITH DOM focus (keyboard navigation/tab)
   const prevActiveRef = useRef(isActive);
   useEffect(() => {
+    const isDomFocused =
+      buttonRef.current !== null && document.activeElement === buttonRef.current;
     if (
       !prevActiveRef.current &&
       isActive &&
+      isDomFocused &&
       equippedItem === undefined &&
       fanoutItems.length > 0
     ) {
