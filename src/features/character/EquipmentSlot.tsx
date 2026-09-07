@@ -85,13 +85,19 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     };
   }, []);
 
+  const isHoveringRef = useRef(false);
+
   useEffect(() => {
-    if (isActive && equippedItem === undefined) {
-      if (buttonRef.current && document.activeElement !== buttonRef.current) {
-        buttonRef.current.focus();
+    if (isHoveringRef.current) {
+      return;
+    }
+    if (isActive) {
+      const target = buttonRef.current ?? equippedButtonRef.current;
+      if (target && document.activeElement !== target) {
+        target.focus();
       }
     }
-  }, [isActive, equippedItem]);
+  }, [isActive]);
 
   // Restore focus to slot button or equipped item when fan-out closes while slot is active
   const prevFanoutOpenRef = useRef(isFanoutOpen);
@@ -108,6 +114,10 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   // Open fan-out when empty slot transitions to active (keyboard focus)
   const prevActiveRef = useRef(isActive);
   useEffect(() => {
+    if (isHoveringRef.current) {
+      prevActiveRef.current = isActive;
+      return;
+    }
     if (
       !prevActiveRef.current &&
       isActive &&
@@ -123,6 +133,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const tabIndex = focusedSlot === slot || isDefaultSlot ? 0 : -1;
 
   const handleMouseEnter = () => {
+    isHoveringRef.current = true;
     // Sync active slot with hover without stealing DOM focus
     useInventoryStore.getState().setFocusedSlot(slot);
 
@@ -143,6 +154,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   };
 
   const handleMouseLeave = (e: React.MouseEvent) => {
+    isHoveringRef.current = false;
     recordSlotActivity(slot);
     // Cancel hover timer if still pending
     if (hoverTimerRef.current !== null) {
@@ -159,6 +171,16 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
       leaveTimerRef.current = setTimeout(() => {
         closeFanout();
       }, FANOUT_LEAVE_GRACE);
+    }
+    // If slot does not have keyboard DOM focus, clear active slot on mouse leave
+    const hasFocus =
+      document.activeElement === buttonRef.current ||
+      document.activeElement === equippedButtonRef.current;
+    if (!hasFocus) {
+      const store = useInventoryStore.getState();
+      if (store.focusedSlot === slot) {
+        store.setFocusedSlot(null);
+      }
     }
   };
 
@@ -195,7 +217,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
             ? 'border-gold/90 shadow-[0_0_14px_rgba(196,148,58,0.35),0_0_6px_rgba(212,104,58,0.25)] ring-1 ring-gold/40'
             : isActive
               ? 'border-gold/70 shadow-[0_0_10px_rgba(196,148,58,0.25),0_0_4px_rgba(212,104,58,0.2)]'
-              : 'border-slot-idle/70 hover:border-ember/70 hover:shadow-[0_0_10px_rgba(212,104,58,0.25)]'
+              : 'border-slot-idle/70 hover:border-gold/70 hover:shadow-[0_0_10px_rgba(196,148,58,0.25),0_0_4px_rgba(212,104,58,0.2)]'
         }`}
         onMouseEnter={handleMouseEnter}
         onMouseLeave={handleMouseLeave}
@@ -203,22 +225,38 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
         {/* Corner bracket accents — the JRPG-style slot framing */}
         <div
           className={`pointer-events-none absolute left-0.5 top-0.5 h-2.5 w-2.5 border-l border-t transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
+            isFanoutOpen
+              ? 'border-gold/90'
+              : isActive
+                ? 'border-gold/80'
+                : 'border-gold/40 group-hover:border-gold/80'
           }`}
         />
         <div
           className={`pointer-events-none absolute right-0.5 top-0.5 h-2.5 w-2.5 border-r border-t transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
+            isFanoutOpen
+              ? 'border-gold/90'
+              : isActive
+                ? 'border-gold/80'
+                : 'border-gold/40 group-hover:border-gold/80'
           }`}
         />
         <div
           className={`pointer-events-none absolute bottom-0.5 left-0.5 h-2.5 w-2.5 border-b border-l transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
+            isFanoutOpen
+              ? 'border-gold/90'
+              : isActive
+                ? 'border-gold/80'
+                : 'border-gold/40 group-hover:border-gold/80'
           }`}
         />
         <div
           className={`pointer-events-none absolute bottom-0.5 right-0.5 h-2.5 w-2.5 border-b border-r transition-colors ${
-            isFanoutOpen ? 'border-gold/90' : 'border-gold/40 group-hover:border-ember/80'
+            isFanoutOpen
+              ? 'border-gold/90'
+              : isActive
+                ? 'border-gold/80'
+                : 'border-gold/40 group-hover:border-gold/80'
           }`}
         />
 
@@ -276,6 +314,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               }
               className="flex h-full w-full items-center justify-center bg-transparent transition-colors outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid motion-reduce:transition-none"
               onFocus={() => {
+                isHoveringRef.current = false;
                 useInventoryStore.getState().setFocusedSlot(slot);
                 tooltip.dismiss();
               }}
@@ -345,7 +384,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
       )}
       <span
         className={`text-[9px] font-semibold uppercase tracking-[0.12em] transition-colors motion-reduce:transition-none ${
-          isFanoutOpen ? 'text-gold' : 'text-ink-muted'
+          isFanoutOpen || isActive ? 'text-gold' : 'text-ink-muted'
         }`}
       >
         {SLOT_LABELS[slot]}

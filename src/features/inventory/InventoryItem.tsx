@@ -1,4 +1,4 @@
-import { useRef, useEffect, forwardRef, useImperativeHandle } from 'react';
+import { useRef, forwardRef, useImperativeHandle } from 'react';
 import type { Item, SlotType } from '../../types/domain';
 import { useItemTooltip, type TooltipPlacement } from './tooltip';
 import type { ButtonHTMLAttributes } from 'react';
@@ -56,16 +56,6 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
 
     const focusedSlot = useInventoryStore((s) => s.focusedSlot);
     const play = useSound();
-
-    const isActive = focusedSlot === slot;
-
-    useEffect(() => {
-      if (isActive) {
-        if (elementRef.current && document.activeElement !== elementRef.current) {
-          elementRef.current.focus();
-        }
-      }
-    }, [isActive]);
 
     const isDefaultSlot = focusedSlot === null && slot === 'head';
     const tabIndex = focusedSlot === slot || isDefaultSlot ? 0 : -1;
