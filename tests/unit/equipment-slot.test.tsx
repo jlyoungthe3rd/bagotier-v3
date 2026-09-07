@@ -52,7 +52,6 @@ describe('EquipmentSlot component', () => {
         emptyBtn.focus();
       });
 
-      expect(useInventoryStore.getState().focusedSection).toBe('equipment');
       expect(useInventoryStore.getState().focusedSlot).toBe('head');
       expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
       expect(screen.getByRole('listbox')).toBeInTheDocument();
@@ -216,7 +215,6 @@ describe('EquipmentSlot component', () => {
 
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
       expect(emptyBtn).toHaveFocus();
-      expect(useInventoryStore.getState().feedback).toBe('Closed Head slot options.');
     });
 
     it('restores focus to equipped item button on Escape', async () => {
@@ -241,7 +239,6 @@ describe('EquipmentSlot component', () => {
 
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
       expect(equippedItem).toHaveFocus();
-      expect(useInventoryStore.getState().feedback).toBe('Closed Head slot options.');
     });
   });
 

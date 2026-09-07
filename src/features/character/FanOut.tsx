@@ -203,7 +203,6 @@ export function FanOut({
     const store = useInventoryStore.getState();
     store.equip(item.id, slot);
     store.setActiveFanoutSlot(null);
-    store.setFeedback(`Equipped ${item.name} to ${SLOT_LABELS[slot]} slot.`);
     play('equip');
   };
 
@@ -255,13 +254,11 @@ export function FanOut({
         event.preventDefault();
         event.stopPropagation();
         store.setActiveFanoutSlot(null);
-        store.setFeedback(`Closed ${SLOT_LABELS[slot]} slot options.`);
         onDismiss?.();
         break;
       case 'Tab':
-        // Close fanout cleanly on tab out and announce state to live region
+        // Close fanout cleanly on tab out
         store.setActiveFanoutSlot(null);
-        store.setFeedback(`Closed ${SLOT_LABELS[slot]} slot options.`);
         break;
     }
   };

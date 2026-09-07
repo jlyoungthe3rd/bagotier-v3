@@ -5,12 +5,12 @@ import {
   preloadSounds,
   useSound,
 } from '../../src/features/audio/useSound';
-import { useInventoryStore } from '../../src/store/useInventoryStore';
+import { useAppStore } from '../../src/store/useAppStore';
 
 describe('useSound (US4 / FR-009, FR-010)', () => {
   beforeEach(() => {
     __resetAudioForTests();
-    useInventoryStore.getState().reset();
+    useAppStore.getState().setMuted(false);
   });
 
   it('creates a fresh AudioBufferSourceNode per play', async () => {
@@ -29,7 +29,7 @@ describe('useSound (US4 / FR-009, FR-010)', () => {
   it('no-ops when muted', async () => {
     const { result } = renderHook(() => useSound());
     await preloadSounds();
-    useInventoryStore.getState().toggleMute();
+    useAppStore.getState().toggleMute();
 
     result.current('pickup');
 
@@ -45,11 +45,11 @@ describe('useSound (US4 / FR-009, FR-010)', () => {
     try {
       const { result } = renderHook(() => useSound());
       expect(() => {
-        result.current('invalid');
+        result.current('pickup');
       }).not.toThrow();
       await preloadSounds();
       expect(() => {
-        result.current('invalid');
+        result.current('pickup');
       }).not.toThrow();
     } finally {
       vi.stubGlobal('AudioContext', RealStub);

@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import type { SoundEffectId } from './sounds';
 import { SOUND_EFFECT_IDS, SOUND_EFFECTS } from './sounds';
-import { useInventoryStore } from '../../store/useInventoryStore';
+import { useAppStore } from '../../store/useAppStore';
 
 let ctx: AudioContext | null = null;
 const buffers = new Map<SoundEffectId, AudioBuffer>();
@@ -75,7 +75,7 @@ export function __resetAudioForTests(): void {
  */
 export function useSound(): (effect: SoundEffectId) => void {
   return useCallback((effect: SoundEffectId) => {
-    if (useInventoryStore.getState().muted) return;
+    if (useAppStore.getState().muted) return;
     audioEngine.playback(effect);
   }, []);
 }

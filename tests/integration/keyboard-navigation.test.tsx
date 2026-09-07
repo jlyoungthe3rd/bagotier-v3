@@ -19,7 +19,6 @@ describe('keyboard navigation integration flows (US1-5)', () => {
     });
 
     expect(screen.getByTestId('fanout-item-iron-helm')).toHaveFocus();
-    expect(useInventoryStore.getState().focusedSection).toBe('equipment');
     expect(useInventoryStore.getState().focusedSlot).toBe('head');
 
     // Fan-out opens immediately on keyboard focus

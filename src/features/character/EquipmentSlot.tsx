@@ -38,7 +38,6 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const reducedMotion = useReducedMotion();
   const play = useSound();
 
-  const focusedSection = useInventoryStore((s) => s.focusedSection);
   const focusedSlot = useInventoryStore((s) => s.focusedSlot);
   const activeFanoutSlot = useInventoryStore((s) => s.activeFanoutSlot);
   const focusedFanoutIndex = useInventoryStore((s) => s.focusedFanoutIndex);
@@ -54,7 +53,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const tooltipPlacement: TooltipPlacement =
     SLOT_FAN_DIRECTION[slot] === 'right' ? 'left' : 'right';
 
-  const isActive = focusedSection === 'equipment' && focusedSlot === slot;
+  const isActive = focusedSlot === slot;
   const isFanoutOpen = activeFanoutSlot === slot;
 
   // Get unequipped items for this slot type
@@ -68,9 +67,6 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
         return;
       }
       store.setActiveFanoutSlot(slot);
-      store.setFeedback(
-        `${SLOT_LABELS[slot]} slot options opened. ${String(fanoutItems.length)} items available.`,
-      );
     }
   }, [slot, fanoutItems.length]);
 
@@ -78,7 +74,6 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     const store = useInventoryStore.getState();
     if (store.activeFanoutSlot === slot) {
       store.setActiveFanoutSlot(null);
-      store.setFeedback(`Closed ${SLOT_LABELS[slot]} slot options.`);
     }
   }, [slot]);
 
@@ -124,11 +119,13 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     prevActiveRef.current = isActive;
   }, [isActive, equippedItem, openFanout, fanoutItems.length]);
 
-  const isDefaultSlot = focusedSection === null && slot === 'head';
-  const tabIndex =
-    (focusedSection === 'equipment' && focusedSlot === slot) || isDefaultSlot ? 0 : -1;
+  const isDefaultSlot = focusedSlot === null && slot === 'head';
+  const tabIndex = focusedSlot === slot || isDefaultSlot ? 0 : -1;
 
   const handleMouseEnter = () => {
+    // Sync active slot with hover without stealing DOM focus
+    useInventoryStore.getState().setFocusedSlot(slot);
+
     // Cancel any pending leave timer
     if (leaveTimerRef.current !== null) {
       clearTimeout(leaveTimerRef.current);
@@ -279,7 +276,6 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               }
               className="flex h-full w-full items-center justify-center bg-transparent transition-colors outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid motion-reduce:transition-none"
               onFocus={() => {
-                useInventoryStore.getState().setFocusedSection('equipment');
                 useInventoryStore.getState().setFocusedSlot(slot);
                 tooltip.dismiss();
               }}
@@ -301,9 +297,6 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                     const store = useInventoryStore.getState();
                     store.equip(selectedItem.id, slot);
                     store.setActiveFanoutSlot(null);
-                    store.setFeedback(
-                      `Equipped ${selectedItem.name} to ${SLOT_LABELS[slot]} slot.`,
-                    );
                     play('equip');
                   }
                   return;

@@ -64,8 +64,6 @@ function useSeedStore(items: readonly Item[] | undefined) {
 }
 
 function InventoryScreen() {
-  const feedback = useInventoryStore((s) => s.feedback);
-
   return (
     <ItemTooltipProvider>
       <a
@@ -74,17 +72,6 @@ function InventoryScreen() {
       >
         Skip to main content
       </a>
-
-      {/* Polite live region for screen reader announcements */}
-      <div
-        role="status"
-        aria-live="polite"
-        aria-atomic="true"
-        className="sr-only"
-        data-testid="a11y-live-region"
-      >
-        {feedback}
-      </div>
 
       <MuteToggle />
       <GitHubLink />

@@ -56,6 +56,4 @@ export const InventoryStoreStateSchema = z.object({
       'all slots must be present',
     ),
   unequipped: z.array(z.string()),
-  muted: z.boolean(),
-  feedback: z.string().nullable(),
 });

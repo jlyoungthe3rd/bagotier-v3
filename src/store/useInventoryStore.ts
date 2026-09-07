@@ -13,10 +13,7 @@ function initialState(): EquipmentState {
   return {
     equipped: emptyEquipped(),
     unequipped: new Set<ItemId>(),
-    muted: false,
-    feedback: null,
-    focusedSection: null,
-    focusedSlot: 'head',
+    focusedSlot: null,
     activeFanoutSlot: null,
     focusedFanoutIndex: 0,
   };
@@ -77,31 +74,22 @@ export interface InventoryStore extends EquipmentState {
   seedUnequipped: (itemIds: readonly ItemId[]) => void;
   equip: (itemId: ItemId, slot: SlotType) => void;
   unequip: (slot: SlotType) => void;
-  toggleMute: () => void;
-  setFeedback: (feedback: string | null) => void;
-  dismissFeedback: () => void;
-  setFocusedSection: (section: 'equipment' | null) => void;
-  setFocusedSlot: (slot: SlotType) => void;
+  setFocusedSlot: (slot: SlotType | null) => void;
   setActiveFanoutSlot: (slot: SlotType | null) => void;
   setFocusedFanoutIndex: (index: number) => void;
   /** Restores the pristine initial state (tests + reload). */
   reset: () => void;
 }
 
-export const useInventoryStore = create<InventoryStore>()((set, get) => ({
+export const useInventoryStore = create<InventoryStore>()((set) => ({
   ...initialState(),
   seedUnequipped: (itemIds) =>
     set(() => ({
       ...initialState(),
       unequipped: new Set(itemIds),
-      muted: get().muted,
     })),
   equip: (itemId, slot) => set((s) => ({ ...equipTransition(s, itemId, slot) })),
   unequip: (slot) => set((s) => ({ ...unequipTransition(s, slot) })),
-  toggleMute: () => set((s) => ({ muted: !s.muted })),
-  setFeedback: (msg) => set({ feedback: msg }),
-  dismissFeedback: () => set({ feedback: null }),
-  setFocusedSection: (section) => set({ focusedSection: section }),
   setFocusedSlot: (slot) => set({ focusedSlot: slot }),
   setActiveFanoutSlot: (slot) => set({ activeFanoutSlot: slot, focusedFanoutIndex: 0 }),
   setFocusedFanoutIndex: (index) => set({ focusedFanoutIndex: index }),

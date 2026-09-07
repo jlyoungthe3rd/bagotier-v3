@@ -60,10 +60,7 @@ export interface EquipmentState {
   readonly equipped: Readonly<Record<SlotType, ItemId | null>>;
   /** Explicit set of unequipped item IDs for O(1) lookup. */
   readonly unequipped: ReadonlySet<ItemId>;
-  readonly muted: boolean;
-  readonly feedback: string | null;
-  readonly focusedSection: 'equipment' | null;
-  readonly focusedSlot: SlotType;
+  readonly focusedSlot: SlotType | null;
   /** Which equipment slot currently has its fan-out open, if any. */
   readonly activeFanoutSlot: SlotType | null;
   /** Index of the focused item within the active fan-out (Arrow key nav). */

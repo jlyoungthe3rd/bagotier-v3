@@ -1,9 +1,9 @@
-import { useInventoryStore } from '../../store/useInventoryStore';
+import { useAppStore } from '../../store/useAppStore';
 
 /** Accessible global mute control wired to the store (FR-010). */
 export function MuteToggle() {
-  const muted = useInventoryStore((s) => s.muted);
-  const toggleMute = useInventoryStore((s) => s.toggleMute);
+  const muted = useAppStore((s) => s.muted);
+  const toggleMute = useAppStore((s) => s.toggleMute);
 
   return (
     <button

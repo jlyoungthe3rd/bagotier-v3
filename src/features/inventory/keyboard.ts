@@ -1,6 +1,5 @@
 import type { SlotType } from '../../types/domain';
 import { useInventoryStore } from '../../store/useInventoryStore';
-import { SLOT_LABELS } from '../character/FanOut';
 
 export const SLOT_NAV_MAP: Record<
   SlotType,
@@ -86,9 +85,7 @@ export function handleEquipmentKeyDown(
     case 'Escape':
       if (store.activeFanoutSlot !== null) {
         event.preventDefault();
-        const activeSlot = store.activeFanoutSlot;
         store.setActiveFanoutSlot(null);
-        store.setFeedback(`Closed ${SLOT_LABELS[activeSlot]} slot options.`);
       }
       break;
   }

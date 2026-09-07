@@ -8,18 +8,9 @@ describe('keyboard navigation store state & actions (US1-5)', () => {
 
   it('initializes with default values', () => {
     const state = useInventoryStore.getState();
-    expect(state.focusedSection).toBeNull();
-    expect(state.focusedSlot).toBe('head');
+    expect(state.focusedSlot).toBeNull();
     expect(state.activeFanoutSlot).toBeNull();
     expect(state.focusedFanoutIndex).toBe(0);
-  });
-
-  it('sets the focused section correctly', () => {
-    useInventoryStore.getState().setFocusedSection('equipment');
-    expect(useInventoryStore.getState().focusedSection).toBe('equipment');
-
-    useInventoryStore.getState().setFocusedSection(null);
-    expect(useInventoryStore.getState().focusedSection).toBeNull();
   });
 
   it('sets the focused slot correctly', () => {
@@ -40,7 +31,6 @@ describe('keyboard navigation store state & actions (US1-5)', () => {
   });
 
   it('resets keyboard nav state upon reset()', () => {
-    useInventoryStore.getState().setFocusedSection('equipment');
     useInventoryStore.getState().setFocusedSlot('weapon');
     useInventoryStore.getState().setActiveFanoutSlot('weapon');
     useInventoryStore.getState().setFocusedFanoutIndex(2);
@@ -48,8 +38,7 @@ describe('keyboard navigation store state & actions (US1-5)', () => {
     useInventoryStore.getState().reset();
 
     const state = useInventoryStore.getState();
-    expect(state.focusedSection).toBeNull();
-    expect(state.focusedSlot).toBe('head');
+    expect(state.focusedSlot).toBeNull();
     expect(state.activeFanoutSlot).toBeNull();
     expect(state.focusedFanoutIndex).toBe(0);
   });

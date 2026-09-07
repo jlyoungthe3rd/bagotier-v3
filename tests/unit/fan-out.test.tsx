@@ -625,9 +625,6 @@ describe('FanOut component & computeFanPositions', () => {
 
       expect(useInventoryStore.getState().equipped.head).toBe('iron-helm');
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
-      expect(useInventoryStore.getState().feedback).toMatch(
-        /Equipped Iron Helm to Head slot/i,
-      );
       expect(playbackSpy).toHaveBeenCalledWith('equip');
 
       playbackSpy.mockRestore();
@@ -646,15 +643,12 @@ describe('FanOut component & computeFanPositions', () => {
 
       expect(useInventoryStore.getState().equipped.head).toBe('wizard-hat');
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
-      expect(useInventoryStore.getState().feedback).toMatch(
-        /Equipped Wizard Hat to Head slot/i,
-      );
       expect(playbackSpy).toHaveBeenCalledWith('equip');
 
       playbackSpy.mockRestore();
     });
 
-    it('Escape key dismisses the fan-out without equipping, announces to feedback store, and calls onDismiss', async () => {
+    it('Escape key dismisses the fan-out without equipping and calls onDismiss', async () => {
       const user = userEvent.setup();
       const onDismissMock = vi.fn();
       renderFanOut({ onDismiss: onDismissMock });
@@ -665,11 +659,10 @@ describe('FanOut component & computeFanPositions', () => {
 
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
       expect(useInventoryStore.getState().equipped.head).toBeNull();
-      expect(useInventoryStore.getState().feedback).toBe('Closed Head slot options.');
       expect(onDismissMock).toHaveBeenCalledTimes(1);
     });
 
-    it('Tab key closes the active fan-out slot cleanly and announces to feedback store', async () => {
+    it('Tab key closes the active fan-out slot cleanly', async () => {
       const user = userEvent.setup();
       renderFanOut();
 
@@ -678,7 +671,6 @@ describe('FanOut component & computeFanPositions', () => {
       await user.keyboard('{Tab}');
 
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
-      expect(useInventoryStore.getState().feedback).toBe('Closed Head slot options.');
     });
 
     it('Home and End keys jump to first and last items', async () => {

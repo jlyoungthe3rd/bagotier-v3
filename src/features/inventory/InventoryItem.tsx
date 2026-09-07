@@ -5,7 +5,6 @@ import type { ButtonHTMLAttributes } from 'react';
 import { useInventoryStore } from '../../store/useInventoryStore';
 import { useSound } from '../audio/useSound';
 import { handleEquipmentKeyDown } from './keyboard';
-import { SLOT_LABELS } from '../character/FanOut';
 
 interface InventoryItemProps extends Omit<
   ButtonHTMLAttributes<HTMLButtonElement>,
@@ -55,11 +54,10 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
       return elementRef.current;
     });
 
-    const focusedSection = useInventoryStore((s) => s.focusedSection);
     const focusedSlot = useInventoryStore((s) => s.focusedSlot);
     const play = useSound();
 
-    const isActive = focusedSection === 'equipment' && focusedSlot === slot;
+    const isActive = focusedSlot === slot;
 
     useEffect(() => {
       if (isActive) {
@@ -69,15 +67,13 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
       }
     }, [isActive]);
 
-    const isDefaultSlot = focusedSection === null && slot === 'head';
-    const tabIndex =
-      (focusedSection === 'equipment' && focusedSlot === slot) || isDefaultSlot ? 0 : -1;
+    const isDefaultSlot = focusedSlot === null && slot === 'head';
+    const tabIndex = focusedSlot === slot || isDefaultSlot ? 0 : -1;
 
     const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
       buttonProps.onClick?.(e);
       const store = useInventoryStore.getState();
       store.unequip(slot);
-      store.setFeedback(`Unequipped ${item.name} from ${SLOT_LABELS[slot]} slot.`);
       play('unequip');
     };
 
@@ -110,7 +106,6 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
           tooltip.closeFor(item.id, 'hover');
         }}
         onFocus={(e) => {
-          useInventoryStore.getState().setFocusedSection('equipment');
           useInventoryStore.getState().setFocusedSlot(slot);
           tooltip.open(
             item,
@@ -129,9 +124,6 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
             tooltip.dismiss();
             if (isFanoutOpen) {
               event.stopPropagation();
-              useInventoryStore
-                .getState()
-                .setFeedback(`Closed ${SLOT_LABELS[slot]} slot options.`);
               onDismissFanout?.();
             }
           }

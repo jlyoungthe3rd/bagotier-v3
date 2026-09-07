@@ -3,6 +3,7 @@ import { act, screen, fireEvent } from '@testing-library/react';
 import { renderApp } from './dnd-test-utils';
 import { audioEngine } from '../../src/features/audio/useSound';
 import { useInventoryStore } from '../../src/store/useInventoryStore';
+import { useAppStore } from '../../src/store/useAppStore';
 import { toItemId } from '../../src/types/domain';
 
 describe('exactly-once sound playback (US4)', () => {
@@ -13,6 +14,7 @@ describe('exactly-once sound playback (US4)', () => {
   beforeEach(() => {
     playback.mockClear();
     useInventoryStore.getState().reset();
+    useAppStore.getState().setMuted(false);
   });
 
   it('plays equip sound once on clicking a fanned-out item', async () => {
@@ -46,7 +48,7 @@ describe('exactly-once sound playback (US4)', () => {
   it('plays zero sounds when muted (FR-010)', async () => {
     await renderApp();
     act(() => {
-      useInventoryStore.getState().toggleMute();
+      useAppStore.getState().toggleMute();
       useInventoryStore.getState().setActiveFanoutSlot('head');
     });
 

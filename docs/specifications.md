@@ -34,9 +34,9 @@ Mimics the experience of managing a character inventory in a modern RPG/video ga
     3. Unequipping into a full inventory is blocked.
 
 - **User Story 4: Sound Effects for Main Interactions (P3)**
-  Tactile game sounds play for pickup, successful equip, unequip, and invalid drops, governed by a mute toggle.
+  Tactile game sounds play for pickup, successful equip, and unequip, governed by a mute toggle.
   - _Acceptance Criteria_:
-    1. Pickup, equip, unequip, and invalid drop play distinct sounds once.
+    1. Pickup, equip, and unequip play distinct sounds once.
     2. No sounds play when muted.
 
 - **User Story 5: Generated Character Presentation (P3)**
@@ -52,7 +52,7 @@ Mimics the experience of managing a character inventory in a modern RPG/video ga
 - **FR-006**: Update character stats (HP, MP, DEF, STR) dynamically as `base + Σ modifiers`.
 - **FR-007**: Support unequipping items back into the inventory grid.
 - **FR-008**: Support item swapping on occupied slots.
-- **FR-009**: Play distinct sound effects for pickup, equip, unequip, and invalid drop.
+- **FR-009**: Play distinct sound effects for pickup, equip, and unequip.
 - **FR-010**: Provide a user control to mute/unmute sounds.
 - **FR-011**: Prevent stat inconsistencies during rapid interactions (no double-counting).
 - **FR-012**: Cancel drag on invalid target drop or interruption.

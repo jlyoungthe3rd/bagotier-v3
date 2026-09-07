@@ -31,8 +31,6 @@ function pickState() {
   return {
     equipped: s.equipped,
     unequipped: Array.from(s.unequipped),
-    muted: s.muted,
-    feedback: s.feedback,
   };
 }
 
@@ -73,7 +71,8 @@ describe('inventory store contract', () => {
         const slot = SLOT_TYPES[Math.floor(rand() * SLOT_TYPES.length)]!;
         s.unequip(slot);
       } else {
-        s.toggleMute();
+        const slot = SLOT_TYPES[Math.floor(rand() * SLOT_TYPES.length)]!;
+        s.setActiveFanoutSlot(s.activeFanoutSlot === slot ? null : slot);
       }
       assertInvariants();
     }
