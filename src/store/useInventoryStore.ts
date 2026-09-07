@@ -1,4 +1,4 @@
- import { create } from 'zustand';
+import { create } from 'zustand';
 import type { EquipmentState, ItemId, SlotType } from '../types/domain';
 import { SLOT_TYPES } from '../types/domain';
 

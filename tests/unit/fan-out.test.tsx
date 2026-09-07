@@ -17,10 +17,7 @@ import {
   type TooltipPlacement,
 } from '../../src/features/inventory/tooltip';
 import { audioEngine } from '../../src/features/audio/useSound';
-import {
-  registerItemSlotTypes,
-  useInventoryStore,
-} from '../../src/store/useInventoryStore';
+import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { items } from '../../src/mocks/items';
 import type { Item, SlotType } from '../../src/types/domain';
 
@@ -110,7 +107,6 @@ describe('FanOut component & computeFanPositions', () => {
     motionDivCalls.length = 0;
 
     useInventoryStore.getState().reset();
-    registerItemSlotTypes(Object.fromEntries(items.map((i) => [i.id, i.slotType])));
     useInventoryStore.getState().seedUnequipped(items.map((i) => i.id));
     useInventoryStore.getState().setActiveFanoutSlot('head');
   });

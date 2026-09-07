@@ -3,10 +3,7 @@ import { render, screen, act, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createElement } from 'react';
 import { StatPanel } from '../../src/features/character/StatPanel';
-import {
-  registerItemSlotTypes,
-  useInventoryStore,
-} from '../../src/store/useInventoryStore';
+import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { character } from '../../src/mocks/character';
 import { items } from '../../src/mocks/items';
 import { queryKeys } from '../../src/lib/queryKeys';
@@ -38,7 +35,6 @@ vi.mock('framer-motion', async () => {
 });
 
 function setupStoreAndRender() {
-  registerItemSlotTypes(Object.fromEntries(items.map((i) => [i.id, i.slotType])));
   useInventoryStore.getState().reset();
   useInventoryStore.getState().seedUnequipped(items.map((i) => i.id));
 

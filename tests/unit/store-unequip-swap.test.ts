@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  registerItemSlotTypes,
-  useInventoryStore,
-} from '../../src/store/useInventoryStore';
+import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { toItemId } from '../../src/types/domain';
 
 const helmA = toItemId('helm-a');
@@ -11,7 +8,6 @@ const sword = toItemId('sword-a');
 
 describe('store unequip transition (US3 / FR-007)', () => {
   beforeEach(() => {
-    registerItemSlotTypes({ [helmA]: 'head', [helmB]: 'head', [sword]: 'weapon' });
     useInventoryStore.getState().reset();
     useInventoryStore.getState().seedUnequipped([helmA, helmB, sword]);
     useInventoryStore.getState().equip(helmA, 'head');
@@ -33,7 +29,6 @@ describe('store unequip transition (US3 / FR-007)', () => {
 
 describe('store equip replacement (US3 / FR-008)', () => {
   beforeEach(() => {
-    registerItemSlotTypes({ [helmA]: 'head', [helmB]: 'head', [sword]: 'weapon' });
     useInventoryStore.getState().reset();
     useInventoryStore.getState().seedUnequipped([helmA, helmB, sword]);
   });

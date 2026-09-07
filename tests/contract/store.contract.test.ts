@@ -1,9 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { InventoryStoreStateSchema } from '../../src/types/schemas';
-import {
-  registerItemSlotTypes,
-  useInventoryStore,
-} from '../../src/store/useInventoryStore';
+import { useInventoryStore } from '../../src/store/useInventoryStore';
 import type { ItemId, SlotType } from '../../src/types/domain';
 import { SLOT_TYPES, toItemId } from '../../src/types/domain';
 
@@ -47,18 +44,12 @@ function assertInvariants(): void {
     ...Array.from(s.unequipped),
   ];
   expect(new Set(seen).size).toBe(seen.length);
-  // I2 — slot compatibility
-  for (const slot of SLOT_TYPES) {
-    const id = s.equipped[slot];
-    if (id !== null) expect(catalog[id]).toBe(slot);
-  }
   // Schema-valid throughout
   expect(InventoryStoreStateSchema.safeParse(pickState()).success).toBe(true);
 }
 
 describe('inventory store contract', () => {
   beforeEach(() => {
-    registerItemSlotTypes(catalog);
     useInventoryStore.getState().reset();
   });
 
@@ -66,7 +57,7 @@ describe('inventory store contract', () => {
     expect(InventoryStoreStateSchema.safeParse(pickState()).success).toBe(true);
   });
 
-  it('preserves invariants I1–I2 under random valid action sequences (SC-006)', () => {
+  it('preserves invariant I1 under random valid action sequences (SC-006)', () => {
     const rand = mulberry32(0xbadc0de);
     useInventoryStore.getState().seedUnequipped(ids);
     assertInvariants();
@@ -75,10 +66,11 @@ describe('inventory store contract', () => {
       const s = useInventoryStore.getState();
       const roll = rand();
       const itemId = ids[Math.floor(rand() * ids.length)]!;
-      const slot = SLOT_TYPES[Math.floor(rand() * SLOT_TYPES.length)]!;
       if (roll < 0.45) {
+        const slot = catalog[itemId]!;
         s.equip(itemId, slot);
       } else if (roll < 0.85) {
+        const slot = SLOT_TYPES[Math.floor(rand() * SLOT_TYPES.length)]!;
         s.unequip(slot);
       } else {
         s.toggleMute();

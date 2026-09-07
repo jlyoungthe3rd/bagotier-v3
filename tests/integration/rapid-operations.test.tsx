@@ -1,8 +1,5 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import {
-  registerItemSlotTypes,
-  useInventoryStore,
-} from '../../src/store/useInventoryStore';
+import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { computeEffectiveStats } from '../../src/features/character/stats';
 import { items } from '../../src/mocks/items';
 import { character } from '../../src/mocks/character';
@@ -30,7 +27,6 @@ function resolveEquipped(
 describe('rapid successive operations (Polish)', () => {
   beforeEach(() => {
     useInventoryStore.getState().reset();
-    registerItemSlotTypes(Object.fromEntries(items.map((i) => [i.id, i.slotType])));
     useInventoryStore.getState().seedUnequipped(items.map((i) => i.id));
   });
 

@@ -5,10 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EquipmentSlot } from '../../src/features/character/EquipmentSlot';
 import { ItemTooltipProvider } from '../../src/features/inventory/tooltip';
 import { audioEngine } from '../../src/features/audio/useSound';
-import {
-  registerItemSlotTypes,
-  useInventoryStore,
-} from '../../src/store/useInventoryStore';
+import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { items } from '../../src/mocks/items';
 import { resetSlotHoverManager } from '../../src/features/character/slotHoverManager';
 import type { ItemId, SlotType } from '../../src/types/domain';
@@ -32,7 +29,6 @@ describe('EquipmentSlot component', () => {
   beforeEach(() => {
     resetSlotHoverManager();
     useInventoryStore.getState().reset();
-    registerItemSlotTypes(Object.fromEntries(items.map((i) => [i.id, i.slotType])));
     useInventoryStore.getState().seedUnequipped(items.map((i) => i.id));
   });
 

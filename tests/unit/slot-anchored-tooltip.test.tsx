@@ -5,10 +5,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EquipmentSlot } from '../../src/features/character/EquipmentSlot';
 import { FanOut } from '../../src/features/character/FanOut';
 import { InventoryItem } from '../../src/features/inventory/InventoryItem';
-import {
-  registerItemSlotTypes,
-  useInventoryStore,
-} from '../../src/store/useInventoryStore';
+import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { items } from '../../src/mocks/items';
 import { resetSlotHoverManager } from '../../src/features/character/slotHoverManager';
 import type { ItemId, SlotType } from '../../src/types/domain';
@@ -64,7 +61,6 @@ describe('Slot-anchored directional tooltip positioning', () => {
     vi.clearAllMocks();
     resetSlotHoverManager();
     useInventoryStore.getState().reset();
-    registerItemSlotTypes(Object.fromEntries(items.map((i) => [i.id, i.slotType])));
     useInventoryStore.getState().seedUnequipped(items.map((i) => i.id));
   });
 
