@@ -62,10 +62,9 @@ Components resolve IDs → full items via a `useItem(id)` selector on the React 
 |                                |                                                                                           |
 | ------------------------------ | ----------------------------------------------------------------------------------------- |
 | **I1** Single location         | Every `ItemId` lives in exactly one place: slot, unequipped set, or catalog               |
-| **I2** Slot compatibility      | `equipped[slot] = id` requires `catalog[id].slotType === slot`                            |
-| **I3** Infallible displacement | Unequipping moves to unequipped set; equipping onto occupied slot displaces existing item |
-| **I4** Derived stats only      | Stats computed on the fly — cannot double-count modifiers                                 |
-| **I5** No entity copies        | Zustand holds only IDs and primitives; enforced by a contract test                        |
+| **I2** Infallible displacement | Unequipping moves to unequipped set; equipping onto occupied slot displaces existing item |
+| **I3** Derived stats only      | Stats computed on the fly — cannot double-count modifiers                                 |
+| **I4** No entity copies        | Zustand holds only IDs and primitives; enforced by a contract test                        |
 
 ### Notable implementation choices
 

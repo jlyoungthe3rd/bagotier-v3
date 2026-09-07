@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useInventoryQuery } from './features/inventory/useInventoryQuery';
 import { useCharacterQuery } from './features/character/useCharacterQuery';
-import { registerItemSlotTypes, useInventoryStore } from './store/useInventoryStore';
+import { useInventoryStore } from './store/useInventoryStore';
 import { ItemTooltipProvider } from './features/inventory/tooltip';
 import { CharacterView } from './features/character/CharacterView';
 import { StatPanel } from './features/character/StatPanel';
@@ -59,7 +59,6 @@ function useSeedStore(items: readonly Item[] | undefined) {
   const seedUnequipped = useInventoryStore((s) => s.seedUnequipped);
   useEffect(() => {
     if (items === undefined) return;
-    registerItemSlotTypes(Object.fromEntries(items.map((i) => [i.id, i.slotType])));
     seedUnequipped(items.map((i) => i.id));
   }, [items, seedUnequipped]);
 }

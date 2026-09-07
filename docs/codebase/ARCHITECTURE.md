@@ -9,7 +9,7 @@
 - Primary constraints:
   - Client-Only Execution: Zero external backend services; character and item catalog data are provided via simulated asynchronous mock APIs.
   - Strict State Ownership Boundaries: React Query owns item entity definitions and base character stats; Zustand owns equipped slot mappings, the unequipped item ID set, active fan-out state, mute preferences, and navigation focus.
-  - Formal Invariant Enforcement: Governed by declared invariants (I1 Single location in slot or unequipped set, I2 Slot compatibility, I3 Infallible item displacement/unequip, I4 Dynamic derived stats only, I5 No entity copies in store).
+  - Formal Invariant Enforcement: Governed by declared invariants (I1 Single location in slot or unequipped set, I2 Infallible item displacement/unequip, I3 Dynamic derived stats only, I4 No entity copies in store).
 
 ### 2) System Flow
 

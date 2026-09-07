@@ -1,22 +1,6 @@
-import { create } from 'zustand';
+ import { create } from 'zustand';
 import type { EquipmentState, ItemId, SlotType } from '../types/domain';
 import { SLOT_TYPES } from '../types/domain';
-
-/**
- * Slot-type registry used only to validate equip/swap compatibility
- * (invariant I2). Holds primitive slot names keyed by ID — never Item
- * entities (invariant I5). Registered from React Query data at load.
- */
-let slotTypeIndex: Readonly<Record<string, SlotType>> = {};
-
-/** Registers the ID → slotType mapping used for compatibility checks. */
-export function registerItemSlotTypes(index: Readonly<Record<string, SlotType>>): void {
-  slotTypeIndex = index;
-}
-
-function slotTypeOf(itemId: ItemId): SlotType | undefined {
-  return slotTypeIndex[itemId];
-}
 
 function emptyEquipped(): Record<SlotType, ItemId | null> {
   return Object.fromEntries(SLOT_TYPES.map((s) => [s, null])) as Record<
@@ -43,7 +27,7 @@ function initialState(): EquipmentState {
  * ------------------------------------------------------------------ */
 
 /**
- * Equips an item from the unequipped set into a type-matching slot.
+ * Equips an item from the unequipped set into the specified slot.
  * If the slot is already occupied, the displaced item is returned to the unequipped set.
  */
 export function equipTransition(
@@ -52,7 +36,6 @@ export function equipTransition(
   slot: SlotType,
 ): EquipmentState {
   if (!state.unequipped.has(itemId)) return state; // item not available
-  if (slotTypeOf(itemId) !== slot) return state; // I2: type mismatch no-ops
 
   const nextUnequipped = new Set(state.unequipped);
   nextUnequipped.delete(itemId);

@@ -56,7 +56,7 @@ _Executes ONLY after explicit user confirmation in Phase 2._
 
 - **Merge Updates**: Commit and merge each sub-agent worktree branch back into `feature/<feature-name>`.
 - **Review Prompt, Code Review & Local Dev Server**:
-  - Ensure local dev server is running (`npm run dev`) and launch chrome and point to the local dev server so the user can inspect the state of the application.
+  - Ensure local dev server is running (`npm run dev`) and connect to /browser instance. If no /browser instance exist then create a new one and point to the local dev server so the user can inspect the state of the application.
   - Present the code diff (`git diff main...feature/<feature-name>`) and summary of changes for user code review.
   - Provide direct links to sub-agent reports (e.g. accessibility `report.md`, test summaries, styling changes).
   - Prompt the user to:
