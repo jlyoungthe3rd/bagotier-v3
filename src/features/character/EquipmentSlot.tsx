@@ -48,6 +48,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const slotContainerRef = useRef<HTMLDivElement | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissedRef = useRef(false);
 
   // Tooltip appears on the opposite side of the fan-out direction
   const tooltipPlacement: TooltipPlacement =
@@ -84,40 +85,6 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
       if (leaveTimerRef.current !== null) clearTimeout(leaveTimerRef.current);
     };
   }, []);
-
-  useEffect(() => {
-    if (isActive && equippedItem === undefined) {
-      if (buttonRef.current && document.activeElement !== buttonRef.current) {
-        buttonRef.current.focus();
-      }
-    }
-  }, [isActive, equippedItem]);
-
-  // Restore focus to slot button or equipped item when fan-out closes while slot is active
-  const prevFanoutOpenRef = useRef(isFanoutOpen);
-  useEffect(() => {
-    if (prevFanoutOpenRef.current && !isFanoutOpen && isActive) {
-      const target = buttonRef.current ?? equippedButtonRef.current;
-      if (target && document.activeElement !== target) {
-        target.focus();
-      }
-    }
-    prevFanoutOpenRef.current = isFanoutOpen;
-  }, [isFanoutOpen, isActive]);
-
-  // Open fan-out when empty slot transitions to active (keyboard focus)
-  const prevActiveRef = useRef(isActive);
-  useEffect(() => {
-    if (
-      !prevActiveRef.current &&
-      isActive &&
-      equippedItem === undefined &&
-      fanoutItems.length > 0
-    ) {
-      openFanout();
-    }
-    prevActiveRef.current = isActive;
-  }, [isActive, equippedItem, openFanout, fanoutItems.length]);
 
   const isDefaultSlot = focusedSlot === null && slot === 'head';
   const tabIndex = focusedSlot === slot || isDefaultSlot ? 0 : -1;
@@ -278,13 +245,23 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               onFocus={() => {
                 useInventoryStore.getState().setFocusedSlot(slot);
                 tooltip.dismiss();
+                if (fanoutItems.length > 0 && !dismissedRef.current) {
+                  openFanout();
+                }
+              }}
+              onBlur={() => {
+                dismissedRef.current = false;
               }}
               onClick={() => {
+                dismissedRef.current = false;
                 if (fanoutItems.length > 0 && !isFanoutOpen) {
                   openFanout();
                 }
               }}
               onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  dismissedRef.current = true;
+                }
                 if (
                   (event.key === 'Enter' || event.key === ' ') &&
                   isFanoutOpen &&
@@ -307,6 +284,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                   fanoutItems.length > 0
                 ) {
                   event.preventDefault();
+                  dismissedRef.current = false;
                   openFanout();
                   return;
                 }
@@ -336,6 +314,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
           slotElement={slotContainerRef.current}
           tooltipPlacement={tooltipPlacement}
           onDismiss={() => {
+            dismissedRef.current = true;
             const target = buttonRef.current ?? equippedButtonRef.current;
             target?.focus();
           }}

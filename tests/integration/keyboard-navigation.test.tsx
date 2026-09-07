@@ -84,4 +84,55 @@ describe('keyboard navigation integration flows (US1-5)', () => {
 
     playbackSpy.mockRestore();
   });
+
+  it('uses head as initial roving tabindex entry stop when focusedSlot is null', async () => {
+    await renderApp();
+
+    expect(useInventoryStore.getState().focusedSlot).toBeNull();
+
+    const headSlotBtn = screen.getByTestId('slot-empty-button-head');
+    const bodySlotBtn = screen.getByTestId('slot-empty-button-body');
+    const legsSlotBtn = screen.getByTestId('slot-empty-button-legs');
+
+    expect(headSlotBtn).toHaveAttribute('tabindex', '0');
+    expect(bodySlotBtn).toHaveAttribute('tabindex', '-1');
+    expect(legsSlotBtn).toHaveAttribute('tabindex', '-1');
+  });
+
+  it('mouse hover over a slot syncs focusedSlot without stealing DOM focus', async () => {
+    const user = userEvent.setup();
+    await renderApp();
+
+    expect(useInventoryStore.getState().focusedSlot).toBeNull();
+
+    const bodySlot = screen.getByTestId('slot-body');
+    const initialActiveElement = document.activeElement;
+
+    await user.hover(bodySlot);
+
+    expect(useInventoryStore.getState().focusedSlot).toBe('body');
+    expect(document.activeElement).toBe(initialActiveElement);
+  });
+
+  it('navigates between slots using arrow keys', async () => {
+    const user = userEvent.setup();
+    await renderApp();
+
+    const headEmptySlot = screen.getByTestId('slot-empty-button-head');
+    act(() => {
+      headEmptySlot.focus();
+    });
+
+    // Close fan-out first so ArrowDown navigates slots instead of fan-out items
+    await user.keyboard('{Escape}');
+    expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
+    expect(headEmptySlot).toHaveFocus();
+
+    await user.keyboard('{ArrowDown}');
+
+    const fannedItem = screen.getByTestId('fanout-item-steel-cuirass');
+    expect(fannedItem).toHaveFocus();
+    expect(useInventoryStore.getState().focusedSlot).toBe('body');
+    expect(useInventoryStore.getState().activeFanoutSlot).toBe('body');
+  });
 });
