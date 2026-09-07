@@ -80,6 +80,12 @@ export function handleEquipmentKeyDown(
       event.preventDefault();
       const nextSlot = SLOT_NAV_MAP[slot][event.key];
       store.setFocusedSlot(nextSlot);
+      if (typeof document !== 'undefined') {
+        const nextButton = document.querySelector<HTMLButtonElement>(
+          `[data-testid="slot-${nextSlot}"] button`,
+        );
+        nextButton?.focus();
+      }
       break;
     }
     case 'Escape':
