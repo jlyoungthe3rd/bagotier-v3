@@ -48,6 +48,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const slotContainerRef = useRef<HTMLDivElement | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dismissedRef = useRef(false);
 
   // Tooltip appears on the opposite side of the fan-out direction
   const tooltipPlacement: TooltipPlacement =
@@ -136,7 +137,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   // Open fan-out when empty slot transitions to active WITH DOM focus (keyboard navigation/tab)
   const prevActiveRef = useRef(isActive);
   useEffect(() => {
-    if (isHoveringRef.current) {
+    if (isHoveringRef.current || dismissedRef.current) {
       prevActiveRef.current = isActive;
       return;
     }
@@ -153,7 +154,6 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     }
     prevActiveRef.current = isActive;
   }, [isActive, equippedItem, openFanout, fanoutItems.length]);
-
   const isDefaultSlot = focusedSlot === null && slot === 'head';
   const tabIndex = focusedSlot === slot || isDefaultSlot ? 0 : -1;
 
@@ -342,13 +342,23 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                 isHoveringRef.current = false;
                 useInventoryStore.getState().setFocusedSlot(slot);
                 tooltip.dismiss();
+                if (fanoutItems.length > 0 && !dismissedRef.current) {
+                  openFanout();
+                }
+              }}
+              onBlur={() => {
+                dismissedRef.current = false;
               }}
               onClick={() => {
+                dismissedRef.current = false;
                 if (fanoutItems.length > 0 && !isFanoutOpen) {
                   openFanout();
                 }
               }}
               onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  dismissedRef.current = true;
+                }
                 if (
                   (event.key === 'Enter' || event.key === ' ') &&
                   isFanoutOpen &&
@@ -371,6 +381,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                   fanoutItems.length > 0
                 ) {
                   event.preventDefault();
+                  dismissedRef.current = false;
                   openFanout();
                   return;
                 }
@@ -400,6 +411,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
           slotElement={slotContainerRef.current}
           tooltipPlacement={tooltipPlacement}
           onDismiss={() => {
+            dismissedRef.current = true;
             const target = buttonRef.current ?? equippedButtonRef.current;
             target?.focus();
           }}
