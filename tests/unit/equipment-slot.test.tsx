@@ -57,6 +57,46 @@ describe('EquipmentSlot component', () => {
       expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
       expect(screen.getByRole('listbox')).toBeInTheDocument();
     });
+
+    it('opens fanout when Enter is pressed on a closed empty slot button', async () => {
+      const user = userEvent.setup();
+      renderEquipmentSlot('head', null);
+
+      const emptyBtn = screen.getByTestId('slot-empty-button-head');
+      act(() => {
+        emptyBtn.focus();
+      });
+      // Close fanout via Escape
+      await user.keyboard('{Escape}');
+      expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
+      expect(emptyBtn).toHaveAttribute(
+        'aria-description',
+        expect.stringContaining('open options'),
+      );
+
+      // Press Enter to reopen
+      await user.keyboard('{Enter}');
+      expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
+      expect(emptyBtn).toHaveAttribute(
+        'aria-description',
+        expect.stringContaining('equip'),
+      );
+    });
+
+    it('opens fanout when clicked on a closed empty slot button', async () => {
+      const user = userEvent.setup();
+      renderEquipmentSlot('head', null);
+
+      const emptyBtn = screen.getByTestId('slot-empty-button-head');
+      act(() => {
+        emptyBtn.focus();
+      });
+      await user.keyboard('{Escape}');
+      expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
+
+      await user.click(emptyBtn);
+      expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
+    });
   });
 
   describe('hover delay triggering fanout', () => {

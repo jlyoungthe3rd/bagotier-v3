@@ -272,7 +272,9 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
               }
               aria-description={
                 fanoutItems.length > 0
-                  ? `${String(fanoutItems.length)} items available. Press Enter or Space to equip.`
+                  ? isFanoutOpen
+                    ? `${String(fanoutItems.length)} items available. Press Enter or Space to equip.`
+                    : `${String(fanoutItems.length)} items available. Press Enter or Space to open options.`
                   : undefined
               }
               className="flex h-full w-full items-center justify-center bg-transparent transition-colors outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid motion-reduce:transition-none"
@@ -280,6 +282,11 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                 useInventoryStore.getState().setFocusedSection('equipment');
                 useInventoryStore.getState().setFocusedSlot(slot);
                 tooltip.dismiss();
+              }}
+              onClick={() => {
+                if (fanoutItems.length > 0 && !isFanoutOpen) {
+                  openFanout();
+                }
               }}
               onKeyDown={(event) => {
                 if (
@@ -299,6 +306,15 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                     );
                     play('equip');
                   }
+                  return;
+                }
+                if (
+                  (event.key === 'Enter' || event.key === ' ') &&
+                  !isFanoutOpen &&
+                  fanoutItems.length > 0
+                ) {
+                  event.preventDefault();
+                  openFanout();
                   return;
                 }
                 handleEquipmentKeyDown(event, slot, fanoutItems.length);
