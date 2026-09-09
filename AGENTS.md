@@ -18,9 +18,7 @@
 
 ### Phase 2: Local App Review & Iteration Loop
 
-- **Local Preview**: Launch local dev server (`npm run dev`) and open a browser using /browser that points to the local dev server.
-- **Manual Verifican**: Display a list of functionality changes for user to verify manually.
-- **Interactive Iteration Loop**: Keep the dev server active and perform any requested adjustments to logic/markup iteratively until satisfied.
+- **Local Preview**: Launch local dev server (`npm run dev`) and open a browser using /browser that points to the local dev server to allow user to manually test changes.
 - **Explicit Approval Gate**: Prompt the user via the `ask_question` interactive tool to explicitly approve advancing to Phase 3:
   - _Proceed to Phase 3_ (Staging, Feature Branch & Sub-agents).
   - _Make further core changes_.
@@ -35,7 +33,6 @@ _Executes ONLY after explicit user confirmation in Phase 2._
   - Stage changes: `git add .`
   - Commit to new feature branch: `git checkout -b feature/<feature-name>` & `git commit -m "feat: core implementation"`
   - Push to remote: `git push -u origin feature/<feature-name>`
-  - **No PR Creation**: Do NOT create a GitHub pull request (`gh pr create`). All review and merging will happen directly and locally into `main` after Phase 4 sub-agent checks and Phase 5 review.
 
 ---
 
