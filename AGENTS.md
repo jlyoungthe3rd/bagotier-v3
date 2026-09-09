@@ -18,7 +18,8 @@
 
 ### Phase 2: Local App Review & Iteration Loop
 
-- **Local Preview**: Launch local dev server (`npm run dev`) and open a browser using /browser that points to the local dev server to allow user to manually test changes.
+- **Local Preview**: Launch local dev server (`npm run dev`)
+- **Open Browser**: /browser Open point to local dev server to allow user to manually test changes.
 - **Explicit Approval Gate**: Prompt the user via the `ask_question` interactive tool to explicitly approve advancing to Phase 3:
   - _Proceed to Phase 3_ (Staging, Feature Branch & Sub-agents).
   - _Make further core changes_.
