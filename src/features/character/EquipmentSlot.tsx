@@ -24,6 +24,9 @@ const SLOT_ICONS: Readonly<Record<SlotType, string>> = {
 /** Grace period for mouse leaving slot before closing fan-out (ms). */
 const FANOUT_LEAVE_GRACE = 200;
 
+/** Delay before item tooltip opens on mouse hover (ms). */
+const TOOLTIP_HOVER_DELAY = 200;
+
 interface EquipmentSlotProps {
   readonly slot: SlotType;
   readonly itemId: ItemId | null;
@@ -48,6 +51,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const slotContainerRef = useRef<HTMLDivElement | null>(null);
   const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const leaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const tooltipTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dismissedRef = useRef(false);
 
   // Tooltip appears on the opposite side of the fan-out direction
@@ -83,6 +87,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     return () => {
       if (hoverTimerRef.current !== null) clearTimeout(hoverTimerRef.current);
       if (leaveTimerRef.current !== null) clearTimeout(leaveTimerRef.current);
+      if (tooltipTimerRef.current !== null) clearTimeout(tooltipTimerRef.current);
     };
   }, []);
 
@@ -120,6 +125,20 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
       clearTimeout(leaveTimerRef.current);
       leaveTimerRef.current = null;
     }
+
+    // Cancel any pending tooltip timer
+    if (tooltipTimerRef.current !== null) {
+      clearTimeout(tooltipTimerRef.current);
+      tooltipTimerRef.current = null;
+    }
+
+    // Delay opening tooltip on hover
+    if (equippedItem !== undefined) {
+      tooltipTimerRef.current = setTimeout(() => {
+        tooltip.open(equippedItem, 'hover', slotContainerRef.current, tooltipPlacement);
+      }, TOOLTIP_HOVER_DELAY);
+    }
+
     // If the fan-out for this slot is already open, do not re-open or re-animate
     if (useInventoryStore.getState().activeFanoutSlot === slot) {
       return;
@@ -138,6 +157,14 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
     if (hoverTimerRef.current !== null) {
       clearTimeout(hoverTimerRef.current);
       hoverTimerRef.current = null;
+    }
+    // Cancel tooltip timer if still pending
+    if (tooltipTimerRef.current !== null) {
+      clearTimeout(tooltipTimerRef.current);
+      tooltipTimerRef.current = null;
+    }
+    if (equippedItem !== undefined) {
+      tooltip.closeFor(equippedItem.id, 'hover');
     }
     // If moving into child elements (like fanned items), do not close
     const related = e.relatedTarget;
@@ -262,6 +289,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                 hasFanout={fanoutItems.length > 0}
                 isFanoutOpen={isFanoutOpen}
                 onDismissFanout={closeFanout}
+                disableHoverTooltip
               />
             </motion.div>
           ) : (

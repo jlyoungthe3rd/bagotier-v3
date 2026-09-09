@@ -19,7 +19,7 @@
 ### Phase 2: Local App Review & Iteration Loop
 
 - **Local Preview**: Launch local dev server (`npm run dev`) and open a browser using /browser that points to the local dev server.
-- **Manual Verifican**: Show a list of things for user to verify manually in the local preview.
+- **Manual Verifican**: Display a list of functionality changes for user to verify manually.
 - **Interactive Iteration Loop**: Keep the dev server active and perform any requested adjustments to logic/markup iteratively until satisfied.
 - **Explicit Approval Gate**: Prompt the user via the `ask_question` interactive tool to explicitly approve advancing to Phase 3:
   - _Proceed to Phase 3_ (Staging, Feature Branch & Sub-agents).
@@ -58,7 +58,7 @@ _Executes ONLY after explicit user confirmation in Phase 2._
 
 - **Merge Updates**: Commit and merge each sub-agent worktree branch back into `feature/<feature-name>`.
 - **Review Prompt, Code Review & Local Dev Server**:
-  - Ensure local dev server is running (`npm run dev`) and connect to /browser instance. If no /browser instance exist then create a new one and point to the local dev server so the user can inspect the state of the application.
+  - Ensure local dev server is running (`npm run dev`) and connect to previously launched browser instance. If no /browser instance exist then create a new one and point to the local dev server so the user can inspect the application.
   - Present the code diff (`git diff main...feature/<feature-name>`) and summary of changes for user code review.
   - Provide direct links to sub-agent reports (e.g. accessibility `report.md`, test summaries, styling changes).
   - Prompt the user to:
@@ -80,3 +80,5 @@ _Executes ONLY after explicit user confirmation in Phase 2._
 - **Worktree Pruning & Cleanup**:
   - Remove and prune Git worktrees (`git worktree remove .worktrees/test`, `git worktree remove .worktrees/a11y`, `git worktree remove .worktrees/styling` and `git worktree prune`).
   - Delete the feature branch locally (`git branch -d feature/<feature-name>`) and on remote (`git push origin --delete feature/<feature-name>`).
+- **Close Dev Server**:
+  - Close any dev servers that were launched

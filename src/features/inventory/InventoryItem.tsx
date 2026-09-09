@@ -17,6 +17,7 @@ interface InventoryItemProps extends Omit<
   readonly hasFanout?: boolean;
   readonly isFanoutOpen?: boolean;
   readonly onDismissFanout?: () => void;
+  readonly disableHoverTooltip?: boolean;
 }
 
 const FALLBACK_ICON = '◻️';
@@ -39,6 +40,7 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
       hasFanout,
       isFanoutOpen,
       onDismissFanout,
+      disableHoverTooltip = false,
       ...buttonProps
     },
     forwardedRef,
@@ -84,16 +86,22 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
             : 'Equipped item. Press Enter or Space to unequip.'
         }
         className="flex h-full w-full items-center justify-center bg-surface-raised/80 p-1 text-ink transition-colors outline-offset-2 hover:bg-surface-raised focus-visible:outline focus-visible:outline-2 focus-visible:outline-slot-valid motion-reduce:transition-none"
-        onMouseEnter={() => {
-          tooltip.open(
-            item,
-            'hover',
-            slotElement ?? elementRef.current,
-            tooltipPlacement,
-          );
+        onMouseEnter={(e) => {
+          if (!disableHoverTooltip) {
+            tooltip.open(
+              item,
+              'hover',
+              slotElement ?? elementRef.current,
+              tooltipPlacement,
+            );
+          }
+          buttonProps.onMouseEnter?.(e);
         }}
-        onMouseLeave={() => {
-          tooltip.closeFor(item.id, 'hover');
+        onMouseLeave={(e) => {
+          if (!disableHoverTooltip) {
+            tooltip.closeFor(item.id, 'hover');
+          }
+          buttonProps.onMouseLeave?.(e);
         }}
         onFocus={(e) => {
           useInventoryStore.getState().setFocusedSlot(slot);
