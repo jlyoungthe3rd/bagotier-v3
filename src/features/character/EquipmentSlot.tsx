@@ -398,6 +398,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
           }}
           onMouseEnter={cancelLeaveTimer}
           onMouseLeave={startLeaveTimer}
+          skipInitialFocus={isHoveringRef.current}
         />
       )}
       <span

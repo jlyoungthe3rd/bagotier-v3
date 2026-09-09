@@ -38,10 +38,11 @@ describe('item tooltip UI contract', () => {
     await user.hover(screen.getByTestId('item-iron-helm'));
     await waitForTooltip();
     await user.hover(screen.getByTestId('item-steel-cuirass'));
+    const tooltip = await waitForTooltip();
 
     const tooltips = screen.getAllByRole('tooltip');
     expect(tooltips).toHaveLength(1);
-    expect(tooltips[0]).toHaveTextContent('Steel Cuirass');
+    expect(tooltip).toHaveTextContent('Steel Cuirass');
 
     await user.unhover(screen.getByTestId('item-steel-cuirass'));
     await waitForTooltipToClose();

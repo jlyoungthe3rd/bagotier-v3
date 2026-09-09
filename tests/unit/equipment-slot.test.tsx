@@ -301,4 +301,90 @@ describe('EquipmentSlot component', () => {
       expect(tooltip.getAttribute('data-placement')).toBe('right');
     });
   });
+
+  describe('tooltip hover delay behavior on equipped slot', () => {
+    it('does not display tooltip before 200ms delay expires on mouse hover', () => {
+      vi.useFakeTimers();
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+      renderEquipmentSlot('head', 'iron-helm' as never);
+
+      const slotElement = screen.getByTestId('slot-head');
+      fireEvent.mouseEnter(slotElement);
+
+      act(() => {
+        vi.advanceTimersByTime(150);
+      });
+      expect(screen.queryByRole('tooltip')).toBeNull();
+
+      vi.useRealTimers();
+    });
+
+    it('displays tooltip after 200ms hover delay', () => {
+      vi.useFakeTimers();
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+      renderEquipmentSlot('head', 'iron-helm' as never);
+
+      const slotElement = screen.getByTestId('slot-head');
+      fireEvent.mouseEnter(slotElement);
+
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Iron Helm');
+
+      vi.useRealTimers();
+    });
+
+    it('cancels tooltip timer if mouse leaves before 200ms delay', () => {
+      vi.useFakeTimers();
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+      renderEquipmentSlot('head', 'iron-helm' as never);
+
+      const slotElement = screen.getByTestId('slot-head');
+      fireEvent.mouseEnter(slotElement);
+
+      act(() => {
+        vi.advanceTimersByTime(100);
+      });
+      fireEvent.mouseLeave(slotElement);
+
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(screen.queryByRole('tooltip')).toBeNull();
+
+      vi.useRealTimers();
+    });
+
+    it('closes tooltip when mouse leaves slot after it opened', () => {
+      vi.useFakeTimers();
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+      renderEquipmentSlot('head', 'iron-helm' as never);
+
+      const slotElement = screen.getByTestId('slot-head');
+      fireEvent.mouseEnter(slotElement);
+
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Iron Helm');
+
+      fireEvent.mouseLeave(slotElement);
+      expect(screen.queryByRole('tooltip')).toBeNull();
+
+      vi.useRealTimers();
+    });
+
+    it('displays tooltip immediately on keyboard focus without delay', () => {
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+      renderEquipmentSlot('head', 'iron-helm' as never);
+
+      const itemButton = screen.getByTestId('item-iron-helm');
+      act(() => {
+        itemButton.focus();
+      });
+
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Iron Helm');
+    });
+  });
 });

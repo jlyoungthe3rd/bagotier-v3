@@ -1,4 +1,4 @@
-import { act, render, screen } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -79,7 +79,9 @@ describe('Slot-anchored directional tooltip positioning', () => {
 
       await user.hover(itemButton);
 
-      expect(mockOpen).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(mockOpen).toHaveBeenCalledTimes(1);
+      });
       expect(mockOpen).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'bronze-sword' }),
         'hover',
@@ -105,7 +107,9 @@ describe('Slot-anchored directional tooltip positioning', () => {
 
       await user.hover(itemButton);
 
-      expect(mockOpen).toHaveBeenCalledTimes(1);
+      await waitFor(() => {
+        expect(mockOpen).toHaveBeenCalledTimes(1);
+      });
       expect(mockOpen).toHaveBeenCalledWith(
         expect.objectContaining({ id: 'iron-helm' }),
         'hover',

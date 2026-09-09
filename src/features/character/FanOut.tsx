@@ -109,6 +109,7 @@ interface FanOutProps {
   readonly onDismiss?: () => void;
   readonly onMouseEnter?: () => void;
   readonly onMouseLeave?: () => void;
+  readonly skipInitialFocus?: boolean;
 }
 
 /**
@@ -125,6 +126,7 @@ export function FanOut({
   onDismiss,
   onMouseEnter: onMouseEnterProp,
   onMouseLeave: onMouseLeaveProp,
+  skipInitialFocus = false,
 }: FanOutProps) {
   const tooltip = useItemTooltip();
   const play = useSound();
@@ -191,8 +193,15 @@ export function FanOut({
     setPositions(clamped);
   }, [basePositions, isMobile]);
 
-  // Focus the active fan-out item when index changes or on mount
+  const isOpenedViaHoverRef = useRef(skipInitialFocus);
+  const prevIndexRef = useRef(focusedFanoutIndex);
+  // Focus the active fan-out item when index changes via keyboard navigation,
+  // or on mount if opened via keyboard.
   useEffect(() => {
+    if (isOpenedViaHoverRef.current && prevIndexRef.current === focusedFanoutIndex) {
+      return;
+    }
+    prevIndexRef.current = focusedFanoutIndex;
     const el = itemRefs.current[focusedFanoutIndex];
     if (el && document.activeElement !== el) {
       el.focus();
