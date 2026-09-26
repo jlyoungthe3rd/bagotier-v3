@@ -723,6 +723,58 @@ describe('FanOut component & computeFanPositions', () => {
       expect(screen.queryByRole('tooltip')).toBeNull();
     });
 
+    it('dismisses tooltip when clicking an item to equip', async () => {
+      const user = userEvent.setup();
+      renderFanOut();
+
+      const itemBtn = screen.getByTestId('fanout-item-iron-helm');
+      await user.hover(itemBtn);
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toBeInTheDocument();
+      expect(tooltip).toHaveTextContent('Iron Helm');
+
+      await user.click(itemBtn);
+
+      expect(screen.queryByRole('tooltip')).toBeNull();
+      expect(useInventoryStore.getState().equipped.head).toBe('iron-helm');
+      expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
+    });
+
+    it('calls onEquip with mouse source and dismisses tooltip when clicking fanout item', async () => {
+      const user = userEvent.setup();
+      const onEquipMock = vi.fn();
+      render(
+        <ItemTooltipProvider>
+          <FanOut slot="head" items={headItems} onEquip={onEquipMock} />
+        </ItemTooltipProvider>,
+      );
+
+      const itemBtn = screen.getByTestId('fanout-item-iron-helm');
+      await user.hover(itemBtn);
+      expect(await screen.findByRole('tooltip')).toBeInTheDocument();
+
+      await user.click(itemBtn);
+
+      expect(onEquipMock).toHaveBeenCalledWith(
+        expect.objectContaining({ id: 'iron-helm' }),
+        'mouse',
+      );
+      expect(screen.queryByRole('tooltip')).toBeNull();
+    });
+
+    it('dismisses any active tooltip on unmount as a safety net', async () => {
+      const user = userEvent.setup();
+      const { unmount } = renderFanOut();
+
+      const itemBtn = screen.getByTestId('fanout-item-iron-helm');
+      await user.hover(itemBtn);
+      expect(await screen.findByRole('tooltip')).toBeInTheDocument();
+
+      unmount();
+      expect(screen.queryByRole('tooltip')).toBeNull();
+    });
+
     it('opens tooltip on focus and updates focusedFanoutIndex', async () => {
       renderFanOut();
 
