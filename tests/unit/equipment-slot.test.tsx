@@ -25,6 +25,26 @@ function renderEquipmentSlot(slot: SlotType = 'head', itemId: ItemId | null = nu
   );
 }
 
+function ConnectedEquipmentSlot({ slot = 'head' }: { slot?: SlotType }) {
+  const itemId = useInventoryStore((s) => s.equipped[slot]);
+  return <EquipmentSlot slot={slot} itemId={itemId} />;
+}
+
+function renderConnectedEquipmentSlot(slot: SlotType = 'head') {
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { retry: false } },
+  });
+  queryClient.setQueryData(['items'], items);
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <ItemTooltipProvider>
+        <ConnectedEquipmentSlot slot={slot} />
+      </ItemTooltipProvider>
+    </QueryClientProvider>,
+  );
+}
+
 describe('EquipmentSlot component', () => {
   beforeEach(() => {
     resetSlotHoverManager();
@@ -441,6 +461,65 @@ describe('EquipmentSlot component', () => {
       expect(screen.getByRole('tooltip')).not.toHaveTextContent('Wizard Hat');
 
       vi.useRealTimers();
+    });
+  });
+
+  describe('equipping via fanout: mouse click vs keyboard Enter', () => {
+    it('equipping an item by clicking in fanout dismisses tooltip and does not force focus or leave tooltip open', async () => {
+      const user = userEvent.setup();
+      renderConnectedEquipmentSlot('head');
+
+      act(() => {
+        useInventoryStore.getState().setActiveFanoutSlot('head');
+      });
+
+      const fanoutItem = screen.getByTestId('fanout-item-iron-helm');
+      await user.hover(fanoutItem);
+
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toHaveTextContent('Iron Helm');
+
+      await user.click(fanoutItem);
+
+      expect(useInventoryStore.getState().equipped.head).toBe('iron-helm');
+      expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
+
+      // Tooltip is dismissed and not left open
+      expect(screen.queryByRole('tooltip')).toBeNull();
+
+      // Focus is not forced onto the newly equipped item
+      const equippedItem = screen.getByTestId('item-iron-helm');
+      expect(equippedItem).toBeInTheDocument();
+      expect(equippedItem).not.toHaveFocus();
+    });
+
+    it('equipping an item via keyboard (Enter) preserves focus on the slot item and opens the tooltip per FR-007', async () => {
+      const user = userEvent.setup();
+      renderConnectedEquipmentSlot('head');
+
+      const emptyBtn = screen.getByTestId('slot-empty-button-head');
+      act(() => {
+        emptyBtn.focus();
+      });
+
+      expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
+      const fanoutItem = screen.getByTestId('fanout-item-iron-helm');
+      expect(fanoutItem).toHaveFocus();
+
+      await user.keyboard('{Enter}');
+
+      expect(useInventoryStore.getState().equipped.head).toBe('iron-helm');
+      expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
+
+      // Focus is preserved on the newly equipped slot item
+      const equippedItem = screen.getByTestId('item-iron-helm');
+      expect(equippedItem).toBeInTheDocument();
+      expect(equippedItem).toHaveFocus();
+
+      // Tooltip is opened for the focused slot item per FR-007
+      const tooltip = await screen.findByRole('tooltip');
+      expect(tooltip).toBeInTheDocument();
+      expect(tooltip).toHaveTextContent('Iron Helm');
     });
   });
 });
