@@ -18,12 +18,9 @@ describe('item tooltip non-blocking behavior', () => {
     const tooltip = await waitForTooltip();
     expect(tooltip).toHaveClass('pointer-events-none');
 
-    const muteToggle = screen.getByRole('button', { name: /mute sound effects/i });
-    await user.click(muteToggle);
+    const bodySlot = screen.getByTestId('slot-empty-button-body');
+    await user.click(bodySlot);
 
-    expect(screen.getByRole('button', { name: /unmute sound effects/i })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    expect(useInventoryStore.getState().activeFanoutSlot).toBe('body');
   });
 });

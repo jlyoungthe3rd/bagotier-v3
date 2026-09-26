@@ -1,16 +1,13 @@
-import { describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { screen, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { renderApp } from './dnd-test-utils';
 import { useInventoryStore } from '../../src/store/useInventoryStore';
-import { audioEngine } from '../../src/features/audio/useSound';
 
 describe('keyboard navigation integration flows (US1-5)', () => {
   it('opens fan-out on focusing an empty slot and equips via Enter', async () => {
     const user = userEvent.setup();
     await renderApp();
-
-    const playbackSpy = vi.spyOn(audioEngine, 'playback');
 
     // 1. Focus the head empty slot
     const headEmptySlot = screen.getByTestId('slot-empty-button-head');
@@ -35,9 +32,6 @@ describe('keyboard navigation integration flows (US1-5)', () => {
     // Verify item is equipped and fan-out is closed
     expect(useInventoryStore.getState().equipped.head).toBe('wizard-hat');
     expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
-    expect(playbackSpy).toHaveBeenCalledWith('equip');
-
-    playbackSpy.mockRestore();
   });
 
   it('closes fan-out on Escape key', async () => {
@@ -60,8 +54,6 @@ describe('keyboard navigation integration flows (US1-5)', () => {
     const user = userEvent.setup();
     await renderApp();
 
-    const playbackSpy = vi.spyOn(audioEngine, 'playback');
-
     // Equip iron helm directly in store
     act(() => {
       useInventoryStore.getState().equip('iron-helm' as never, 'head');
@@ -80,9 +72,6 @@ describe('keyboard navigation integration flows (US1-5)', () => {
     await user.keyboard('{Enter}');
 
     expect(useInventoryStore.getState().equipped.head).toBeNull();
-    expect(playbackSpy).toHaveBeenCalledWith('unequip');
-
-    playbackSpy.mockRestore();
   });
 
   it('uses head as initial roving tabindex entry stop when focusedSlot is null', async () => {

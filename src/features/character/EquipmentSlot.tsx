@@ -6,7 +6,6 @@ import { useItem } from '../inventory/useInventoryQuery';
 import { useItemsForSlot } from '../inventory/useInventoryQuery';
 import { InventoryItem } from '../inventory/InventoryItem';
 import { useItemTooltip, type TooltipPlacement } from '../inventory/tooltip';
-import { useSound } from '../audio/useSound';
 import { handleEquipmentKeyDown } from '../inventory/keyboard';
 import { FanOut, SLOT_LABELS, SLOT_FAN_DIRECTION } from './FanOut';
 import { getSlotHoverDelay, recordSlotActivity } from './slotHoverManager';
@@ -39,7 +38,6 @@ interface EquipmentSlotProps {
 export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const equippedItem = useItem(itemId);
   const reducedMotion = useReducedMotion();
-  const play = useSound();
 
   const focusedSlot = useInventoryStore((s) => s.focusedSlot);
   const activeFanoutSlot = useInventoryStore((s) => s.activeFanoutSlot);
@@ -355,7 +353,6 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                     const store = useInventoryStore.getState();
                     store.equip(selectedItem.id, slot);
                     store.setActiveFanoutSlot(null);
-                    play('equip');
                   }
                   return;
                 }

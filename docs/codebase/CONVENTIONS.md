@@ -4,15 +4,15 @@
 
 ### 1) Naming Rules
 
-| Item                       | Rule                                      | Example                                                | Evidence                                   |
-| -------------------------- | ----------------------------------------- | ------------------------------------------------------ | ------------------------------------------ |
-| Files (React Components)   | PascalCase with `.tsx` extension          | `CharacterView.tsx`, `InventoryGrid.tsx`               | `src/features/character/CharacterView.tsx` |
-| Files (Stores & Utilities) | camelCase with `.ts` extension            | `useInventoryStore.ts`, `devLog.ts`, `keyboard.ts`     | `src/store/useInventoryStore.ts`           |
-| Files (Tests)              | kebab-case with `.test.ts` or `.test.tsx` | `stat-panel.test.tsx`, `keyboard-nav.test.ts`          | `tests/integration/stat-panel.test.tsx`    |
-| Functions & Methods        | camelCase                                 | `computeEffectiveStats`, `equipTransition`, `useSound` | `src/features/character/stats.ts`          |
-| Types & Interfaces         | PascalCase                                | `Item`, `Character`, `ItemId`, `EquipmentState`        | `src/types/domain.ts`                      |
-| Constants & Enums          | UPPER_SNAKE_CASE                          | `BAG_CAPACITY`, `SLOT_TYPES`, `STAT_KEYS`              | `src/types/domain.ts`                      |
-| Environment Variables      | UPPER_SNAKE_CASE                          | `VITE_BASE`                                            | `vite.config.ts`, `netlify.toml`           |
+| Item                       | Rule                                      | Example                                            | Evidence                                   |
+| -------------------------- | ----------------------------------------- | -------------------------------------------------- | ------------------------------------------ |
+| Files (React Components)   | PascalCase with `.tsx` extension          | `CharacterView.tsx`, `InventoryGrid.tsx`           | `src/features/character/CharacterView.tsx` |
+| Files (Stores & Utilities) | camelCase with `.ts` extension            | `useInventoryStore.ts`, `devLog.ts`, `keyboard.ts` | `src/store/useInventoryStore.ts`           |
+| Files (Tests)              | kebab-case with `.test.ts` or `.test.tsx` | `stat-panel.test.tsx`, `keyboard-nav.test.ts`      | `tests/integration/stat-panel.test.tsx`    |
+| Functions & Methods        | camelCase                                 | `computeEffectiveStats`, `equipTransition`         | `src/features/character/stats.ts`          |
+| Types & Interfaces         | PascalCase                                | `Item`, `Character`, `ItemId`, `EquipmentState`    | `src/types/domain.ts`                      |
+| Constants & Enums          | UPPER_SNAKE_CASE                          | `BAG_CAPACITY`, `SLOT_TYPES`, `STAT_KEYS`          | `src/types/domain.ts`                      |
+| Environment Variables      | UPPER_SNAKE_CASE                          | `VITE_BASE`                                        | `vite.config.ts`, `netlify.toml`           |
 
 ### 2) Formatting and Linting
 
@@ -43,7 +43,6 @@
 - Error strategy by layer:
   - UI Data Fetch Errors: Catch errors at query boundary in `App.tsx` and render designed `ErrorScreen` with retry action.
   - State Invariants: Pure transition functions (`equipTransition`, `unequipTransition`) return deterministic immutable `EquipmentState`. Equipping into an occupied slot safely displaces the current item back to the `unequipped` Set; unequipping is infallible and returns the item to the `unequipped` Set without capacity errors.
-  - Web Audio: AudioContext creation and asset loading wrapped in `try/catch`; fails gracefully to silent operation on unsupported browsers or autoplay restrictions.
 - Logging style and required context fields: Production code enforces zero console logging via ESLint (`no-console`). Development logging is isolated in `src/lib/devLog.ts`, guarded by `import.meta.env.DEV`, logging performance metrics:
   ```text
   [inventory] drop outcome=${outcome} handled in ${elapsed.toFixed(1)}ms (${status}, budget ${budgetMs}ms)
@@ -59,7 +58,6 @@
 - Mocking strategy norm:
   - Pure state isolation: Store reset called via `useInventoryStore.getState().reset()` before test runs.
   - React Query isolation: Tests instantiate fresh `QueryClient` instances with `retry: false` and `staleTime: Infinity`.
-  - Audio mocking: Tests spy on `audioEngine.playback` or invoke `__resetAudioForTests()` to avoid audio buffer errors.
   - Layout mocking: `installLayout()` in `tests/integration/dnd-test-utils.tsx` overrides `getBoundingClientRect` for predictable coordinate calculations.
 - Coverage expectation: Configured via `@vitest/coverage-v8` (`npm run test:coverage`), generating terminal and HTML reports while excluding `src/main.tsx`, `src/mocks/**`, and `src/vite-env.d.ts`. Minimum threshold flags are currently not enforced.
 
@@ -71,5 +69,4 @@
 - `src/lib/devLog.ts`
 - `src/App.tsx`
 - `src/store/useInventoryStore.ts`
-- `src/features/audio/useSound.ts`
 - `tests/setup.ts`

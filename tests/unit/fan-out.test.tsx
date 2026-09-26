@@ -16,7 +16,6 @@ import {
   ItemTooltipProvider,
   type TooltipPlacement,
 } from '../../src/features/inventory/tooltip';
-import { audioEngine } from '../../src/features/audio/useSound';
 import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { items } from '../../src/mocks/items';
 import type { Item, SlotType } from '../../src/types/domain';
@@ -620,7 +619,6 @@ describe('FanOut component & computeFanPositions', () => {
 
     it('Enter key equips the selected item and closes fan-out', async () => {
       const user = userEvent.setup();
-      const playbackSpy = vi.spyOn(audioEngine, 'playback');
       renderFanOut();
 
       // First item is iron-helm at index 0
@@ -628,14 +626,10 @@ describe('FanOut component & computeFanPositions', () => {
 
       expect(useInventoryStore.getState().equipped.head).toBe('iron-helm');
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
-      expect(playbackSpy).toHaveBeenCalledWith('equip');
-
-      playbackSpy.mockRestore();
     });
 
     it('Space key equips the selected item and closes fan-out', async () => {
       const user = userEvent.setup();
-      const playbackSpy = vi.spyOn(audioEngine, 'playback');
       renderFanOut();
 
       // Navigate to second item (wizard-hat)
@@ -646,9 +640,6 @@ describe('FanOut component & computeFanPositions', () => {
 
       expect(useInventoryStore.getState().equipped.head).toBe('wizard-hat');
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
-      expect(playbackSpy).toHaveBeenCalledWith('equip');
-
-      playbackSpy.mockRestore();
     });
 
     it('Escape key dismisses the fan-out without equipping and calls onDismiss', async () => {
@@ -691,9 +682,8 @@ describe('FanOut component & computeFanPositions', () => {
   });
 
   describe('click / equip action', () => {
-    it('equips item on click, dismisses fan-out, and plays sound', async () => {
+    it('equips item on click and dismisses fan-out', async () => {
       const user = userEvent.setup();
-      const playbackSpy = vi.spyOn(audioEngine, 'playback');
       renderFanOut();
 
       const wizardHatBtn = screen.getByTestId('fanout-item-wizard-hat');
@@ -701,9 +691,6 @@ describe('FanOut component & computeFanPositions', () => {
 
       expect(useInventoryStore.getState().equipped.head).toBe('wizard-hat');
       expect(useInventoryStore.getState().activeFanoutSlot).toBeNull();
-      expect(playbackSpy).toHaveBeenCalledWith('equip');
-
-      playbackSpy.mockRestore();
     });
   });
 

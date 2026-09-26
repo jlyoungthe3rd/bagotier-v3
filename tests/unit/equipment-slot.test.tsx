@@ -4,7 +4,6 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { EquipmentSlot } from '../../src/features/character/EquipmentSlot';
 import { ItemTooltipProvider } from '../../src/features/inventory/tooltip';
-import { audioEngine } from '../../src/features/audio/useSound';
 import { useInventoryStore } from '../../src/store/useInventoryStore';
 import { items } from '../../src/mocks/items';
 import { resetSlotHoverManager } from '../../src/features/character/slotHoverManager';
@@ -198,9 +197,8 @@ describe('EquipmentSlot component', () => {
   });
 
   describe('clicking equipped item unequipping', () => {
-    it('unequips the equipped item and plays unequip sound when clicked', async () => {
+    it('unequips the equipped item when clicked', async () => {
       const user = userEvent.setup();
-      const playbackSpy = vi.spyOn(audioEngine, 'playback');
 
       // Equip iron-helm in store
       useInventoryStore.getState().equip('iron-helm' as never, 'head');
@@ -213,9 +211,6 @@ describe('EquipmentSlot component', () => {
       await user.click(equippedItem);
 
       expect(useInventoryStore.getState().equipped.head).toBeNull();
-      expect(playbackSpy).toHaveBeenCalledWith('unequip');
-
-      playbackSpy.mockRestore();
     });
   });
 

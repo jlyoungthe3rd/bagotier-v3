@@ -3,7 +3,6 @@ import type { Item, SlotType } from '../../types/domain';
 import { useItemTooltip, type TooltipPlacement } from './tooltip';
 import type { ButtonHTMLAttributes } from 'react';
 import { useInventoryStore } from '../../store/useInventoryStore';
-import { useSound } from '../audio/useSound';
 import { handleEquipmentKeyDown } from './keyboard';
 
 interface InventoryItemProps extends Omit<
@@ -57,7 +56,6 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
     });
 
     const focusedSlot = useInventoryStore((s) => s.focusedSlot);
-    const play = useSound();
 
     const isDefaultSlot = focusedSlot === null && slot === 'head';
     const tabIndex = focusedSlot === slot || isDefaultSlot ? 0 : -1;
@@ -66,7 +64,6 @@ export const InventoryItem = forwardRef<HTMLButtonElement, InventoryItemProps>(
       buttonProps.onClick?.(e);
       const store = useInventoryStore.getState();
       store.unequip(slot);
-      play('unequip');
     };
 
     return (

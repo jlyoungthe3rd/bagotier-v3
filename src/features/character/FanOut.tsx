@@ -3,7 +3,6 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import type { Item, ItemId, SlotType } from '../../types/domain';
 import { useInventoryStore } from '../../store/useInventoryStore';
 import { useItemTooltip, type TooltipPlacement } from '../inventory/tooltip';
-import { useSound } from '../audio/useSound';
 
 export type HorizontalFanDirection = 'left' | 'right' | 'center';
 
@@ -146,7 +145,6 @@ export function FanOut({
   skipInitialFocus = false,
 }: FanOutProps) {
   const tooltip = useItemTooltip();
-  const play = useSound();
   const reducedMotion = useReducedMotion();
   const focusedFanoutIndex = useInventoryStore((s) => s.focusedFanoutIndex);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
@@ -269,7 +267,6 @@ export function FanOut({
     const store = useInventoryStore.getState();
     store.equip(item.id, slot);
     store.setActiveFanoutSlot(null);
-    play('equip');
   };
 
   const handleItemKeyDown = (

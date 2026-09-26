@@ -34,19 +34,18 @@ npx vitest run tests/unit/stats.test.ts            # Run a single target test fi
 
 ### 3) Test Scope Matrix
 
-| Scope       | Covered? | Typical target                                                                                                | Notes                                                                                                                                          |
-| ----------- | -------- | ------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Contract    | Yes      | Zod schemas, mock catalogs, invariant I5 validation                                                           | Asserts catalog has ≥10 items covering all 7 slots (`items.contract.test.ts`) and store contains no `Item` objects (`store.contract.test.ts`). |
-| Unit        | Yes      | `equipTransition`, `swapTransition`, `unequipTransition`, `computeEffectiveStats`, `useSound`                 | Tests pure transitions with zero React overhead (`tests/unit/`).                                                                               |
-| Integration | Yes      | Full view rendering (`App`, `CharacterView`, `InventoryGrid`, `StatPanel`), keyboard navigation, sound firing | Simulates user clicks and keyboard navigation via RTL and user-event (`tests/integration/`).                                                   |
-| E2E         | No       | [TODO] Real browser automation (Playwright/Cypress)                                                           | Not configured; all integration testing relies on jsdom.                                                                                       |
+| Scope       | Covered? | Typical target                                                                    | Notes                                                                                                                                          |
+| ----------- | -------- | --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| Contract    | Yes      | Zod schemas, mock catalogs, invariant I5 validation                               | Asserts catalog has ≥10 items covering all 7 slots (`items.contract.test.ts`) and store contains no `Item` objects (`store.contract.test.ts`). |
+| Unit        | Yes      | `equipTransition`, `swapTransition`, `unequipTransition`, `computeEffectiveStats` | Tests pure transitions with zero React overhead (`tests/unit/`).                                                                               |
+| Integration | Yes      | Full view rendering (`App`, `CharacterView`, `StatPanel`), keyboard navigation    | Simulates user clicks and keyboard navigation via RTL and user-event (`tests/integration/`).                                                   |
+| E2E         | No       | [TODO] Real browser automation (Playwright/Cypress)                               | Not configured; all integration testing relies on jsdom.                                                                                       |
 
 ### 4) Mocking and Isolation Strategy
 
 - Main mocking approach:
   - State Reset: `useInventoryStore.getState().reset()` resets Zustand state between tests.
   - QueryClient Isolation: `renderApp()` instantiates an isolated `QueryClient` with `staleTime: Infinity` and `retry: false`.
-  - Audio Spies: Spies on `audioEngine.playback` rather than instantiating browser AudioContext; `__resetAudioForTests()` flushes module caches.
   - Deterministic Coordinates: `installLayout()` in `tests/integration/dnd-test-utils.tsx` overrides `getBoundingClientRect` with fixed cell/slot geometries.
 - Isolation guarantees: Complete memory isolation between test files; global mocks are cleaned up after each test execution.
 - Common failure mode in tests:

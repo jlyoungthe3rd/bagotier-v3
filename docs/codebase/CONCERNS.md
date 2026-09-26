@@ -24,10 +24,9 @@
 
 ### 4) Performance and Scaling Concerns
 
-| Concern                                    | Evidence                                                                                        | Current symptom                                                                      | Scaling risk                                                                | Suggested improvement                                                        |
-| ------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------- | ---------------------------------------------------------------------------- |
-| Viewport Layout Clamping on Mobile Resizes | `src/features/character/FanOut.tsx` runs `useLayoutEffect` to clamp fanned item X offsets       | Minimal; throttled by browser layout cycle                                           | Rapid resizing or heavy orientation change could trigger multiple relayouts | Debounce resize listener or precalculate boundary positions.                 |
-| Just-in-Time Audio Buffer Preloading       | `src/features/audio/useSound.ts` initializes audio preloading on first user interaction or load | First played sound effect can experience subtle latency if assets are not pre-cached | Degraded sound tactile feedback on slower mobile connections                | Preload sound assets during initial app idle time via `requestIdleCallback`. |
+| Concern                                    | Evidence                                                                                  | Current symptom                            | Scaling risk                                                                | Suggested improvement                                        |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------- | ------------------------------------------ | --------------------------------------------------------------------------- | ------------------------------------------------------------ |
+| Viewport Layout Clamping on Mobile Resizes | `src/features/character/FanOut.tsx` runs `useLayoutEffect` to clamp fanned item X offsets | Minimal; throttled by browser layout cycle | Rapid resizing or heavy orientation change could trigger multiple relayouts | Debounce resize listener or precalculate boundary positions. |
 
 ### 5) Fragile/High-Churn Areas
 

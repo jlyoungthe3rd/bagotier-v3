@@ -69,7 +69,6 @@ npm run format     # Format code across project with Prettier
   - No secret keys or credentials required (100% client-side application).
 - Deployment/runtime constraints:
   - Static SPA; runs entirely in client browser context.
-  - Requires Web Audio API support (`AudioContext`) for audio sound effects; degrades gracefully to silent operation if unsupported or autoplay restricted.
 
 ### 6) Evidence
 
@@ -81,4 +80,3 @@ npm run format     # Format code across project with Prettier
 - `.eslintrc.cjs`
 - `.github/workflows/deploy-pages.yml`
 - `netlify.toml`
-- `src/features/audio/useSound.ts`

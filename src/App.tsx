@@ -5,9 +5,7 @@ import { useInventoryStore } from './store/useInventoryStore';
 import { ItemTooltipProvider } from './features/inventory/tooltip';
 import { CharacterView } from './features/character/CharacterView';
 import { StatPanel } from './features/character/StatPanel';
-import { MuteToggle } from './features/audio/MuteToggle';
 import { GitHubLink } from './features/github/GitHubLink';
-import { WipBanner } from './features/banner/WipBanner';
 import type { Item } from './types/domain';
 
 /** Skeleton block used by the designed loading state (Constitution III). */
@@ -73,18 +71,16 @@ function InventoryScreen() {
         Skip to main content
       </a>
 
-      <MuteToggle />
       <GitHubLink />
       <main
         id="main-content"
         tabIndex={-1}
         className="mx-auto flex max-w-2xl flex-col gap-6 px-4 pb-6 pt-14 focus:outline-none sm:px-6 sm:pb-8 sm:pt-16"
       >
-        <header className="flex shrink-0 items-center justify-between border-b border-slot-idle/50 pb-4">
+        <header className="flex shrink-0 items-center border-b border-slot-idle/50 pb-4">
           <h1 className="font-display text-xl font-bold text-ink sm:text-2xl">
             Bagotier
           </h1>
-          <WipBanner />
         </header>
 
         {/* Paper doll — visual hero, centered */}
