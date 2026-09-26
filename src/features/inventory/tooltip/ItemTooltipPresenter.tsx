@@ -11,6 +11,7 @@ import {
   useContext,
   useEffect,
   useId,
+  useMemo,
   type PropsWithChildren,
 } from 'react';
 import type { Item, ItemId } from '../../../types/domain';
@@ -107,18 +108,21 @@ export function ItemTooltipProvider({ children }: PropsWithChildren) {
   const controller = useItemTooltipState();
   const tooltipId = useId();
 
+  const contextValue = useMemo<ItemTooltipContextValue>(
+    () => ({
+      tooltipId,
+      open: (item, mode, element, placement) =>
+        controller.open({ item, mode, element, placement }),
+      closeFor: controller.closeFor,
+      dismiss: controller.dismiss,
+      ariaDescribedByFor: (itemId) =>
+        controller.isDescribedBy(itemId) ? tooltipId : undefined,
+    }),
+    [controller, tooltipId],
+  );
+
   return (
-    <ItemTooltipContext.Provider
-      value={{
-        tooltipId,
-        open: (item, mode, element, placement) =>
-          controller.open({ item, mode, element, placement }),
-        closeFor: controller.closeFor,
-        dismiss: controller.dismiss,
-        ariaDescribedByFor: (itemId) =>
-          controller.isDescribedBy(itemId) ? tooltipId : undefined,
-      }}
-    >
+    <ItemTooltipContext.Provider value={contextValue}>
       {children}
       <TooltipNode controller={controller} tooltipId={tooltipId} />
     </ItemTooltipContext.Provider>

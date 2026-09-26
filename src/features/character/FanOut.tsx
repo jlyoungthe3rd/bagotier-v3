@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import type { Item, SlotType } from '../../types/domain';
+import type { Item, ItemId, SlotType } from '../../types/domain';
 import { useInventoryStore } from '../../store/useInventoryStore';
 import { useItemTooltip, type TooltipPlacement } from '../inventory/tooltip';
 import { useSound } from '../audio/useSound';
@@ -124,6 +124,7 @@ interface FanOutProps {
   readonly onDismiss?: () => void;
   readonly onMouseEnter?: () => void;
   readonly onMouseLeave?: () => void;
+  readonly onEquip?: (item: Item, source: 'mouse' | 'keyboard') => void;
   readonly skipInitialFocus?: boolean;
 }
 
@@ -141,6 +142,7 @@ export function FanOut({
   onDismiss,
   onMouseEnter: onMouseEnterProp,
   onMouseLeave: onMouseLeaveProp,
+  onEquip,
   skipInitialFocus = false,
 }: FanOutProps) {
   const tooltip = useItemTooltip();
@@ -149,6 +151,22 @@ export function FanOut({
   const focusedFanoutIndex = useInventoryStore((s) => s.focusedFanoutIndex);
   const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const activeTooltipItemIdRef = useRef<ItemId | null>(null);
+  const tooltipRef = useRef(tooltip);
+  useEffect(() => {
+    tooltipRef.current = tooltip;
+  });
+
+  // Unmount safety net: clean up any tooltip opened by this fanout on unmount
+  useEffect(() => {
+    return () => {
+      if (activeTooltipItemIdRef.current !== null) {
+        tooltipRef.current.closeFor(activeTooltipItemIdRef.current, 'hover');
+        tooltipRef.current.closeFor(activeTooltipItemIdRef.current, 'focus');
+        activeTooltipItemIdRef.current = null;
+      }
+    };
+  }, []);
 
   // Responsive radius detection (compact for mobile < 640px)
   const [isMobile, setIsMobile] = useState(() => {
@@ -242,7 +260,12 @@ export function FanOut({
     };
   }, [skipInitialFocus, reducedMotion]);
 
-  const handleItemClick = (item: Item) => {
+  const handleItemClick = (item: Item, source: 'mouse' | 'keyboard' = 'mouse') => {
+    if (source === 'mouse') {
+      tooltip.dismiss();
+      activeTooltipItemIdRef.current = null;
+    }
+    onEquip?.(item, source);
     const store = useInventoryStore.getState();
     store.equip(item.id, slot);
     store.setActiveFanoutSlot(null);
@@ -289,18 +312,22 @@ export function FanOut({
         event.stopPropagation();
         const selectedItem = items[index];
         if (selectedItem !== undefined) {
-          handleItemClick(selectedItem);
+          handleItemClick(selectedItem, 'keyboard');
         }
         break;
       }
       case 'Escape':
         event.preventDefault();
         event.stopPropagation();
+        tooltip.dismiss();
+        activeTooltipItemIdRef.current = null;
         store.setActiveFanoutSlot(null);
         onDismiss?.();
         break;
       case 'Tab':
         // Close fanout cleanly on tab out
+        tooltip.dismiss();
+        activeTooltipItemIdRef.current = null;
         store.setActiveFanoutSlot(null);
         break;
     }
@@ -377,7 +404,7 @@ export function FanOut({
                     : 'border-slot-idle/80'
                 }`}
                 onClick={() => {
-                  handleItemClick(item);
+                  handleItemClick(item, 'mouse');
                 }}
                 onKeyDown={(e) => {
                   handleItemKeyDown(e, i);
@@ -387,6 +414,7 @@ export function FanOut({
                     return;
                   }
                   onMouseEnterProp?.();
+                  activeTooltipItemIdRef.current = item.id;
                   tooltip.open(
                     item,
                     'hover',
@@ -399,10 +427,14 @@ export function FanOut({
                     return;
                   }
                   onMouseLeaveProp?.();
+                  if (activeTooltipItemIdRef.current === item.id) {
+                    activeTooltipItemIdRef.current = null;
+                  }
                   tooltip.closeFor(item.id, 'hover');
                 }}
                 onFocus={() => {
                   useInventoryStore.getState().setFocusedFanoutIndex(i);
+                  activeTooltipItemIdRef.current = item.id;
                   tooltip.open(
                     item,
                     'focus',
@@ -411,6 +443,9 @@ export function FanOut({
                   );
                 }}
                 onBlur={() => {
+                  if (activeTooltipItemIdRef.current === item.id) {
+                    activeTooltipItemIdRef.current = null;
+                  }
                   tooltip.closeFor(item.id, 'focus');
                 }}
                 tabIndex={isFocused ? 0 : -1}

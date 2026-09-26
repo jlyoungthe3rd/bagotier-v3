@@ -94,6 +94,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
   const isHoveringRef = useRef(false);
   const prevEquippedItemRef = useRef(equippedItem);
   const wasFanoutOpenRef = useRef(isFanoutOpen);
+  const equipTriggerRef = useRef<'mouse' | 'keyboard' | null>(null);
 
   // Focus permanence on equip / unequip transitions
   useEffect(() => {
@@ -101,15 +102,16 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
       // Unequip transition: preserve focus on the newly mounted empty slot button
       buttonRef.current?.focus();
     } else if (
-      prevEquippedItemRef.current === undefined &&
       equippedItem !== undefined &&
-      wasFanoutOpenRef.current
+      wasFanoutOpenRef.current &&
+      equipTriggerRef.current === 'keyboard'
     ) {
-      // Equip transition from open fanout: preserve focus on newly equipped item button
+      // Equip transition from open fanout via keyboard: preserve focus on newly equipped item button
       equippedButtonRef.current?.focus();
     }
     prevEquippedItemRef.current = equippedItem;
     wasFanoutOpenRef.current = isFanoutOpen;
+    equipTriggerRef.current = null;
   }, [equippedItem, isFanoutOpen]);
 
   const isDefaultSlot = focusedSlot === null && slot === 'head';
@@ -349,6 +351,7 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
                   const selectedItem =
                     fanoutItems[useInventoryStore.getState().focusedFanoutIndex];
                   if (selectedItem !== undefined) {
+                    equipTriggerRef.current = 'keyboard';
                     const store = useInventoryStore.getState();
                     store.equip(selectedItem.id, slot);
                     store.setActiveFanoutSlot(null);
@@ -398,6 +401,9 @@ export function EquipmentSlot({ slot, itemId }: EquipmentSlotProps) {
           }}
           onMouseEnter={cancelLeaveTimer}
           onMouseLeave={startLeaveTimer}
+          onEquip={(_item, source) => {
+            equipTriggerRef.current = source;
+          }}
           skipInitialFocus={isHoveringRef.current}
         />
       )}
