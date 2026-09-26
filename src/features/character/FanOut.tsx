@@ -101,6 +101,21 @@ export const SLOT_LABELS: Readonly<Record<SlotType, string>> = {
   accessory: 'Accessory',
 };
 
+function isMouseInsideElement(
+  e: React.MouseEvent,
+  element: HTMLElement | null | undefined,
+): boolean {
+  if (!element) return false;
+  const rect = element.getBoundingClientRect();
+  if (rect.width === 0 && rect.height === 0) return false;
+  return (
+    e.clientX >= rect.left &&
+    e.clientX <= rect.right &&
+    e.clientY >= rect.top &&
+    e.clientY <= rect.bottom
+  );
+}
+
 interface FanOutProps {
   readonly slot: SlotType;
   readonly items: readonly Item[];
@@ -208,6 +223,25 @@ export function FanOut({
     }
   }, [focusedFanoutIndex]);
 
+  // Suppress hover interactions on fanned items while bursting outward over the slot
+  const [isHoverInteractive, setIsHoverInteractive] = useState(!skipInitialFocus);
+
+  useEffect(() => {
+    if (!skipInitialFocus) {
+      setIsHoverInteractive(true);
+      return;
+    }
+    const timer = setTimeout(
+      () => {
+        setIsHoverInteractive(true);
+      },
+      reducedMotion === true ? 0 : 200,
+    );
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [skipInitialFocus, reducedMotion]);
+
   const handleItemClick = (item: Item) => {
     const store = useInventoryStore.getState();
     store.equip(item.id, slot);
@@ -300,7 +334,9 @@ export function FanOut({
             <motion.div
               key={item.id}
               role="presentation"
-              className="pointer-events-auto absolute left-1/2 top-1/2"
+              className={`absolute left-1/2 top-1/2 ${
+                isHoverInteractive ? 'pointer-events-auto' : 'pointer-events-none'
+              }`}
               initial={
                 reducedMotion === true
                   ? false
@@ -346,7 +382,10 @@ export function FanOut({
                 onKeyDown={(e) => {
                   handleItemKeyDown(e, i);
                 }}
-                onMouseEnter={() => {
+                onMouseEnter={(e) => {
+                  if (isMouseInsideElement(e, slotElement)) {
+                    return;
+                  }
                   onMouseEnterProp?.();
                   tooltip.open(
                     item,
@@ -355,7 +394,10 @@ export function FanOut({
                     tooltipPlacement,
                   );
                 }}
-                onMouseLeave={() => {
+                onMouseLeave={(e) => {
+                  if (isMouseInsideElement(e, slotElement)) {
+                    return;
+                  }
                   onMouseLeaveProp?.();
                   tooltip.closeFor(item.id, 'hover');
                 }}

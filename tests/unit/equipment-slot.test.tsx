@@ -386,5 +386,61 @@ describe('EquipmentSlot component', () => {
 
       expect(screen.getByRole('tooltip')).toHaveTextContent('Iron Helm');
     });
+
+    it('does not display any tooltip when hovering an empty slot before and after fanout opens', () => {
+      vi.useFakeTimers();
+      renderEquipmentSlot('head', null);
+
+      const slotElement = screen.getByTestId('slot-head');
+      fireEvent.mouseEnter(slotElement);
+
+      // Advance to 300ms where fanout opens
+      act(() => {
+        vi.advanceTimersByTime(300);
+      });
+      expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
+      expect(screen.queryByRole('tooltip')).toBeNull();
+
+      // Advance through animation duration (200ms)
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(screen.queryByRole('tooltip')).toBeNull();
+
+      vi.useRealTimers();
+    });
+
+    it('keeps equipped item tooltip visible and does not flash unequipped fanout item tooltip when fanout opens', () => {
+      vi.useFakeTimers();
+      useInventoryStore.getState().equip('iron-helm' as never, 'head');
+      renderEquipmentSlot('head', 'iron-helm' as never);
+
+      const slotElement = screen.getByTestId('slot-head');
+      fireEvent.mouseEnter(slotElement);
+
+      // Tooltip delay expires at 200ms: equipped tooltip is open
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Iron Helm');
+
+      // Fanout opens at 300ms
+      act(() => {
+        vi.advanceTimersByTime(100);
+      });
+      expect(useInventoryStore.getState().activeFanoutSlot).toBe('head');
+      // Tooltip should still be Iron Helm, NOT Wizard Hat
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Iron Helm');
+      expect(screen.getByRole('tooltip')).not.toHaveTextContent('Wizard Hat');
+
+      // After animation completes at 500ms
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+      expect(screen.getByRole('tooltip')).toHaveTextContent('Iron Helm');
+      expect(screen.getByRole('tooltip')).not.toHaveTextContent('Wizard Hat');
+
+      vi.useRealTimers();
+    });
   });
 });

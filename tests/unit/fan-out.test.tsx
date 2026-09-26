@@ -1,5 +1,5 @@
 import { createElement, forwardRef } from 'react';
-import { act, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type * as FramerMotion from 'framer-motion';
@@ -78,6 +78,7 @@ function renderFanOut(
     slotElement?: HTMLElement | null;
     tooltipPlacement?: TooltipPlacement;
     onDismiss?: () => void;
+    skipInitialFocus?: boolean;
   } = {},
 ) {
   const {
@@ -86,6 +87,7 @@ function renderFanOut(
     slotElement,
     tooltipPlacement,
     onDismiss,
+    skipInitialFocus,
   } = props;
   return render(
     <ItemTooltipProvider>
@@ -95,6 +97,7 @@ function renderFanOut(
         slotElement={slotElement}
         tooltipPlacement={tooltipPlacement}
         onDismiss={onDismiss}
+        skipInitialFocus={skipInitialFocus}
       />
     </ItemTooltipProvider>,
   );
@@ -790,6 +793,47 @@ describe('FanOut component & computeFanPositions', () => {
       const tooltip = await screen.findByRole('tooltip');
       expect(tooltip).toHaveTextContent('Wizard Hat');
       expect(tooltip.getAttribute('data-placement')).toBe('right');
+    });
+
+    it('does not open tooltip on mouse enter if cursor is within slotElement bounds', () => {
+      const mockSlotEl = document.createElement('div');
+      vi.spyOn(mockSlotEl, 'getBoundingClientRect').mockReturnValue({
+        left: 100,
+        right: 156,
+        top: 100,
+        bottom: 156,
+        width: 56,
+        height: 56,
+        x: 100,
+        y: 100,
+        toJSON: () => ({}),
+      });
+
+      renderFanOut({ slotElement: mockSlotEl, skipInitialFocus: true });
+
+      const itemBtn = screen.getByTestId('fanout-item-iron-helm');
+      fireEvent.mouseEnter(itemBtn, { clientX: 120, clientY: 120 });
+
+      expect(screen.queryByRole('tooltip')).toBeNull();
+    });
+
+    it('suppresses hover interactivity on initial render when skipInitialFocus is true and enables after transition', () => {
+      vi.useFakeTimers();
+      render(
+        <ItemTooltipProvider>
+          <FanOut slot="head" items={headItems} skipInitialFocus />
+        </ItemTooltipProvider>,
+      );
+
+      const motionWrapper = screen.getByTestId('fanout-item-iron-helm').parentElement;
+      expect(motionWrapper).toHaveClass('pointer-events-none');
+
+      act(() => {
+        vi.advanceTimersByTime(200);
+      });
+
+      expect(motionWrapper).toHaveClass('pointer-events-auto');
+      vi.useRealTimers();
     });
   });
 });
